@@ -1,6 +1,6 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { BarChart3, Boxes, ClipboardList, Tags, LogOut, ArrowLeftCircle } from "lucide-react";
+import { BarChart3, Boxes, ClipboardList, Tags, LogOut, ArrowLeftCircle, ShieldAlert } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 
 const navItems = [
@@ -14,53 +14,73 @@ const AdminLayout = () => {
   const dispatch = useDispatch();
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-primary text-white">
-      <aside className="w-full lg:w-60 shrink-0 flex-col border-r border-border bg-surface p-5 lg:flex">
-        <Link to="/" className="flex items-center gap-1.5">
-          <span className="text-xl font-black text-white">
-            Ly<span className="text-accent">Zov</span>
-          </span>
-          <span className="badge badge-accent text-[8px]">Admin</span>
-        </Link>
-        <span className="text-[11px] text-stone mt-0.5">Store Management</span>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="lg:flex-row">
+      
+      {/* Sidebar */}
+      <aside style={{ borderRight: "1px solid var(--border)", backgroundColor: "var(--surface)", padding: "1.25rem" }} className="w-full lg:w-64 shrink-0 flex flex-col justify-between">
+        <div>
+          {/* Header Logo */}
+          <div style={{ display: "flex", itemsCenter: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+            <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
+              <div style={{ width: "2.25rem", height: "2.25rem", borderRadius: "9999px", backgroundColor: "var(--ink)", color: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.875rem" }}>
+                L<span style={{ color: "#F59E0B" }}>Z</span>
+              </div>
+              <div>
+                <p style={{ fontSize: "1rem", fontWeight: 800, color: "var(--ink)", lineHeight: 1 }}>LyZov</p>
+                <p style={{ fontSize: "10px", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin Portal</p>
+              </div>
+            </Link>
+          </div>
 
-        <nav className="mt-6 flex lg:flex-col lg:gap-1 overflow-x-auto lg:overflow-visible flex-row gap-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                isActive
-                  ? "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-semibold bg-accent text-white"
-                  : "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-medium text-stone hover:bg-raised hover:text-white"
-              }
-            >
-              <item.icon size={15} />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+          {/* Navigation Links */}
+          <nav style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.625rem",
+                  borderRadius: "0.75rem",
+                  padding: "0.625rem 0.875rem",
+                  fontSize: "0.8125rem",
+                  fontWeight: isActive ? 700 : 500,
+                  backgroundColor: isActive ? "var(--ink)" : "transparent",
+                  color: isActive ? "var(--bg)" : "var(--ink-muted)",
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                })}
+              >
+                <item.icon size={16} />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
 
-        <div className="mt-auto flex flex-col gap-1 pt-6 border-t border-border">
+        {/* Footer Actions */}
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "2rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
           <Link
             to="/"
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-medium text-stone hover:bg-raised hover:text-white"
+            style={{ display: "flex", alignItems: "center", gap: "0.625rem", borderRadius: "0.75rem", padding: "0.625rem 0.875rem", fontSize: "0.8125rem", color: "var(--ink-muted)", textDecoration: "none" }}
           >
-            <ArrowLeftCircle size={15} />
-            Back to Store
+            <ArrowLeftCircle size={16} />
+            <span>Back to Store</span>
           </Link>
           <button
             onClick={() => dispatch(logoutUser())}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-medium text-red-400 hover:bg-red-500/10"
+            style={{ display: "flex", alignItems: "center", gap: "0.625rem", borderRadius: "0.75rem", padding: "0.625rem 0.875rem", fontSize: "0.8125rem", color: "#EF4444", background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
           >
-            <LogOut size={15} />
-            Log Out
+            <LogOut size={16} />
+            <span>Log Out</span>
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden p-5 lg:p-8 bg-primary">
+      {/* Main Admin Page Content */}
+      <main style={{ flex: 1, padding: "1.5rem", backgroundColor: "var(--bg)", overflowX: "hidden" }} className="lg:p-8">
         <Outlet />
       </main>
     </div>
