@@ -1,78 +1,88 @@
-﻿import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Truck, ShieldCheck, RefreshCw, Star, Plus, Minus } from "lucide-react";
+import { ArrowRight, Star, ChevronRight } from "lucide-react";
+import { toast } from "react-toastify";
 import Hero from "../components/layout/Hero";
 import ProductGrid from "../components/product/ProductGrid";
-import { productService, categoryService } from "../services/productService";
-import { toast } from "react-toastify";
+import { productService } from "../services/productService";
 
-const perks = [
-  { icon: Truck, title: "Free Shipping", desc: "On all orders over $100" },
-  { icon: RefreshCw, title: "Easy Returns", desc: "30-day hassle-free returns" },
-  { icon: ShieldCheck, title: "Secure Checkout", desc: "Protected by Stripe encryption" },
+const categoryCards = [
+  {
+    title: "God Idols & Murtis",
+    desc: "Bal Hanuman ji, Krishna ji Makhan, Car Dashboard Statues",
+    image: "https://images.unsplash.com/photo-1567591974584-f1832dfaad58?w=600&auto=format&fit=crop&q=70",
+    href: "/shop?category=spiritual",
+  },
+  {
+    title: "Gym & Workout Gear",
+    desc: "Rubber Hex Dumbbells, Barbells, Adjustable Benches",
+    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&auto=format&fit=crop&q=70",
+    href: "/shop?category=equipment",
+  },
+  {
+    title: "Resistance & Training",
+    desc: "Pull-up Resistance Bands, Foam Rollers, Grips",
+    image: "https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=600&auto=format&fit=crop&q=70",
+    href: "/shop?category=equipment",
+  },
+  {
+    title: "Lifestyle & Decor",
+    desc: "Car Accessories, Spiritual Mandir Decor & Gifting",
+    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=70",
+    href: "/shop?category=accessories",
+  },
 ];
 
 const testimonials = [
   {
-    name: "Amara Chen",
+    quote: "The Bal Hanuman idol for my car dashboard is stunning. Beautiful paint finish and packed with great care.",
+    name: "Siddharth P.",
     role: "Verified Buyer",
-    quote:
-      "The quality is genuinely on par with brands charging three times as much. My go-to for basics now.",
   },
   {
-    name: "Diego Fuentes",
-    role: "Verified Buyer",
-    quote: "Fast shipping, true-to-size fit, and the packaging alone felt premium. Will keep ordering.",
+    quote: "Top quality 10kg rubber hex dumbbells. Solid knurling grip and zero rubber odor. Perfect for home workouts.",
+    name: "Vikram R.",
+    role: "Fitness Enthusiast",
   },
   {
-    name: "Priya Nair",
+    quote: "LyZov Store delivers fast across India and customer support was very helpful with tracking.",
+    name: "Pooja S.",
     role: "Verified Buyer",
-    quote: "Customer support resolved my exchange in minutes. Rare to find that kind of service anymore.",
   },
 ];
 
 const faqs = [
   {
-    q: "What is your return policy?",
-    a: "We offer a 30-day return window on all unworn items with original tags attached. Refunds are processed within 5-7 business days of receiving your return.",
+    q: "What products are available on LyZov Store?",
+    a: "LyZov Store offers a diverse collection including heavy-duty gym equipment, handcrafted spiritual God idols (Hanuman Ji, Krishna Ji, Ganesha), and lifestyle accessories.",
   },
   {
-    q: "How long does shipping take?",
-    a: "Standard shipping takes 3-5 business days within the continental US. Express options are available at checkout for 1-2 day delivery.",
+    q: "How are fragile items like God Idols packaged?",
+    a: "All delicate idols and statues are packaged with multi-layered shockproof bubble wrap and protective cushioning to guarantee damage-free delivery.",
   },
   {
-    q: "Do you ship internationally?",
-    a: "Yes, we ship to over 40 countries. International delivery times and customs fees vary by destination.",
+    q: "How fast is shipping across India?",
+    a: "Orders are dispatched within 24-48 hours. Metro cities receive delivery in 2-4 business days, and other locations in 4-6 business days with tracking.",
   },
   {
-    q: "How do I track my order?",
-    a: "Once your order ships, you'll receive a tracking link by email. You can also view live status from your LyZov dashboard.",
+    q: "What is your return or replacement policy?",
+    a: "We offer a 7-day hassle-free direct replacement if any product arrives damaged or incomplete.",
   },
 ];
 
-const FaqItem = ({ item, isOpen, onClick }) => (
-  <div className="border-b border-hairline py-6 dark:border-hairline-dark">
-    <button onClick={onClick} className="flex w-full items-center justify-between text-left">
-      <span className="font-display text-lg text-ink dark:text-cream">{item.q}</span>
-      {isOpen ? <Minus size={18} className="text-stone" /> : <Plus size={18} className="text-stone" />}
-    </button>
-    {isOpen && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone">{item.a}</p>}
-  </div>
-);
-
 const SectionHeading = ({ eyebrow, title, ctaLabel, ctaTo }) => (
-  <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+  <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
     <div>
       <span className="eyebrow">{eyebrow}</span>
-      <h2 className="mt-2 font-display text-3xl tracking-tightest text-ink dark:text-cream sm:text-4xl">
+      <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
         {title}
       </h2>
     </div>
     {ctaLabel && (
       <Link
         to={ctaTo}
-        className="group flex items-center gap-1.5 text-sm font-medium text-ink dark:text-cream"
+        className="group flex items-center gap-1.5 text-xs font-semibold text-accent hover:underline"
       >
         {ctaLabel}
         <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
@@ -84,8 +94,6 @@ const SectionHeading = ({ eyebrow, title, ctaLabel, ctaTo }) => (
 const LandingPage = () => {
   const [featured, setFeatured] = useState([]);
   const [trending, setTrending] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState(0);
   const [email, setEmail] = useState("");
@@ -93,18 +101,14 @@ const LandingPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [featuredRes, trendingRes, newRes, catRes] = await Promise.all([
-          productService.getCollection("featured", 8),
-          productService.getCollection("trending", 8),
-          productService.getCollection("new-arrivals", 4),
-          categoryService.getCategories(),
+        const [featuredRes, trendingRes] = await Promise.all([
+          productService.getCollection("featured", 8).catch(() => ({ data: [] })),
+          productService.getCollection("trending", 8).catch(() => ({ data: [] })),
         ]);
-        setFeatured(featuredRes.data);
-        setTrending(trendingRes.data);
-        setNewArrivals(newRes.data);
-        setCategories(catRes.data);
+        setFeatured(featuredRes?.data || []);
+        setTrending(trendingRes?.data || []);
       } catch (err) {
-        // sections simply stay empty if the API isn't reachable yet
+        // fallback
       } finally {
         setIsLoading(false);
       }
@@ -115,7 +119,7 @@ const LandingPage = () => {
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     if (!email.trim()) return;
-    toast.success("You're on the list â€” welcome to LyZov");
+    toast.success("Welcome to LyZov Store Club!");
     setEmail("");
   };
 
@@ -123,131 +127,125 @@ const LandingPage = () => {
     <div>
       <Hero />
 
-      <section className="border-y border-hairline bg-cream/40 dark:border-hairline-dark dark:bg-white/[0.02]">
-        <div className="container-page grid grid-cols-1 gap-8 py-10 sm:grid-cols-3">
-          {perks.map((perk) => (
-            <div key={perk.title} className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink text-ivory dark:bg-cream dark:text-ink">
-                <perk.icon size={20} />
+      {/* Featured Products */}
+      <section className="container-page py-14 lg:py-20">
+        <SectionHeading eyebrow="Curated Picks" title="Featured Products" ctaLabel="View All" ctaTo="/shop" />
+        <ProductGrid products={featured} isLoading={isLoading} emptyMessage="Products loading..." />
+      </section>
+
+      {/* Shop by Category */}
+      <section className="container-page pb-14 lg:pb-20">
+        <SectionHeading eyebrow="Explore Catalog" title="Shop by Category" ctaLabel="Explore All" ctaTo="/shop" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {categoryCards.map((cat) => (
+            <Link
+              key={cat.title}
+              to={cat.href}
+              className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+            >
+              <img
+                src={cat.image}
+                alt={cat.title}
+                className="h-full w-full object-cover transition-transform duration-700 ease-premium group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/40 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <h3 className="text-lg font-bold text-white group-hover:text-accent transition-colors">
+                  {cat.title}
+                </h3>
+                <p className="text-xs text-stone mt-1 line-clamp-2">{cat.desc}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent mt-2">
+                  Shop Now <ChevronRight size={13} />
+                </span>
               </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Bestsellers */}
+      <section className="bg-surface border-y border-border py-14 lg:py-20">
+        <div className="container-page">
+          <SectionHeading eyebrow="Top Rated" title="Bestsellers This Week" ctaLabel="Shop Bestsellers" ctaTo="/shop?sort=bestseller" />
+          <ProductGrid products={trending.length > 0 ? trending : featured} isLoading={isLoading} emptyMessage="Bestsellers loading..." />
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="container-page py-14 lg:py-20">
+        <SectionHeading eyebrow="Customer Reviews" title="What Shoppers Say" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          {testimonials.map((t, i) => (
+            <div key={i} className="card-surface p-5 flex flex-col justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-ink dark:text-cream">{perk.title}</p>
-                <p className="text-xs text-stone">{perk.desc}</p>
+                <div className="flex gap-1 text-accent mb-2">
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Star key={s} size={14} fill="currentColor" />
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed text-stone">"{t.quote}"</p>
+              </div>
+              <div className="border-t border-border pt-3">
+                <p className="text-xs font-bold text-white">{t.name}</p>
+                <p className="text-[10px] text-stone">{t.role}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="container-page py-16 lg:py-24">
-        <SectionHeading eyebrow="Curated Edit" title="Featured Products" ctaLabel="View All" ctaTo="/shop" />
-        <ProductGrid products={featured} isLoading={isLoading} emptyMessage="Featured products coming soon" />
-      </section>
-
-      {categories.length > 0 && (
-        <section className="container-page pb-16 lg:pb-24">
-          <SectionHeading eyebrow="Explore" title="Shop by Category" />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {categories.slice(0, 4).map((cat) => (
-              <Link
-                key={cat._id}
-                to={`/shop?category=${cat._id}`}
-                className="group relative aspect-[3/4] overflow-hidden rounded-xl2 bg-ink/5"
-              >
-                {cat.image?.url && (
-                  <img
-                    src={cat.image.url}
-                    alt={cat.name}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-premium group-hover:scale-110"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
-                <span className="absolute bottom-4 left-4 font-display text-xl text-ivory">{cat.name}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="bg-ink py-16 text-ivory dark:bg-white/5 lg:py-24">
-        <div className="container-page">
-          <SectionHeading eyebrow="Right Now" title="Trending This Week" ctaLabel="Shop Trending" ctaTo="/shop?sort=popular" />
-          <ProductGrid products={trending} isLoading={isLoading} emptyMessage="Trending products coming soon" />
-        </div>
-      </section>
-
-      <section className="container-page py-16 lg:py-24">
-        <SectionHeading eyebrow="Just Landed" title="New Arrivals" ctaLabel="Shop New" ctaTo="/shop?sort=newest" />
-        <ProductGrid products={newArrivals} isLoading={isLoading} emptyMessage="New arrivals coming soon" />
-      </section>
-
-      <section className="border-t border-hairline py-16 dark:border-hairline-dark lg:py-24">
-        <div className="container-page">
-          <SectionHeading eyebrow="Word on the Street" title="What Customers Say" />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="card-surface flex flex-col gap-4 p-6"
-              >
-                <div className="flex gap-0.5 text-gold">
-                  {Array.from({ length: 5 }).map((_, s) => (
-                    <Star key={s} size={14} fill="currentColor" />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed text-ink/80 dark:text-cream/80">"{t.quote}"</p>
-                <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-stone">{t.role}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="faq" className="border-t border-hairline py-16 dark:border-hairline-dark lg:py-24">
-        <div className="container-page grid grid-cols-1 gap-10 lg:grid-cols-3">
+      {/* FAQ */}
+      <section id="faq" className="border-t border-border bg-surface py-14 lg:py-20">
+        <div className="container-page grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div>
-            <span className="eyebrow">Need to Know</span>
-            <h2 className="mt-2 font-display text-3xl tracking-tightest sm:text-4xl">
+            <span className="eyebrow">Support</span>
+            <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Frequently Asked Questions
             </h2>
+            <p className="text-xs text-stone mt-2">
+              Have questions about shipping, packaging, or bulk orders?
+            </p>
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-2.5">
             {faqs.map((item, i) => (
-              <FaqItem
+              <div
                 key={item.q}
-                item={item}
-                isOpen={openFaq === i}
                 onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-              />
+                className="card-surface p-4 cursor-pointer hover:border-border-light transition-colors"
+              >
+                <div className="flex items-center justify-between text-sm font-semibold text-white">
+                  <span>{item.q}</span>
+                  <span className="text-accent font-bold text-base">{openFaq === i ? "âˆ’" : "+"}</span>
+                </div>
+                {openFaq === i && (
+                  <p className="text-xs text-stone mt-2.5 leading-relaxed border-t border-border pt-2.5">
+                    {item.a}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-cream/50 py-16 dark:bg-white/[0.02] lg:py-24">
-        <div className="container-page flex flex-col items-center gap-6 text-center">
-          <span className="eyebrow">Stay in the Loop</span>
-          <h2 className="max-w-xl font-display text-3xl tracking-tightest sm:text-4xl">
-            Get 10% off your first order
+      {/* Newsletter */}
+      <section className="border-t border-border bg-primary py-14 lg:py-20">
+        <div className="container-page flex flex-col items-center gap-4 text-center">
+          <span className="badge badge-accent">LyZov Club</span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            Get 10% Off Your First Order
           </h2>
-          <p className="max-w-md text-sm text-stone">
-            Sign up for early access to new drops, private sales, and style edits â€” no spam, ever.
+          <p className="max-w-md text-xs sm:text-sm text-stone">
+            Subscribe for exclusive offers, new product launches, and special festival drops.
           </p>
-          <form onSubmit={handleNewsletterSubmit} className="flex w-full max-w-md gap-2">
+          <form onSubmit={handleNewsletterSubmit} className="flex w-full max-w-md gap-2 pt-2">
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="input-field !bg-white"
+              placeholder="Enter your email address"
+              className="input-field"
             />
             <button type="submit" className="btn-primary shrink-0">
               Subscribe
