@@ -15,7 +15,7 @@ const AdminLayout = () => {
   const dispatch = useDispatch();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="lg:flex-row">
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="flex-col lg:flex-row">
       
       {/* Sidebar */}
       <aside style={{ borderRight: "1px solid var(--border)", backgroundColor: "var(--surface)", padding: "1.25rem" }} className="w-full lg:w-64 shrink-0 flex flex-col justify-between">
