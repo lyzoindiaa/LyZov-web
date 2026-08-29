@@ -1,27 +1,39 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import Modal from "../ui/Modal";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import { categoryService, brandService } from "../../services/productService";
 import { adminProductService } from "../../services/adminProductService";
+import { adminBrandService } from "../../services/adminBrandService";
 
 const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState([]);
 
+  // Quick Add Brand Inline State
+  const [showQuickBrand, setShowQuickBrand] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm();
 
+  const loadDropdowns = () => {
+    categoryService.getCategories().then((res) => setCategories(res.data || [])).catch(() => {});
+    brandService.getBrands().then((res) => setBrands(res.data || [])).catch(() => {});
+  };
+
   useEffect(() => {
-    categoryService.getCategories().then((res) => setCategories(res.data));
-    brandService.getBrands().then((res) => setBrands(res.data));
+    loadDropdowns();
   }, []);
 
   useEffect(() => {
@@ -33,19 +45,52 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         price: product.price,
         discountPrice: product.discountPrice,
         stock: product.stock,
-        category: product.category?._id,
-        brand: product.brand?._id,
+        category: product.category?._id || "",
+        brand: product.brand?._id || "",
       });
     } else {
-      reset({ title: "", description: "", shortDescription: "", price: "", discountPrice: "", stock: "" });
+      reset({
+        title: "",
+        description: "",
+        shortDescription: "",
+        price: "",
+        discountPrice: "",
+        stock: "",
+        category: "",
+        brand: "",
+      });
     }
     setImages([]);
+    setShowQuickBrand(false);
   }, [product, isOpen]);
+
+  const handleCreateBrandInline = async (e) => {
+    e.preventDefault();
+    if (!newBrandName.trim()) return;
+    setIsCreatingBrand(true);
+    try {
+      const res = await adminBrandService.createBrand({ name: newBrandName.trim() });
+      toast.success("Brand created!");
+      const newBrand = res.data;
+      setBrands((prev) => [...prev, newBrand]);
+      setValue("brand", newBrand._id);
+      setNewBrandName("");
+      setShowQuickBrand(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Could not create brand");
+    } finally {
+      setIsCreatingBrand(false);
+    }
+  };
 
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => formData.append(key, value));
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          formData.append(key, value);
+        }
+      });
       images.forEach((file) => formData.append("images", file));
 
       if (product) {
@@ -73,11 +118,11 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         />
 
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-stone">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
             Description
           </label>
           <textarea
-            rows={4}
+            rows={3}
             className="input-field"
             {...register("description", { required: "Description is required" })}
           />
@@ -86,11 +131,12 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
 
         <Input label="Short Description" className="sm:col-span-2" {...register("shortDescription")} />
 
+        {/* Category */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-stone">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
             Category
           </label>
-          <select className="input-field" {...register("category", { required: "Required" })}>
+          <select className="input-field" {...register("category", { required: "Category is required" })}>
             <option value="">Select category</option>
             {categories.map((c) => (
               <option key={c._id} value={c._id}>
@@ -98,37 +144,72 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
               </option>
             ))}
           </select>
+          {errors.category && <p className="mt-1.5 text-xs text-red-500">{errors.category.message}</p>}
         </div>
 
+        {/* Brand */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-stone">Brand</label>
-          <select className="input-field" {...register("brand", { required: "Required" })}>
-            <option value="">Select brand</option>
-            {brands.map((b) => (
-              <option key={b._id} value={b._id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Brand (Optional)
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowQuickBrand(!showQuickBrand)}
+              className="text-[11px] font-semibold text-amber-600 hover:underline flex items-center gap-0.5"
+            >
+              <Plus size={12} /> Add New
+            </button>
+          </div>
+
+          {showQuickBrand ? (
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="Brand name..."
+                className="input-field !py-1.5 text-xs"
+              />
+              <button
+                type="button"
+                onClick={handleCreateBrandInline}
+                disabled={isCreatingBrand}
+                className="btn-primary !py-1.5 !px-3 text-xs shrink-0"
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            <select className="input-field" {...register("brand")}>
+              <option value="">Select brand (or leave blank)</option>
+              {brands.map((b) => (
+                <option key={b._id} value={b._id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <Input
-          label="Price"
+          label="Price (â‚¹)"
           type="number"
           step="0.01"
-          {...register("price", { required: "Required", min: 0 })}
+          {...register("price", { required: "Price is required", min: 0 })}
           error={errors.price?.message}
         />
-        <Input label="Discount Price (optional)" type="number" step="0.01" {...register("discountPrice")} />
+        <Input label="Discount Price (â‚¹)" type="number" step="0.01" {...register("discountPrice")} />
+        
         <Input
-          label="Stock"
+          label="Stock Quantity"
           type="number"
-          {...register("stock", { required: "Required", min: 0 })}
+          {...register("stock", { required: "Stock is required", min: 0 })}
           error={errors.stock?.message}
         />
 
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-stone">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
             Product Images
           </label>
           <input
@@ -136,11 +217,11 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
             multiple
             accept="image/*"
             onChange={(e) => setImages(Array.from(e.target.files))}
-            className="block w-full text-sm text-stone file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:font-medium file:text-ivory dark:file:bg-cream dark:file:text-ink"
+            className="block w-full text-xs text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white dark:file:bg-white dark:file:text-black cursor-pointer"
           />
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-2 pt-2">
           <Button type="submit" isLoading={isSubmitting} className="w-full">
             {product ? "Save Changes" : "Create Product"}
           </Button>

@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { ToastContainer } from "react-toastify";
@@ -30,6 +30,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
+import AdminBrandsPage from "./pages/admin/AdminBrandsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
@@ -106,6 +107,7 @@ function App() {
           <Route index element={<AdminAnalyticsPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
         </Route>
       </Routes>

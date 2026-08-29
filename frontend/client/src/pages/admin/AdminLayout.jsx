@@ -1,12 +1,13 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { BarChart3, Boxes, ClipboardList, Tags, LogOut, ArrowLeftCircle, ShieldAlert } from "lucide-react";
+import { BarChart3, Boxes, ClipboardList, Tags, LogOut, ArrowLeftCircle, Award } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 
 const navItems = [
   { label: "Analytics", to: "/admin", icon: BarChart3, end: true },
   { label: "Products", to: "/admin/products", icon: Boxes },
   { label: "Categories", to: "/admin/categories", icon: Tags },
+  { label: "Brands", to: "/admin/brands", icon: Award },
   { label: "Orders", to: "/admin/orders", icon: ClipboardList },
 ];
 
@@ -20,7 +21,7 @@ const AdminLayout = () => {
       <aside style={{ borderRight: "1px solid var(--border)", backgroundColor: "var(--surface)", padding: "1.25rem" }} className="w-full lg:w-64 shrink-0 flex flex-col justify-between">
         <div>
           {/* Header Logo */}
-          <div style={{ display: "flex", itemsCenter: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
             <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
               <div style={{ width: "2.25rem", height: "2.25rem", borderRadius: "9999px", backgroundColor: "var(--ink)", color: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.875rem" }}>
                 L<span style={{ color: "#F59E0B" }}>Z</span>
