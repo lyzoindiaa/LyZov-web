@@ -1,257 +1,205 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Star, ChevronRight } from "lucide-react";
-import { toast } from "react-toastify";
-import Hero from "../components/layout/Hero";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { SlidersHorizontal, X, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import ProductGrid from "../components/product/ProductGrid";
+import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
 
-const categoryCards = [
-  {
-    title: "God Idols & Murtis",
-    desc: "Hanuman Ji, Krishna Ji Makhan, Car Dashboard Statues",
-    image: "https://images.unsplash.com/photo-1567591974584-f1832dfaad58?w=600&auto=format&fit=crop&q=70",
-    href: "/shop?category=spiritual",
-  },
-  {
-    title: "Gym & Workout Gear",
-    desc: "Rubber Hex Dumbbells, Barbells, Adjustable Benches",
-    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&auto=format&fit=crop&q=70",
-    href: "/shop?category=equipment",
-  },
-  {
-    title: "Resistance & Training",
-    desc: "Pull-up Resistance Bands, Foam Rollers, Grips",
-    image: "https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=600&auto=format&fit=crop&q=70",
-    href: "/shop?category=equipment",
-  },
-  {
-    title: "Lifestyle & Decor",
-    desc: "Car Accessories, Spiritual Mandir Decor & Gifting",
-    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=70",
-    href: "/shop?category=accessories",
-  },
+const sortOptions = [
+  { label: "Sort By : Recommended", value: "popular" },
+  { label: "Newest Arrivals", value: "newest" },
+  { label: "Price: Low to High", value: "price-asc" },
+  { label: "Price: High to Low", value: "price-desc" },
+  { label: "Top Rated", value: "rating-desc" },
 ];
-
-const testimonials = [
-  {
-    quote: "The Bal Hanuman idol for my car dashboard is stunning. Beautiful paint finish and packed with great care.",
-    name: "Siddharth P.",
-    role: "Verified Buyer",
-  },
-  {
-    quote: "Top quality 10kg rubber hex dumbbells. Solid knurling grip and zero rubber odor. Perfect for home workouts.",
-    name: "Vikram R.",
-    role: "Fitness Enthusiast",
-  },
-  {
-    quote: "LyZov Store delivers fast across India and customer support was very helpful with tracking.",
-    name: "Pooja S.",
-    role: "Verified Buyer",
-  },
-];
-
-const faqs = [
-  {
-    q: "What products are available on LyZov Store?",
-    a: "LyZov Store offers a diverse collection including heavy-duty gym equipment, handcrafted spiritual God idols (Hanuman Ji, Krishna Ji, Ganesha), and lifestyle accessories.",
-  },
-  {
-    q: "How are fragile items like God Idols packaged?",
-    a: "All delicate idols and statues are packaged with multi-layered shockproof bubble wrap and protective cushioning to guarantee damage-free delivery.",
-  },
-  {
-    q: "How fast is shipping across India?",
-    a: "Orders are dispatched within 24-48 hours. Metro cities receive delivery in 2-4 business days, and other locations in 4-6 business days with tracking.",
-  },
-  {
-    q: "What is your return or replacement policy?",
-    a: "We offer a 7-day hassle-free direct replacement if any product arrives damaged or incomplete.",
-  },
-];
-
-const SectionHeading = ({ eyebrow, title, ctaLabel, ctaTo }) => (
-  <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <span className="eyebrow">{eyebrow}</span>
-      <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-        {title}
-      </h2>
-    </div>
-    {ctaLabel && (
-      <Link
-        to={ctaTo}
-        className="group flex items-center gap-1.5 text-xs font-semibold text-gray-900 hover:text-amber-700 transition-colors"
-      >
-        {ctaLabel}
-        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-      </Link>
-    )}
-  </div>
-);
 
 const LandingPage = () => {
-  const [featured, setFeatured] = useState([]);
-  const [trending, setTrending] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [openFaq, setOpenFaq] = useState(0);
-  const [email, setEmail] = useState("");
+  const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
+
+  const filters = Object.fromEntries(searchParams.entries());
+  const page = Number(filters.page) || 1;
+
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await productService.getProducts({ ...filters, limit: 12 });
+      let list = res.data || [];
+      if (inStockOnly) {
+        list = list.filter((p) => (p.stock || 0) > 0);
+      }
+      setProducts(list);
+      setMeta(res.meta || { page: 1, totalPages: 1, total: list.length });
+    } catch (err) {
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchParams, inStockOnly]);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [featuredRes, trendingRes] = await Promise.all([
-          productService.getCollection("featured", 8).catch(() => ({ data: [] })),
-          productService.getCollection("trending", 8).catch(() => ({ data: [] })),
-        ]);
-        setFeatured(featuredRes?.data || []);
-        setTrending(trendingRes?.data || []);
-      } catch (err) {
-        // fallback
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+    fetchProducts();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [fetchProducts]);
 
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    toast.success("Welcome to LyZov Store Club!");
-    setEmail("");
+  const updateFilters = (updates) => {
+    const next = { ...filters, ...updates, page: 1 };
+    Object.keys(next).forEach((key) => {
+      if (next[key] === undefined || next[key] === "") delete next[key];
+    });
+    setSearchParams(next);
+  };
+
+  const clearFilters = () => {
+    setInStockOnly(false);
+    setSearchParams({});
+  };
+
+  const goToPage = (p) => {
+    updateFilters({ page: p });
   };
 
   return (
-    <div>
-      <Hero />
+    <div className="container-page py-8 lg:py-12">
+      
+      {/* Page Title */}
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+          {filters.search ? `Search results for "${filters.search}"` : "Featured Products"}
+        </h1>
+      </div>
 
-      {/* Featured Products */}
-      <section className="container-page py-14 lg:py-20">
-        <SectionHeading eyebrow="Curated Picks" title="Featured Products" ctaLabel="View All Products" ctaTo="/shop" />
-        <ProductGrid products={featured} isLoading={isLoading} emptyMessage="Products loading..." />
-      </section>
+      {/* Filter and Control Bar */}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-5">
+        
+        {/* Left Filter Buttons */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-800 hover:border-gray-900 transition-colors shadow-soft"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Filter</span>
+          </button>
 
-      {/* Shop by Category */}
-      <section className="container-page pb-14 lg:pb-20">
-        <SectionHeading eyebrow="Explore Catalog" title="Shop by Category" ctaLabel="Explore All" ctaTo="/shop" />
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {categoryCards.map((cat) => (
-            <Link
-              key={cat.title}
-              to={cat.href}
-              className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100 shadow-soft"
+          {/* In Stock toggle button */}
+          <button
+            onClick={() => setInStockOnly(!inStockOnly)}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${
+              inStockOnly
+                ? "border-amber-600 bg-amber-50 text-amber-800"
+                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            <span>In Stock</span>
+            {inStockOnly && <X size={12} className="cursor-pointer" />}
+          </button>
+
+          {/* Category Chip if active */}
+          {filters.category && (
+            <span className="badge badge-accent flex items-center gap-1 py-1.5 px-3 text-xs font-medium">
+              Category Active
+              <X size={12} className="cursor-pointer" onClick={() => updateFilters({ category: undefined })} />
+            </span>
+          )}
+
+          {/* Clear Filters Link */}
+          {(filters.category || filters.search || filters.minPrice || inStockOnly) && (
+            <button
+              onClick={clearFilters}
+              className="text-xs font-semibold text-amber-700 hover:underline ml-1"
             >
-              <img
-                src={cat.image}
-                alt={cat.title}
-                className="h-full w-full object-cover transition-transform duration-700 ease-premium group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 text-white">
-                <h3 className="text-lg font-bold group-hover:text-amber-300 transition-colors">
-                  {cat.title}
-                </h3>
-                <p className="text-xs text-gray-200 mt-1 line-clamp-2">{cat.desc}</p>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 mt-2">
-                  Shop Now <ChevronRight size={13} />
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Bestsellers Strip */}
-      <section className="bg-gray-50 border-y border-gray-100 py-14 lg:py-20">
-        <div className="container-page">
-          <SectionHeading eyebrow="Top Demand" title="Bestsellers This Week" ctaLabel="Shop Bestsellers" ctaTo="/shop?sort=bestseller" />
-          <ProductGrid products={trending.length > 0 ? trending : featured} isLoading={isLoading} emptyMessage="Bestsellers loading..." />
-        </div>
-      </section>
-
-      {/* Customer Reviews */}
-      <section className="container-page py-14 lg:py-20">
-        <SectionHeading eyebrow="Verified Buyers" title="What Shoppers Say" />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {testimonials.map((t, i) => (
-            <div key={i} className="card-surface p-6 flex flex-col justify-between gap-4">
-              <div>
-                <div className="flex gap-1 text-amber-500 mb-2.5">
-                  {Array.from({ length: 5 }).map((_, s) => (
-                    <Star key={s} size={15} fill="currentColor" />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed text-gray-600">"{t.quote}"</p>
-              </div>
-              <div className="border-t border-gray-100 pt-3">
-                <p className="text-xs font-bold text-gray-900">{t.name}</p>
-                <p className="text-[11px] text-gray-500">{t.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="border-t border-gray-100 bg-gray-50 py-14 lg:py-20">
-        <div className="container-page grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div>
-            <span className="eyebrow">Customer Care</span>
-            <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xs text-gray-500 mt-2">
-              Have questions about shipping, packaging, or orders?
-            </p>
-          </div>
-          <div className="lg:col-span-2 space-y-3">
-            {faqs.map((item, i) => (
-              <div
-                key={item.q}
-                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                className="rounded-2xl border border-gray-200 bg-white p-5 cursor-pointer hover:border-gray-300 transition-colors shadow-soft"
-              >
-                <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
-                  <span>{item.q}</span>
-                  <span className="text-amber-600 font-bold text-base">{openFaq === i ? "âˆ’" : "+"}</span>
-                </div>
-                {openFaq === i && (
-                  <p className="text-xs text-gray-600 mt-3 leading-relaxed border-t border-gray-100 pt-3">
-                    {item.a}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="border-t border-gray-100 bg-white py-14 lg:py-20">
-        <div className="container-page flex flex-col items-center gap-4 text-center">
-          <span className="badge badge-accent">LyZov Club</span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Get 10% Off Your First Order
-          </h2>
-          <p className="max-w-md text-xs sm:text-sm text-gray-500">
-            Subscribe for exclusive offers, new product launches, and special festival drops.
-          </p>
-          <form onSubmit={handleNewsletterSubmit} className="flex w-full max-w-md gap-2 pt-2">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address"
-              className="input-field"
-            />
-            <button type="submit" className="btn-primary shrink-0">
-              Subscribe
+              Clear Filters
             </button>
-          </form>
+          )}
         </div>
-      </section>
+
+        {/* Right Sort By Dropdown */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <select
+              value={filters.sort || "popular"}
+              onChange={(e) => updateFilters({ sort: e.target.value })}
+              className="appearance-none rounded-xl border border-gray-300 bg-white pl-4 pr-9 py-2 text-xs font-semibold text-gray-800 outline-none hover:border-gray-900 cursor-pointer shadow-soft"
+            >
+              {sortOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <ArrowUpDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Layout */}
+      <div className={`grid grid-cols-1 gap-8 ${isFilterOpen ? "lg:grid-cols-[240px_1fr]" : ""}`}>
+        
+        {/* Collapsible Filter Sidebar on Desktop */}
+        {isFilterOpen && (
+          <div className="hidden lg:block">
+            <FilterSidebar filters={filters} onChange={updateFilters} onClear={clearFilters} />
+          </div>
+        )}
+
+        {/* Mobile Filter Drawer */}
+        {isFilterOpen && (
+          <div className="fixed inset-0 z-[95] lg:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setIsFilterOpen(false)} />
+            <div className="absolute left-0 top-0 h-full w-full max-w-xs overflow-y-auto bg-white p-5 border-r border-gray-200">
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="mb-4 ml-auto flex rounded-full p-1.5 text-gray-500 hover:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+              <FilterSidebar filters={filters} onChange={updateFilters} onClear={clearFilters} />
+            </div>
+          </div>
+        )}
+
+        {/* Product Grid Listing */}
+        <div>
+          <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your filters" />
+
+          {meta.totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-center gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+                className="btn-icon disabled:opacity-30 border border-gray-200"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {Array.from({ length: meta.totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i + 1)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                    page === i + 1
+                      ? "bg-black text-white"
+                      : "border border-gray-200 hover:bg-gray-50 text-gray-700"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                disabled={page >= meta.totalPages}
+                onClick={() => goToPage(page + 1)}
+                className="btn-icon disabled:opacity-30 border border-gray-200"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

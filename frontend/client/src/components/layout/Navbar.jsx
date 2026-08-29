@@ -10,12 +10,6 @@ import { toggleMobileMenu, closeMobileMenu } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
 import { categoryService } from "../../services/categoryService";
 
-const navCategories = [
-  { label: "Featured Products", to: "/shop?sort=bestseller" },
-  { label: "Categories", to: "/shop" },
-  { label: "All Products", to: "/shop" },
-];
-
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -69,7 +63,7 @@ const Navbar = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      navigate(`/?search=${encodeURIComponent(searchTerm.trim())}`);
       setSearchOpen(false);
       setSearchTerm("");
     }
@@ -85,8 +79,8 @@ const Navbar = () => {
     >
       <div className="container-page flex h-18 items-center justify-between gap-6 py-3">
         
-        {/* Left: Hamburger & Brand */}
-        <div className="flex items-center gap-4">
+        {/* Left: Brand & Navigation */}
+        <div className="flex items-center gap-6 sm:gap-8">
           <button
             onClick={() => dispatch(toggleMobileMenu())}
             className="btn-icon lg:hidden"
@@ -95,83 +89,81 @@ const Navbar = () => {
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white font-black text-lg tracking-tight">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white font-black text-lg">
               L<span className="text-amber-500">Z</span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-gray-900 leading-tight">
-                LyZov
-              </span>
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest leading-none">
-                Store
-              </span>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              LyZov
+            </span>
           </Link>
+
+          <span className="hidden sm:inline text-gray-300">|</span>
+
+          {/* Nav Links */}
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-600">
+            <Link
+              to="/?sort=popular"
+              className="hover:text-gray-900 transition-colors"
+            >
+              Featured Products
+            </Link>
+
+            {/* Categories Dropdown */}
+            <div className="relative" ref={catRef}>
+              <button
+                onClick={() => setCatMenuOpen((v) => !v)}
+                className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+              >
+                <span>Categories</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? "rotate-180 text-gray-900" : "text-gray-400"}`} />
+              </button>
+
+              {catMenuOpen && (
+                <div className="absolute top-full left-0 mt-3 w-56 rounded-2xl bg-white border border-gray-100 p-2 shadow-card z-50">
+                  <Link
+                    to="/"
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    <span>All Categories</span>
+                    <Tag size={13} className="text-amber-600" />
+                  </Link>
+                  <div className="border-t border-gray-100 my-1" />
+                  {categories.length > 0 ? (
+                    categories.map((c) => (
+                      <Link
+                        key={c._id}
+                        to={`/?category=${c._id}`}
+                        className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      >
+                        {c.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <>
+                      <Link to="/?category=equipment" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">Gym & Fitness</Link>
+                      <Link to="/?category=spiritual" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">God Idols & Decor</Link>
+                      <Link to="/?category=accessories" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">Accessories</Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Link
+              to="/"
+              className="hover:text-gray-900 transition-colors"
+            >
+              All Products
+            </Link>
+          </nav>
         </div>
 
-        {/* Center: Clean Nav Links */}
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <Link
-            to="/shop?sort=bestseller"
-            className="hover:text-gray-900 transition-colors"
-          >
-            Featured Products
-          </Link>
-
-          {/* Dynamic Categories Dropdown */}
-          <div className="relative" ref={catRef}>
-            <button
-              onClick={() => setCatMenuOpen((v) => !v)}
-              className="flex items-center gap-1 hover:text-gray-900 transition-colors"
-            >
-              <span>Categories</span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? "rotate-180 text-gray-900" : "text-gray-400"}`} />
-            </button>
-
-            {catMenuOpen && (
-              <div className="absolute top-full left-0 mt-3 w-56 rounded-2xl bg-white border border-gray-100 p-2 shadow-card z-50">
-                <Link
-                  to="/shop"
-                  className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors"
-                >
-                  <span>All Categories</span>
-                  <Tag size={13} className="text-amber-600" />
-                </Link>
-                <div className="border-t border-gray-100 my-1" />
-                {categories.length > 0 ? (
-                  categories.map((c) => (
-                    <Link
-                      key={c._id}
-                      to={`/shop?category=${c._id}`}
-                      className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                    >
-                      {c.name}
-                    </Link>
-                  ))
-                ) : (
-                  <>
-                    <Link to="/shop?category=equipment" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">Gym & Fitness</Link>
-                    <Link to="/shop?category=spiritual" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">God Idols & Decor</Link>
-                    <Link to="/shop?category=accessories" className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50">Accessories</Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <Link
-            to="/shop"
-            className="hover:text-gray-900 transition-colors"
-          >
-            All Products
-          </Link>
-        </nav>
-
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           
-          {/* Search Button */}
+          {/* Search Trigger */}
           <button
             onClick={() => setSearchOpen((v) => !v)}
             className="btn-icon"
@@ -180,16 +172,7 @@ const Navbar = () => {
             <Search size={19} />
           </button>
 
-          {/* Wishlist */}
-          <Link
-            to={isAuthenticated ? "/dashboard/wishlist" : "/login"}
-            className="btn-icon hidden sm:flex"
-            aria-label="Wishlist"
-          >
-            <Heart size={19} />
-          </Link>
-
-          {/* Cart */}
+          {/* Cart with count badge */}
           <button
             onClick={() => dispatch(openMiniCart())}
             className="btn-icon relative"
@@ -203,13 +186,22 @@ const Navbar = () => {
             )}
           </button>
 
-          {/* Account */}
+          {/* Wishlist */}
+          <Link
+            to={isAuthenticated ? "/dashboard/wishlist" : "/login"}
+            className="btn-icon hidden sm:flex"
+            aria-label="Wishlist"
+          >
+            <Heart size={19} />
+          </Link>
+
+          {/* Account / Login */}
           <div className="relative" ref={userRef}>
             {isAuthenticated ? (
               <>
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-xs font-semibold text-gray-800 hover:border-gray-300 transition-colors"
+                  className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-xs font-semibold text-gray-800 hover:border-gray-300 transition-colors"
                 >
                   <User size={15} className="text-amber-600" />
                   <span className="hidden sm:inline max-w-[80px] truncate">{user?.name?.split(" ")[0]}</span>
@@ -247,7 +239,7 @@ const Navbar = () => {
                 )}
               </>
             ) : (
-              <Link to="/login" className="btn-primary !py-2 !px-5 text-xs">
+              <Link to="/login" className="text-sm font-semibold text-gray-900 hover:text-amber-700 transition-colors px-2 py-1">
                 Login
               </Link>
             )}
@@ -257,14 +249,14 @@ const Navbar = () => {
 
       {/* Expandable Search Input */}
       {searchOpen && (
-        <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-3 animate-fade-in">
+        <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 animate-fade-in">
           <form onSubmit={handleSearchSubmit} className="container-page flex items-center gap-3">
             <Search size={18} className="text-gray-400 flex-shrink-0" />
             <input
               autoFocus
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by product name, category, or brand..."
+              placeholder="Search products across LyZov Store..."
               className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
             />
             {searchTerm && (
@@ -290,10 +282,10 @@ const Navbar = () => {
           </form>
 
           <nav className="flex flex-col space-y-1">
-            <Link to="/shop?sort=bestseller" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50">
+            <Link to="/?sort=popular" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50">
               Featured Products
             </Link>
-            <Link to="/shop" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50">
+            <Link to="/" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50">
               All Products
             </Link>
             <div className="pt-2 border-t border-gray-100">
@@ -301,7 +293,7 @@ const Navbar = () => {
               {categories.map((c) => (
                 <Link
                   key={c._id}
-                  to={`/shop?category=${c._id}`}
+                  to={`/?category=${c._id}`}
                   className="block px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50"
                 >
                   {c.name}
