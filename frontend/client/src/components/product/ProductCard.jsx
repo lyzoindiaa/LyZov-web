@@ -11,70 +11,78 @@ const ProductCard = ({ product }) => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const isWished = wishlistProducts.some((p) => p._id === product._id);
-
   const mainImage = product.images?.[0]?.url || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=500&auto=format&fit=crop&q=60";
   const hoverImage = product.images?.[1]?.url || mainImage;
-
   const finalPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
-  const discountPercent =
-    product.discountPrice > 0 ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0;
+  const discountPercent = product.discountPrice > 0 ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0;
 
   const handleWishlistClick = (e) => {
     e.preventDefault();
-    if (!isAuthenticated) {
-      toast.info("Please login to save to wishlist");
-      return;
-    }
+    if (!isAuthenticated) { toast.info("Please login to save to wishlist"); return; }
     dispatch(toggleWishlistItem(product._id));
   };
 
   return (
-    <Link to={`/shop/${product.slug || product._id}`} className="group block card-product">
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+    <Link to={`/shop/${product.slug || product._id}`} className="card-product group">
+      
+      {/* Image Area */}
+      <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--bg-raised)" }}>
         <img
           src={mainImage}
           alt={product.images?.[0]?.altText || product.title || product.name}
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-premium group-hover:opacity-0"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "opacity 0.4s" }}
+          className="group-hover:opacity-0"
         />
         <img
           src={hoverImage}
           alt=""
           loading="lazy"
-          className="absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition-all duration-500 ease-premium group-hover:scale-100 group-hover:opacity-100"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, transform: "scale(1.05)", transition: "all 0.4s" }}
+          className="group-hover:opacity-100 group-hover:scale-100"
         />
 
         {/* Badges */}
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5 z-10">
-          <span className="badge badge-accent">Bestseller</span>
+        <div style={{ position: "absolute", left: "0.75rem", top: "0.75rem", display: "flex", flexDirection: "column", gap: "0.375rem", zIndex: 10 }}>
           {discountPercent > 0 && <span className="badge badge-dark">-{discountPercent}%</span>}
         </div>
 
         {/* Wishlist Button */}
         <button
           onClick={handleWishlistClick}
-          className="absolute right-3 top-3 flex h-8.5 w-8.5 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-soft backdrop-blur-sm transition-all duration-200 hover:text-red-500 z-10"
+          style={{
+            position: "absolute", right: "0.75rem", top: "0.75rem", zIndex: 10,
+            width: "2rem", height: "2rem",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: "9999px",
+            backgroundColor: "var(--surface)",
+            color: isWished ? "#EF4444" : "var(--ink-muted)",
+            border: "1px solid var(--border)",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
           aria-label="Toggle wishlist"
         >
-          <Heart size={16} className={isWished ? "fill-red-500 text-red-500" : ""} />
+          <Heart size={14} fill={isWished ? "#EF4444" : "none"} />
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+      {/* Product Info */}
+      <div style={{ padding: "0.875rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+        <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)" }}>
           {product.brand?.name || "LyZov Store"}
         </p>
-
-        <h3 className="truncate text-sm font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">
+        <h3 style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.15s" }}
+          className="group-hover:text-[var(--accent)]"
+        >
           {product.title || product.name}
         </h3>
-
-        <div className="flex items-center gap-2 pt-1">
-          <span className="text-sm font-bold text-gray-900 tabular-nums">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
+          <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
             {formatCurrency(finalPrice)}
           </span>
           {product.discountPrice > 0 && (
-            <span className="text-xs text-gray-400 line-through tabular-nums">
+            <span style={{ fontSize: "0.75rem", color: "var(--ink-subtle)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(product.price)}
             </span>
           )}

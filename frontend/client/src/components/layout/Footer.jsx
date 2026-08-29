@@ -5,10 +5,10 @@ const footerColumns = [
   {
     title: "Categories",
     links: [
-      { label: "Gym & Workout Gear", to: "/shop?category=equipment" },
-      { label: "God Idols & Murtis", to: "/shop?category=spiritual" },
-      { label: "Accessories & Decor", to: "/shop?category=accessories" },
-      { label: "All Products Catalog", to: "/shop" },
+      { label: "Gym & Workout Gear", to: "/?category=equipment" },
+      { label: "God Idols & Murtis", to: "/?category=spiritual" },
+      { label: "Accessories & Decor", to: "/?category=accessories" },
+      { label: "All Products", to: "/" },
     ],
   },
   {
@@ -17,13 +17,13 @@ const footerColumns = [
       { label: "Track Your Order", to: "/dashboard/orders" },
       { label: "Shipping Policy", to: "/shipping" },
       { label: "7-Day Replacement", to: "/returns" },
-      { label: "FAQ & Contact", to: "/#faq" },
+      { label: "Contact & FAQ", to: "/#faq" },
     ],
   },
   {
     title: "My Account",
     links: [
-      { label: "Orders", to: "/dashboard/orders" },
+      { label: "My Orders", to: "/dashboard/orders" },
       { label: "Wishlist", to: "/dashboard/wishlist" },
       { label: "Saved Addresses", to: "/dashboard/addresses" },
       { label: "Sign In", to: "/login" },
@@ -33,56 +33,55 @@ const footerColumns = [
 
 const Footer = () => {
   return (
-    <footer className="border-t border-gray-100 bg-white text-gray-500">
-      <div className="container-page grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:py-16">
-        
-        <div className="col-span-1 sm:col-span-2 flex flex-col gap-3">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white font-black text-sm">
-              L<span className="text-amber-500">Z</span>
-            </div>
-            <span className="text-lg font-bold text-gray-900">LyZov Store</span>
-          </Link>
-          <p className="max-w-sm text-xs text-gray-500 leading-relaxed">
-            Your destination for workout equipment, sacred handcrafted God idols, and curated lifestyle accessories.
-          </p>
-          <div className="flex items-center gap-2 pt-2">
-            {[Instagram, Twitter, Linkedin, Youtube].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="btn-icon border border-gray-200 hover:border-gray-900"
-                aria-label="Social Link"
-              >
-                <Icon size={15} />
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {footerColumns.map((col) => (
-          <div key={col.title}>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3">{col.title}</h4>
-            <ul className="flex flex-col gap-2">
-              {col.links.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.to}
-                    className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
+    <footer style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)" }}>
+      <div className="container-page" style={{ paddingTop: "3rem", paddingBottom: "3rem" }}>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          
+          {/* Brand column */}
+          <div className="sm:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.625rem", textDecoration: "none" }}>
+              <div style={{ width: "2rem", height: "2rem", borderRadius: "9999px", backgroundColor: "var(--ink)", color: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.875rem" }}>
+                L<span style={{ color: "#F59E0B" }}>Z</span>
+              </div>
+              <span style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--ink)" }}>LyZov Store</span>
+            </Link>
+            <p style={{ maxWidth: "20rem", fontSize: "0.75rem", color: "var(--ink-muted)", lineHeight: "1.6" }}>
+              Your destination for workout equipment, handcrafted God idols, and curated lifestyle accessories. Delivered safely across India.
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", paddingTop: "0.25rem" }}>
+              {[Instagram, Twitter, Linkedin, Youtube].map((Icon, i) => (
+                <a key={i} href="#" className="btn-icon" style={{ border: "1px solid var(--border)", width: "2rem", height: "2rem" }} aria-label="Social">
+                  <Icon size={14} />
+                </a>
               ))}
-            </ul>
+            </div>
           </div>
-        ))}
+
+          {/* Link columns */}
+          {footerColumns.map((col) => (
+            <div key={col.title}>
+              <h4 style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink)", marginBottom: "0.75rem" }}>{col.title}</h4>
+              <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem", listStyle: "none", padding: 0, margin: 0 }}>
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to} style={{ fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => e.target.style.color = "var(--ink)"}
+                      onMouseLeave={(e) => e.target.style.color = "var(--ink-muted)"}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="border-t border-gray-100 bg-gray-50 py-5">
-        <div className="container-page flex flex-col items-center justify-between gap-2 text-[11px] text-gray-500 sm:flex-row">
+      <div style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg)", padding: "1rem 0" }}>
+        <div className="container-page" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", fontSize: "11px", color: "var(--ink-subtle)" }}>
           <p>&copy; {new Date().getFullYear()} LyZov Store. All rights reserved.</p>
-          <p>Curated with care. Delivered with speed.</p>
+          <p>Pan-India Delivery Â· Quality Guaranteed</p>
         </div>
       </div>
     </footer>

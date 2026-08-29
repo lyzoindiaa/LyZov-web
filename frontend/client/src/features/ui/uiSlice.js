@@ -1,8 +1,8 @@
-﻿import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
 const getInitialTheme = () => {
   if (typeof window === "undefined") return "light";
-  const stored = window.localStorage?.getItem("novacart-theme");
+  const stored = window.localStorage?.getItem("lyzov-theme");
   if (stored) return stored;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
@@ -16,10 +16,19 @@ const uiSlice = createSlice({
   },
   reducers: {
     toggleTheme: (state) => {
-      state.theme = state.theme === "light" ? "dark" : "light";
+      const next = state.theme === "light" ? "dark" : "light";
+      state.theme = next;
+      if (typeof window !== "undefined") {
+        window.localStorage?.setItem("lyzov-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+      }
     },
     setTheme: (state, action) => {
       state.theme = action.payload;
+      if (typeof window !== "undefined") {
+        window.localStorage?.setItem("lyzov-theme", action.payload);
+        document.documentElement.classList.toggle("dark", action.payload === "dark");
+      }
     },
     toggleMobileMenu: (state) => {
       state.isMobileMenuOpen = !state.isMobileMenuOpen;

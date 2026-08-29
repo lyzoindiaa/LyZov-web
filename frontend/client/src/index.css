@@ -4,91 +4,162 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   CSS CUSTOM PROPERTIES â€” Light Mode (default)
+   ============================================================ */
+:root {
+  --bg:           #FFFFFF;
+  --bg-subtle:    #F9FAFB;
+  --bg-raised:    #F3F4F6;
+  --surface:      #FFFFFF;
+  --border:       #E5E7EB;
+  --border-dark:  #D1D5DB;
+
+  --ink:          #111827;
+  --ink-light:    #374151;
+  --ink-muted:    #6B7280;
+  --ink-subtle:   #9CA3AF;
+
+  --accent:       #D97706;
+  --accent-hover: #B45309;
+  --accent-bg:    #FEF3C7;
+
+  --brand:        #111827;
+  --brand-hover:  #1F2937;
+
+  --red:          #EF4444;
+  --red-bg:       #FEF2F2;
+  --green:        #16A34A;
+  --green-bg:     #DCFCE7;
+
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md:    0 4px 20px -2px rgba(0,0,0,0.05);
+  --shadow-lg:    0 10px 30px -4px rgba(0,0,0,0.08);
+}
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES â€” Dark Mode
+   ============================================================ */
+html.dark {
+  --bg:           #0D0D0F;
+  --bg-subtle:    #111113;
+  --bg-raised:    #18181B;
+  --surface:      #141416;
+  --border:       #27272A;
+  --border-dark:  #3F3F46;
+
+  --ink:          #F4F4F5;
+  --ink-light:    #D4D4D8;
+  --ink-muted:    #A1A1AA;
+  --ink-subtle:   #71717A;
+
+  --accent:       #F59E0B;
+  --accent-hover: #D97706;
+  --accent-bg:    rgba(245,158,11,0.12);
+
+  --brand:        #F4F4F5;
+  --brand-hover:  #FFFFFF;
+
+  --red:          #F87171;
+  --red-bg:       rgba(248,113,113,0.1);
+  --green:        #4ADE80;
+  --green-bg:     rgba(74,222,128,0.1);
+
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:    0 4px 20px -2px rgba(0,0,0,0.4);
+  --shadow-lg:    0 10px 30px -4px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
 @layer base {
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-  html {
-    scroll-behavior: smooth;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
   body {
-    background-color: #FFFFFF;
-    color: #111827;
+    background-color: var(--bg);
+    color: var(--ink);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
-  ::selection {
-    background: #FEF3C7;
-    color: #92400E;
-  }
-  :focus-visible {
-    outline: 2px solid #111827;
-    outline-offset: 2px;
-    border-radius: 6px;
-  }
+
+  ::selection { background: var(--accent-bg); color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 }
 
+/* ============================================================
+   COMPONENT CLASSES â€” Variable-Based (auto dark/light switch)
+   ============================================================ */
 @layer components {
+
+  /* Layout */
   .container-page {
-    @apply mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 1360px;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
+  @media (min-width: 640px) { .container-page { padding-left: 1.5rem; padding-right: 1.5rem; } }
+  @media (min-width: 1024px) { .container-page { padding-left: 2rem; padding-right: 2rem; } }
 
   .eyebrow {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #D97706;
+    color: var(--accent);
   }
 
+  /* Primary Button */
   .btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background-color: #111827;
-    color: #FFFFFF;
+    background-color: var(--brand);
+    color: var(--bg);
     padding: 0.7rem 1.4rem;
     border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 600;
     transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
   }
   .btn-primary:hover {
-    background-color: #1F2937;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    background-color: var(--brand-hover);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
   }
-  .btn-primary:active {
-    transform: scale(0.97);
-  }
-  .btn-primary:disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
 
+  /* Secondary Button */
   .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border: 1px solid #E5E7EB;
-    background-color: #FFFFFF;
-    color: #111827;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--ink);
     padding: 0.7rem 1.4rem;
     border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 600;
     transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: pointer;
+    text-decoration: none;
   }
-  .btn-secondary:hover {
-    border-color: #111827;
-    background-color: #F9FAFB;
-  }
-  .btn-secondary:active {
-    transform: scale(0.97);
-  }
+  .btn-secondary:hover { border-color: var(--ink); background-color: var(--bg-subtle); }
+  .btn-secondary:active { transform: scale(0.97); }
 
+  /* Icon Button */
   .btn-icon {
     display: flex;
     align-items: center;
@@ -96,55 +167,58 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 9999px;
-    color: #4B5563;
+    color: var(--ink-muted);
     background-color: transparent;
+    border: none;
+    cursor: pointer;
     transition: all 0.2s;
   }
-  .btn-icon:hover {
-    color: #111827;
-    background-color: #F3F4F6;
-  }
+  .btn-icon:hover { color: var(--ink); background-color: var(--bg-raised); }
 
+  /* Input Field */
   .input-field {
     width: 100%;
     border-radius: 0.75rem;
-    border: 1px solid #E5E7EB;
-    background-color: #F9FAFB;
+    border: 1px solid var(--border);
+    background-color: var(--bg-subtle);
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
-    color: #111827;
+    color: var(--ink);
     outline: none;
     transition: all 0.2s;
   }
-  .input-field::placeholder {
-    color: #9CA3AF;
-  }
+  .input-field::placeholder { color: var(--ink-subtle); }
   .input-field:focus {
-    border-color: #111827;
-    background-color: #FFFFFF;
-    box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
+    border-color: var(--ink);
+    background-color: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-bg);
   }
 
+  /* Card Surface */
   .card-surface {
     border-radius: 1rem;
-    border: 1px solid #E5E7EB;
-    background-color: #FFFFFF;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    box-shadow: var(--shadow-md);
   }
 
+  /* Product Card */
   .card-product {
     border-radius: 1rem;
-    background-color: #FFFFFF;
-    border: 1px solid #F3F4F6;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
     overflow: hidden;
     transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    text-decoration: none;
+    display: block;
   }
   .card-product:hover {
-    border-color: #E5E7EB;
-    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.08);
+    border-color: var(--border-dark);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-3px);
   }
 
+  /* Badges */
   .badge {
     display: inline-flex;
     align-items: center;
@@ -157,35 +231,102 @@
     letter-spacing: 0.04em;
   }
   .badge-accent {
-    background-color: #FEF3C7;
-    color: #92400E;
-    border: 1px solid #FDE68A;
+    background-color: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent-bg);
   }
   .badge-success {
-    background-color: #DCFCE7;
-    color: #166534;
-    border: 1px solid #BBF7D0;
+    background-color: var(--green-bg);
+    color: var(--green);
+    border: 1px solid var(--green-bg);
   }
   .badge-warning {
-    background-color: #FEF3C7;
-    color: #92400E;
-    border: 1px solid #FDE68A;
+    background-color: var(--accent-bg);
+    color: var(--accent);
   }
   .badge-dark {
-    background-color: #111827;
-    color: #FFFFFF;
+    background-color: var(--ink);
+    color: var(--bg);
+  }
+  .badge-error {
+    background-color: var(--red-bg);
+    color: var(--red);
   }
 
+  /* Nav Link */
   .nav-link {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #4B5563;
+    color: var(--ink-muted);
     transition: color 0.15s;
+    text-decoration: none;
   }
-  .nav-link:hover {
-    color: #111827;
+  .nav-link:hover { color: var(--ink); }
+
+  /* Page Section Background */
+  .section-subtle {
+    background-color: var(--bg-subtle);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
+
+  /* Divider */
+  .divider {
+    border-top: 1px solid var(--border);
+  }
+
+  /* Shadow helpers */
+  .shadow-soft { box-shadow: var(--shadow-sm); }
+  .shadow-card { box-shadow: var(--shadow-md); }
+  .shadow-lift { box-shadow: var(--shadow-lg); }
 }
 
+/* ============================================================
+   TAILWIND DARK: OVERRIDES  â€” for inline utility classes
+   ============================================================ */
+
+/* Background */
+html.dark .dark\:bg-auto { background-color: var(--bg); }
+
+/* Scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Smooth transition for theme switch */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+/* But NOT transitions on animations / transforms */
+img, video, svg { transition: none; }
+
+/* ============================================================
+   PAGE-SPECIFIC OVERRIDES  (using CSS vars)
+   ============================================================ */
+
+/* Filter sidebar */
+.filter-sidebar-label { color: var(--ink-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* Product card text colours */
+.product-brand { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.product-title { color: var(--ink); font-size: 0.875rem; font-weight: 600; }
+.product-price { color: var(--ink); font-size: 0.875rem; font-weight: 700; }
+.product-price-old { color: var(--ink-subtle); font-size: 0.75rem; text-decoration: line-through; }
+
+/* Table rows */
+html.dark table { background-color: var(--surface); }
+html.dark th { background-color: var(--bg-raised); color: var(--ink-muted); }
+html.dark td { border-color: var(--border); color: var(--ink); }
+html.dark tr:hover td { background-color: var(--bg-raised); }
+
+/* Select dropdown */
+html.dark select {
+  background-color: var(--surface);
+  color: var(--ink);
+  border-color: var(--border);
+}
+html.dark option {
+  background-color: var(--surface);
+  color: var(--ink);
+}
