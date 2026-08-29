@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Search, ShoppingBag, Heart, User, Menu, X,
   ChevronDown, LogOut, LayoutDashboard, Settings,
-  Tag, SunMedium, MoonStar
+  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart
 } from "lucide-react";
 import { toggleMobileMenu, closeMobileMenu, toggleTheme } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
@@ -28,6 +28,8 @@ const Navbar = () => {
   const { isMobileMenuOpen, theme } = useSelector((s) => s.ui);
   const { totalItems } = useSelector((s) => s.cart);
   const { isAuthenticated, user } = useSelector((s) => s.auth);
+
+  const isAdmin = isAuthenticated && user?.role === "admin";
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -107,60 +109,89 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
-            <Link
-              to="/?sort=popular"
-              className="hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              Featured Products
-            </Link>
+            {isAdmin ? (
+              /* Admin Navigation Links */
+              <>
+                <Link
+                  to="/admin/categories"
+                  className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors"
+                >
+                  <FolderPlus size={16} /> Manage Categories
+                </Link>
+                <Link
+                  to="/admin/products"
+                  className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <PackagePlus size={16} /> Manage Products
+                </Link>
+                <Link
+                  to="/admin/orders"
+                  className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <ShoppingCart size={16} /> Orders
+                </Link>
+                <Link
+                  to="/admin"
+                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </>
+            ) : (
+              /* Regular Customer Navigation Links */
+              <>
+                <Link
+                  to="/?sort=popular"
+                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  Featured Products
+                </Link>
 
-            {/* Categories Dropdown */}
-            <div className="relative" ref={catRef}>
-              <button
-                onClick={() => setCatMenuOpen((v) => !v)}
-                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <span>Categories</span>
-                <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? "rotate-180 text-gray-900 dark:text-white" : "text-gray-400"}`} />
-              </button>
-
-              {catMenuOpen && (
-                <div className="absolute top-full left-0 mt-3 w-56 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2 shadow-card z-50">
-                  <Link
-                    to="/"
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                {/* Categories Dropdown */}
+                <div className="relative" ref={catRef}>
+                  <button
+                    onClick={() => setCatMenuOpen((v) => !v)}
+                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
-                    <span>All Categories</span>
-                    <Tag size={13} className="text-amber-600" />
-                  </Link>
-                  <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-                  {categories.length > 0 ? (
-                    categories.map((c) => (
+                    <span>Categories</span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? "rotate-180 text-gray-900 dark:text-white" : "text-gray-400"}`} />
+                  </button>
+
+                  {catMenuOpen && (
+                    <div className="absolute top-full left-0 mt-3 w-56 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2 shadow-card z-50">
                       <Link
-                        key={c._id}
-                        to={`/?category=${c._id}`}
-                        className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        to="/"
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
-                        {c.name}
+                        <span>All Categories</span>
+                        <Tag size={13} className="text-amber-600" />
                       </Link>
-                    ))
-                  ) : (
-                    <>
-                      <Link to="/?category=equipment" className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Gym & Fitness</Link>
-                      <Link to="/?category=spiritual" className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">God Idols & Decor</Link>
-                      <Link to="/?category=accessories" className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Accessories</Link>
-                    </>
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                      {categories.length > 0 ? (
+                        categories.map((c) => (
+                          <Link
+                            key={c._id}
+                            to={`/?category=${c._id}`}
+                            className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            {c.name}
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-400">No categories added yet</div>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            <Link
-              to="/"
-              className="hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              All Products
-            </Link>
+                <Link
+                  to="/"
+                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  All Products
+                </Link>
+              </>
+            )}
           </nav>
         </div>
 
@@ -176,28 +207,31 @@ const Navbar = () => {
             <Search size={19} />
           </button>
 
-          {/* Cart with count badge */}
-          <button
-            onClick={() => dispatch(openMiniCart())}
-            className="btn-icon relative"
-            aria-label="Cart"
-          >
-            <ShoppingBag size={19} />
-            {totalItems > 0 && (
-              <span className="absolute 1 top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-black dark:bg-amber-500 text-[10px] font-bold text-white dark:text-black shadow-soft">
-                {totalItems > 9 ? "9+" : totalItems}
-              </span>
-            )}
-          </button>
+          {/* Cart & Wishlist â€” ONLY shown for non-admin users */}
+          {!isAdmin && (
+            <>
+              <button
+                onClick={() => dispatch(openMiniCart())}
+                className="btn-icon relative"
+                aria-label="Cart"
+              >
+                <ShoppingBag size={19} />
+                {totalItems > 0 && (
+                  <span className="absolute top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-black dark:bg-amber-500 text-[10px] font-bold text-white dark:text-black shadow-soft">
+                    {totalItems > 9 ? "9+" : totalItems}
+                  </span>
+                )}
+              </button>
 
-          {/* Wishlist */}
-          <Link
-            to={isAuthenticated ? "/dashboard/wishlist" : "/login"}
-            className="btn-icon hidden sm:flex"
-            aria-label="Wishlist"
-          >
-            <Heart size={19} />
-          </Link>
+              <Link
+                to={isAuthenticated ? "/dashboard/wishlist" : "/login"}
+                className="btn-icon hidden sm:flex"
+                aria-label="Wishlist"
+              >
+                <Heart size={19} />
+              </Link>
+            </>
+          )}
 
           {/* Dark / Light Mode Toggle Button */}
           <button
@@ -233,20 +267,32 @@ const Navbar = () => {
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                     </div>
                     <div className="py-1 space-y-0.5 text-xs">
-                      {user?.role === "admin" && (
-                        <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-50 dark:hover:bg-gray-700">
-                          <Settings size={14} /> Admin Dashboard
-                        </Link>
+                      {isAdmin && (
+                        <>
+                          <Link to="/admin/categories" className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-50 dark:hover:bg-gray-700">
+                            <FolderPlus size={14} /> Manage Categories
+                          </Link>
+                          <Link to="/admin/products" className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-50 dark:hover:bg-gray-700">
+                            <PackagePlus size={14} /> Manage Products
+                          </Link>
+                          <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <Settings size={14} /> Admin Overview
+                          </Link>
+                        </>
                       )}
-                      <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <LayoutDashboard size={14} /> My Dashboard
-                      </Link>
-                      <Link to="/dashboard/orders" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <Tag size={14} /> My Orders
-                      </Link>
-                      <Link to="/dashboard/wishlist" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <Heart size={14} /> Wishlist
-                      </Link>
+                      {!isAdmin && (
+                        <>
+                          <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <LayoutDashboard size={14} /> My Dashboard
+                          </Link>
+                          <Link to="/dashboard/orders" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <Tag size={14} /> My Orders
+                          </Link>
+                          <Link to="/dashboard/wishlist" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <Heart size={14} /> Wishlist
+                          </Link>
+                        </>
+                      )}
                     </div>
                     <div className="pt-1 border-t border-gray-100 dark:border-gray-700">
                       <Link to="/logout" className="flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs">
@@ -300,37 +346,29 @@ const Navbar = () => {
           </form>
 
           <nav className="flex flex-col space-y-1">
-            <Link to="/?sort=popular" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-              Featured Products
-            </Link>
-            <Link to="/" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-              All Products
-            </Link>
-            <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-              <p className="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Categories</p>
-              {categories.map((c) => (
-                <Link
-                  key={c._id}
-                  to={`/?category=${c._id}`}
-                  className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  {c.name}
+            {isAdmin ? (
+              <>
+                <Link to="/admin/categories" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  Manage Categories
                 </Link>
-              ))}
-            </div>
-          </nav>
-
-          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2">
-            {isAuthenticated ? (
-              <Link to={user?.role === "admin" ? "/admin" : "/dashboard"} className="btn-secondary w-full text-xs">
-                {user?.role === "admin" ? "Admin Dashboard" : "My Dashboard"}
-              </Link>
+                <Link to="/admin/products" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  Manage Products
+                </Link>
+                <Link to="/admin/orders" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  Manage Orders
+                </Link>
+              </>
             ) : (
-              <Link to="/login" className="btn-primary w-full text-xs">
-                Login / Register
-              </Link>
+              <>
+                <Link to="/?sort=popular" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  Featured Products
+                </Link>
+                <Link to="/" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  All Products
+                </Link>
+              </>
             )}
-          </div>
+          </nav>
         </div>
       )}
     </header>
