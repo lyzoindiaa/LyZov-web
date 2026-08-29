@@ -6,10 +6,10 @@ import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
 
 const sortOptions = [
-  { label: "Newest", value: "newest" },
+  { label: "Recommended", value: "popular" },
+  { label: "Newest Arrivals", value: "newest" },
   { label: "Price: Low to High", value: "price-asc" },
   { label: "Price: High to Low", value: "price-desc" },
-  { label: "Most Popular", value: "popular" },
   { label: "Top Rated", value: "rating-desc" },
 ];
 
@@ -27,8 +27,8 @@ const ShopPage = () => {
     setIsLoading(true);
     try {
       const res = await productService.getProducts({ ...filters, limit: 12 });
-      setProducts(res.data);
-      setMeta(res.meta);
+      setProducts(res.data || []);
+      setMeta(res.meta || { page: 1, totalPages: 1, total: res.data?.length || 0 });
     } catch (err) {
       setProducts([]);
     } finally {
@@ -56,27 +56,54 @@ const ShopPage = () => {
   };
 
   return (
-    <div className="container-page py-10 lg:py-14">
-      <div className="mb-8 flex flex-col gap-2">
-        <span className="eyebrow">{meta.total} Results</span>
-        <h1 className="font-display text-4xl tracking-tightest">
-          {filters.search ? `Results for "${filters.search}"` : "Shop All"}
+    <div className="container-page py-8 lg:py-12">
+      {/* Header */}
+      <div className="mb-6 flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+          {filters.search ? `Results for "${filters.search}"` : "Featured Products"}
         </h1>
+        <p className="text-xs text-gray-500">{meta.total} products available</p>
       </div>
 
-      <div className="mb-6 flex items-center justify-between gap-4 border-b border-hairline pb-6 dark:border-hairline-dark">
+      {/* Control Bar */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="btn-secondary !py-2.5 !px-5 lg:hidden"
+          className="btn-secondary !py-2 !px-4 text-xs lg:hidden"
         >
-          <SlidersHorizontal size={15} /> Filters
+          <SlidersHorizontal size={14} /> Filter
         </button>
+
+        {/* Active Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          {filters.category && (
+            <span className="badge badge-accent flex items-center gap-1 py-1 px-2.5">
+              Category
+              <X size={11} className="cursor-pointer" onClick={() => updateFilters({ category: undefined })} />
+            </span>
+          )}
+          {filters.search && (
+            <span className="badge badge-accent flex items-center gap-1 py-1 px-2.5">
+              "{filters.search}"
+              <X size={11} className="cursor-pointer" onClick={() => updateFilters({ search: undefined })} />
+            </span>
+          )}
+          {(filters.category || filters.search || filters.minPrice) && (
+            <button
+              onClick={clearFilters}
+              className="text-xs font-semibold text-amber-700 hover:underline"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+
         <div className="ml-auto flex items-center gap-2">
-          <span className="hidden text-xs text-stone sm:inline">Sort by</span>
+          <span className="hidden text-xs text-gray-500 sm:inline">Sort By :</span>
           <select
-            value={filters.sort || "newest"}
+            value={filters.sort || "popular"}
             onChange={(e) => updateFilters({ sort: e.target.value })}
-            className="rounded-full border border-ink/12 bg-transparent px-4 py-2.5 text-sm outline-none dark:border-cream/15"
+            className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-gray-900 cursor-pointer shadow-soft"
           >
             {sortOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -87,18 +114,20 @@ const ShopPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
         <div className="hidden lg:block">
           <FilterSidebar filters={filters} onChange={updateFilters} onClear={clearFilters} />
         </div>
 
+        {/* Mobile Filter Drawer */}
         {isFilterOpen && (
           <div className="fixed inset-0 z-[95] lg:hidden">
-            <div className="absolute inset-0 bg-ink/40" onClick={() => setIsFilterOpen(false)} />
-            <div className="absolute left-0 top-0 h-full w-full max-w-xs overflow-y-auto bg-ivory p-6 dark:bg-charcoal">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setIsFilterOpen(false)} />
+            <div className="absolute left-0 top-0 h-full w-full max-w-xs overflow-y-auto bg-white p-5 border-r border-gray-200">
               <button
                 onClick={() => setIsFilterOpen(false)}
-                className="mb-6 ml-auto flex rounded-full p-2 hover:bg-ink/5"
+                className="mb-4 ml-auto flex rounded-full p-1.5 text-gray-500 hover:bg-gray-100"
               >
                 <X size={18} />
               </button>
@@ -108,14 +137,14 @@ const ShopPage = () => {
         )}
 
         <div>
-          <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your filters" />
+          <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" />
 
           {meta.totalPages > 1 && (
-            <div className="mt-14 flex items-center justify-center gap-2">
+            <div className="mt-12 flex items-center justify-center gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => goToPage(page - 1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink/10 disabled:opacity-30 dark:border-cream/15"
+                className="btn-icon disabled:opacity-30 border border-gray-200"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -123,10 +152,10 @@ const ShopPage = () => {
                 <button
                   key={i}
                   onClick={() => goToPage(i + 1)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm transition-colors ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
                     page === i + 1
-                      ? "bg-ink text-ivory dark:bg-cream dark:text-ink"
-                      : "border border-ink/10 hover:bg-ink/5 dark:border-cream/15"
+                      ? "bg-black text-white"
+                      : "border border-gray-200 hover:bg-gray-50 text-gray-700"
                   }`}
                 >
                   {i + 1}
@@ -135,7 +164,7 @@ const ShopPage = () => {
               <button
                 disabled={page >= meta.totalPages}
                 onClick={() => goToPage(page + 1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink/10 disabled:opacity-30 dark:border-cream/15"
+                className="btn-icon disabled:opacity-30 border border-gray-200"
               >
                 <ChevronRight size={16} />
               </button>

@@ -5,69 +5,58 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Modern LyZov Store Palette
-        primary: "#0B0B0C",
-        surface: "#141416",
-        raised:  "#1D1D20",
-        card:    "#18181B",
+        // Clean Premium Light Store Palette
+        primary: "#FFFFFF",
+        surface: "#F9FAFB",
+        raised:  "#F3F4F6",
+        card:    "#FFFFFF",
+        ink: {
+          DEFAULT: "#111827",
+          light:   "#374151",
+          muted:   "#6B7280",
+          subtle:  "#9CA3AF",
+        },
         accent: {
-          DEFAULT: "#FF5722",
-          hover:   "#E64A19",
-          light:   "#FF7043",
-          muted:   "rgba(255,87,34,0.12)",
+          DEFAULT: "#D97706", // Amber Gold / Luxury Warm Accent
+          hover:   "#B45309",
+          light:   "#FEF3C7",
+          dark:    "#92400E",
         },
-        border:  "#26262B",
-        "border-light": "#323238",
-        // Backward compatibility
-        ivory:   "#0B0B0C",
-        ink:     "#FFFFFF",
-        charcoal:"#0B0B0C",
-        stone:   "#8E8E93",
-        hairline:"#26262B",
-        "hairline-dark": "#26262B",
+        brand: {
+          DEFAULT: "#111827", // Dark Navy-Black for primary CTAs
+          hover:   "#1F2937",
+        },
+        border: {
+          DEFAULT: "#E5E7EB",
+          light:   "#F3F4F6",
+          dark:    "#D1D5DB",
+        },
+        // Fallbacks
+        ivory:   "#FFFFFF",
+        charcoal:"#111827",
+        stone:   "#6B7280",
+        hairline:"#E5E7EB",
+        "hairline-dark": "#E5E7EB",
         gold: {
-          DEFAULT: "#FF5722",
-          light:   "#FF7043",
-          dark:    "#E64A19",
+          DEFAULT: "#D97706",
+          light:   "#FEF3C7",
+          dark:    "#92400E",
         },
-        cream:   "#F2F2F7",
+        cream:   "#F9FAFB",
       },
       fontFamily: {
+        sans: ["'Inter'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "sans-serif"],
         display: ["'Inter'", "-apple-system", "sans-serif"],
-        sans:    ["'Inter'", "-apple-system", "sans-serif"],
-      },
-      letterSpacing: {
-        tightest:  "-0.04em",
-        widest2:   "0.15em",
-        hero:      "-0.03em",
       },
       boxShadow: {
-        soft:   "0 2px 16px rgba(0,0,0,0.3)",
-        card:   "0 4px 24px rgba(0,0,0,0.45)",
-        lift:   "0 12px 36px rgba(0,0,0,0.6)",
-        accent: "0 0 20px rgba(255,87,34,0.3)",
+        soft:   "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+        card:   "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+        lift:   "0 10px 30px -4px rgba(0, 0, 0, 0.08)",
+        nav:    "0 1px 12px 0 rgba(0, 0, 0, 0.04)",
       },
       borderRadius: {
         xl2: "1rem",
-      },
-      animation: {
-        "fade-up":  "fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both",
-        "fade-in":  "fadeIn 0.3s ease both",
-        marquee:    "marquee 26s linear infinite",
-      },
-      keyframes: {
-        fadeUp: {
-          "0%":   { opacity: 0, transform: "translateY(16px)" },
-          "100%": { opacity: 1, transform: "translateY(0)" },
-        },
-        fadeIn: {
-          "0%":   { opacity: 0 },
-          "100%": { opacity: 1 },
-        },
-        marquee: {
-          "0%":   { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
-        },
+        "3xl": "1.5rem",
       },
     },
   },

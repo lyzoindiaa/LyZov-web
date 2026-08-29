@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { categoryService, brandService } from "../../services/productService";
+import { Filter, RotateCcw, Star } from "lucide-react";
 
 const ratingOptions = [4, 3, 2, 1];
 
@@ -12,8 +13,8 @@ const FilterSidebar = ({ filters, onChange, onClear }) => {
   });
 
   useEffect(() => {
-    categoryService.getCategories().then((res) => setCategories(res.data));
-    brandService.getBrands().then((res) => setBrands(res.data));
+    categoryService.getCategories().then((res) => setCategories(res.data || [])).catch(() => {});
+    brandService.getBrands().then((res) => setBrands(res.data || [])).catch(() => {});
   }, []);
 
   const applyPriceRange = () => {
@@ -21,25 +22,41 @@ const FilterSidebar = ({ filters, onChange, onClear }) => {
   };
 
   return (
-    <aside className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <h3 className="font-display text-lg">Filters</h3>
-        <button onClick={onClear} className="text-xs text-stone underline-offset-2 hover:underline">
-          Clear All
+    <aside className="rounded-2xl border border-gray-200 bg-white p-5 shadow-soft flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
+        <h3 className="text-sm font-bold tracking-tight text-gray-900 flex items-center gap-1.5">
+          <Filter size={15} className="text-amber-600" /> Filters
+        </h3>
+        <button
+          onClick={onClear}
+          className="text-xs font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1"
+        >
+          <RotateCcw size={11} /> Clear All
         </button>
       </div>
 
+      {/* Category Filter */}
       <div>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone">Category</h4>
+        <h4 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-gray-500">Categories</h4>
         <div className="flex flex-col gap-2">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-700 hover:text-gray-900">
+            <input
+              type="radio"
+              name="category"
+              checked={!filters.category}
+              onChange={() => onChange({ category: undefined })}
+              className="accent-black"
+            />
+            All Categories
+          </label>
           {categories.map((cat) => (
-            <label key={cat._id} className="flex cursor-pointer items-center gap-2.5 text-sm">
+            <label key={cat._id} className="flex cursor-pointer items-center gap-2 text-xs text-gray-700 hover:text-gray-900">
               <input
                 type="radio"
                 name="category"
                 checked={filters.category === cat._id}
                 onChange={() => onChange({ category: cat._id })}
-                className="accent-gold"
+                className="accent-black"
               />
               {cat.name}
             </label>
@@ -47,60 +64,49 @@ const FilterSidebar = ({ filters, onChange, onClear }) => {
         </div>
       </div>
 
-      <div>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone">Brand</h4>
-        <div className="flex flex-col gap-2">
-          {brands.map((brand) => (
-            <label key={brand._id} className="flex cursor-pointer items-center gap-2.5 text-sm">
-              <input
-                type="radio"
-                name="brand"
-                checked={filters.brand === brand._id}
-                onChange={() => onChange({ brand: brand._id })}
-                className="accent-gold"
-              />
-              {brand.name}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone">Price Range</h4>
+      {/* Price Range */}
+      <div className="border-t border-gray-100 pt-4">
+        <h4 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-gray-500">Price Range (â‚¹)</h4>
         <div className="flex items-center gap-2">
           <input
             type="number"
-            placeholder="Min"
+            placeholder="Min â‚¹"
             value={priceRange.min}
             onChange={(e) => setPriceRange((p) => ({ ...p, min: e.target.value }))}
             onBlur={applyPriceRange}
-            className="input-field !py-2 text-sm"
+            className="input-field !py-2 text-xs"
           />
-          <span className="text-stone">–</span>
+          <span className="text-gray-400">-</span>
           <input
             type="number"
-            placeholder="Max"
+            placeholder="Max â‚¹"
             value={priceRange.max}
             onChange={(e) => setPriceRange((p) => ({ ...p, max: e.target.value }))}
             onBlur={applyPriceRange}
-            className="input-field !py-2 text-sm"
+            className="input-field !py-2 text-xs"
           />
         </div>
       </div>
 
-      <div>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone">Minimum Rating</h4>
+      {/* Minimum Rating */}
+      <div className="border-t border-gray-100 pt-4">
+        <h4 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-gray-500">Customer Rating</h4>
         <div className="flex flex-col gap-2">
           {ratingOptions.map((r) => (
-            <label key={r} className="flex cursor-pointer items-center gap-2.5 text-sm">
+            <label key={r} className="flex cursor-pointer items-center gap-2 text-xs text-gray-700 hover:text-gray-900">
               <input
                 type="radio"
                 name="rating"
                 checked={String(filters.minRating) === String(r)}
                 onChange={() => onChange({ minRating: r })}
-                className="accent-gold"
+                className="accent-black"
               />
-              {r}+ Stars
+              <span className="flex items-center gap-0.5 text-amber-500">
+                {Array.from({ length: r }).map((_, i) => (
+                  <Star key={i} size={12} fill="currentColor" />
+                ))}
+              </span>
+              <span className="text-gray-500">{r}+ Stars</span>
             </label>
           ))}
         </div>
