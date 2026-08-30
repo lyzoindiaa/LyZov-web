@@ -2,13 +2,26 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, bootstrapped } = useAuth();
+  const { isAuthenticated, isAdmin, bootstrapped } = useAuth();
   const location = useLocation();
 
-  if (!bootstrapped) return null;
+  if (!bootstrapped) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", color: "var(--ink)" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "9999px", border: "2px solid var(--border)", borderTopColor: "var(--accent)" }} />
+          <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

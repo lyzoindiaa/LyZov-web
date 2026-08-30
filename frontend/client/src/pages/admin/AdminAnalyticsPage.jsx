@@ -28,10 +28,10 @@ const statusTones = {
 };
 
 const statMeta = [
-  { key: "revenue",  cls: "stat-revenue",  icon: DollarSign },
-  { key: "orders",   cls: "stat-orders",   icon: ShoppingBag },
+  { key: "revenue", cls: "stat-revenue", icon: DollarSign },
+  { key: "orders", cls: "stat-orders", icon: ShoppingBag },
   { key: "products", cls: "stat-products", icon: Package },
-  { key: "users",    cls: "stat-users",    icon: Users },
+  { key: "users", cls: "stat-users", icon: Users },
 ];
 
 const StatCard = ({ icon: Icon, label, value, colorClass }) => (
@@ -52,14 +52,33 @@ const AdminAnalyticsPage = () => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    (async()=>{
-      const res= await adminService.getDashboardStats();
-      console.log('res analytic: ',res);
-      setStats(res)
-
+    (async () => {
+      try {
+        const res = await adminService.getDashboardStats();
+        const payload = res?.data ?? res ?? {};
+        setStats({
+          totalRevenue: payload.totalRevenue ?? 0,
+          totalOrders: payload.totalOrders ?? 0,
+          totalProducts: payload.totalProducts ?? 0,
+          totalUsers: payload.totalUsers ?? 0,
+          revenueByDay: Array.isArray(payload.revenueByDay) ? payload.revenueByDay : [],
+          ordersByStatus: Array.isArray(payload.ordersByStatus) ? payload.ordersByStatus : [],
+          recentOrders: Array.isArray(payload.recentOrders) ? payload.recentOrders : [],
+        });
+      } catch (error) {
+        setStats({
+          totalRevenue: 0,
+          totalOrders: 0,
+          totalProducts: 0,
+          totalUsers: 0,
+          revenueByDay: [],
+          ordersByStatus: [],
+          recentOrders: [],
+        });
+      }
     })();
   }, []);
-// console.log(stats) // testing
+
   if (!stats) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -71,11 +90,11 @@ const AdminAnalyticsPage = () => {
   }
 
   const revenueChartData = {
-    labels: stats.revenueByDay.map((d) => d._id),
+    labels: (stats.revenueByDay || []).map((d) => d._id),
     datasets: [
       {
         label: "Revenue",
-        data: stats.revenueByDay.map((d) => d.revenue),
+        data: (stats.revenueByDay || []).map((d) => d.revenue),
         borderColor: "#B08D57",
         backgroundColor: "rgba(176,141,87,0.12)",
         fill: true,
@@ -85,10 +104,10 @@ const AdminAnalyticsPage = () => {
   };
 
   const statusChartData = {
-    labels: stats.ordersByStatus.map((s) => s._id),
+    labels: (stats.ordersByStatus || []).map((s) => s._id),
     datasets: [
       {
-        data: stats.ordersByStatus.map((s) => s.count),
+        data: (stats.ordersByStatus || []).map((s) => s.count),
         backgroundColor: ["#B08D57", "#0B0B0A", "#8A8580", "#C9A66B", "#E8E5DE", "#6B6560"],
         borderWidth: 0,
       },
@@ -103,10 +122,10 @@ const AdminAnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={DollarSign} label="Total Revenue"   value={formatCurrency(stats.totalRevenue)} colorClass="stat-revenue" />
-        <StatCard icon={ShoppingBag} label="Total Orders"   value={stats.totalOrders}                  colorClass="stat-orders" />
-        <StatCard icon={Package}    label="Total Products"  value={stats.totalProducts}                colorClass="stat-products" />
-        <StatCard icon={Users}      label="Total Customers" value={stats.totalUsers}                   colorClass="stat-users" />
+        <StatCard icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} colorClass="stat-revenue" />
+        <StatCard icon={ShoppingBag} label="Total Orders" value={stats.totalOrders} colorClass="stat-orders" />
+        <StatCard icon={Package} label="Total Products" value={stats.totalProducts} colorClass="stat-products" />
+        <StatCard icon={Users} label="Total Customers" value={stats.totalUsers} colorClass="stat-users" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
@@ -130,20 +149,24 @@ const AdminAnalyticsPage = () => {
       <div className="card-surface p-6">
         <h3 className="mb-4 font-display text-lg">Recent Orders</h3>
         <div className="flex flex-col divide-y divide-hairline dark:divide-hairline-dark">
-          {stats.recentOrders.map((order) => (
-            <div key={order._id} className="flex items-center justify-between py-3 text-sm">
-              <div>
-                <p className="font-medium">{order.orderNumber}</p>
-                <p className="text-xs text-stone">
-                  {order.user?.name} · {formatDate(order.createdAt)}
-                </p>
+          {(stats.recentOrders || []).length === 0 ? (
+            <p className="py-3 text-sm text-stone">No recent orders yet.</p>
+          ) : (
+            stats.recentOrders.map((order) => (
+              <div key={order._id} className="flex items-center justify-between py-3 text-sm">
+                <div>
+                  <p className="font-medium">{order.orderNumber || `Order #${String(order._id || "").slice(-6)}`}</p>
+                  <p className="text-xs text-stone">
+                    {order.user?.name || "Customer"} · {formatDate(order.createdAt)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge tone={statusTones[order.orderStatus] || "neutral"}>{order.orderStatus || "pending"}</Badge>
+                  <span className="font-semibold tabular-nums">{formatCurrency(order.totalPrice || 0)}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <Badge tone={statusTones[order.orderStatus]}>{order.orderStatus}</Badge>
-                <span className="font-semibold tabular-nums">{formatCurrency(order.totalPrice)}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

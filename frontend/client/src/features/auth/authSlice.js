@@ -64,6 +64,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.bootstrapped = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
@@ -77,6 +78,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.bootstrapped = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
@@ -87,6 +89,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.status = "idle";
+        state.bootstrapped = true;
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.status = "loading";

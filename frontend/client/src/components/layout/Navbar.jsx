@@ -11,6 +11,7 @@ import { openMiniCart } from "../../features/cart/cartSlice";
 import { logoutUser } from "../../features/auth/authSlice";
 import { categoryService } from "../../services/categoryService";
 import ThemeToggle from "../ui/ThemeToggle";
+import { toast } from "react-toastify";
 
 /* ── Helper sub-components ─────────────────────────────────── */
 const DropItem = ({ to, icon: Icon, children, accent }) => (
@@ -113,15 +114,25 @@ const Navbar = () => {
     }
   };
 
+  const handleCartClick = () => {
+    if (!isAuthenticated) {
+      toast.info("Please sign in to access your shopping bag");
+      navigate("/login", { state: { from: { pathname: "/cart" } } });
+      return;
+    }
+    dispatch(openMiniCart());
+  };
+
   return (
     <header
       style={{
         position: "sticky", top: 0, zIndex: 50, width: "100%",
-        backgroundColor: scrolled ? "rgba(var(--bg-rgb, 255,255,255), 0.96)" : "var(--bg)",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
+        backgroundColor: scrolled ? "var(--glass-bg)" : "var(--bg)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid var(--border)",
         boxShadow: scrolled ? "var(--shadow-sm)" : "none",
-        transition: "all 0.25s",
+        transition: "background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
       }}
     >
       <div className="container-page flex h-18 items-center justify-between gap-6 py-3">
@@ -137,16 +148,27 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black dark:bg-white text-white dark:text-black font-black text-lg">
-              L<span className="text-amber-500">Z</span>
+          <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: "none" }}>
+            <div
+              style={{
+                width: "2.5rem", height: "2.5rem",
+                borderRadius: "0.75rem",
+                backgroundColor: "var(--ink)",
+                color: "var(--bg)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 900, fontSize: "1rem",
+                flexShrink: 0,
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              L<span style={{ color: "#F59E0B" }}>Z</span>
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
               LyZov
             </span>
           </Link>
 
-          <span className="hidden sm:inline text-gray-300 dark:text-gray-700">|</span>
+          <span style={{ color: "var(--border)", fontSize: "1.25rem", userSelect: "none" }} className="hidden sm:inline">|</span>
 
           {/* Nav Links */}
           <nav className="hidden lg:flex items-center gap-6">
@@ -165,6 +187,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                <Link to="/" className="nav-link-animated">Home</Link>
                 <Link to="/?sort=popular" className="nav-link-animated">Featured</Link>
 
                 {/* Categories Dropdown */}
@@ -179,7 +202,7 @@ const Navbar = () => {
 
                   {catMenuOpen && (
                     <div style={{ position: "absolute", top: "calc(100% + 0.75rem)", left: 0, width: "14rem", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.5rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
-                      <Link to="/" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", textDecoration: "none", transition: "background 0.15s" }}
+                      <Link to="/shop" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", textDecoration: "none", transition: "background 0.15s" }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-raised)"}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
                       >
@@ -189,7 +212,7 @@ const Navbar = () => {
                       <div style={{ borderTop: "1px solid var(--border)", margin: "0.25rem 0" }} />
                       {categories.length > 0 ? (
                         categories.map((c) => (
-                          <Link key={c._id} to={`/?category=${c._id}`}
+                          <Link key={c._id} to={`/shop?category=${c._id}`}
                             style={{ display: "block", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none", transition: "all 0.15s" }}
                             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-raised)"; e.currentTarget.style.color = "var(--ink)"; }}
                             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ""; e.currentTarget.style.color = "var(--ink-muted)"; }}
@@ -204,7 +227,28 @@ const Navbar = () => {
                   )}
                 </div>
 
-                <Link to="/" className="nav-link-animated">All Products</Link>
+                <Link to="/shop" className="nav-link-animated">All Products</Link>
+
+                {/* Shop CTA */}
+                <Link
+                  to="/shop"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                    padding: "0.45rem 1rem",
+                    background: "var(--accent)",
+                    color: "#fff",
+                    borderRadius: "9999px",
+                    fontSize: "0.8125rem",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
+                    boxShadow: "var(--shadow-xs)",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "scale(1.04)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.transform = ""; }}
+                >
+                  <ShoppingBag size={13} /> Shop
+                </Link>
               </>
             )}
           </nav>
@@ -222,11 +266,12 @@ const Navbar = () => {
             <Search size={19} />
           </button>
 
-          {/* Cart & Wishlist â€” ONLY shown for non-admin users */}
+          {/* Cart & Wishlist — ONLY shown for non-admin users */}
           {!isAdmin && (
             <>
               <button
-                onClick={() => dispatch(openMiniCart())}
+                type="button"
+                onClick={handleCartClick}
                 className="btn-icon relative"
                 aria-label="Cart"
               >
@@ -257,11 +302,35 @@ const Navbar = () => {
               <>
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3.5 py-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200 hover:border-gray-300 transition-colors"
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    padding: "0.45rem 0.875rem 0.45rem 0.5rem",
+                    borderRadius: "9999px",
+                    border: "1.5px solid var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--ink)",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-hover)"; e.currentTarget.style.backgroundColor = "var(--bg-raised)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.backgroundColor = "var(--surface)"; }}
                 >
-                  <User size={15} className="text-amber-600" />
-                  <span className="hidden sm:inline max-w-[80px] truncate">{user?.name?.split(" ")[0]}</span>
-                  <ChevronDown size={12} className="text-gray-400" />
+                  <div
+                    style={{
+                      width: "1.75rem", height: "1.75rem",
+                      borderRadius: "9999px",
+                      background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "0.6875rem", fontWeight: 800, color: "#fff",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {user?.name?.[0]?.toUpperCase() || "U"}
+                  </div>
+                  <span className="hidden sm:inline" style={{ maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name?.split(" ")[0]}</span>
+                  <ChevronDown size={12} style={{ color: "var(--ink-subtle)", transition: "transform 0.2s", transform: userMenuOpen ? "rotate(180deg)" : "none" }} />
                 </button>
 
                 {userMenuOpen && (
@@ -296,8 +365,26 @@ const Navbar = () => {
                 )}
               </>
             ) : (
-              <Link to="/login" className="text-sm font-semibold text-gray-900 dark:text-white hover:text-amber-600 transition-colors px-2 py-1">
-                Login
+              <Link
+                to="/login"
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  textDecoration: "none",
+                  padding: "0.45rem 1rem",
+                  borderRadius: "9999px",
+                  border: "1.5px solid var(--border)",
+                  backgroundColor: "var(--surface)",
+                  transition: "all 0.2s",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.backgroundColor = "var(--bg-raised)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.backgroundColor = "var(--surface)"; }}
+              >
+                <User size={14} style={{ color: "var(--accent)" }} /> Login
               </Link>
             )}
           </div>
@@ -345,8 +432,9 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                <MobileNavLink to="/">Home Storefront</MobileNavLink>
                 <MobileNavLink to="/?sort=popular">Featured Products</MobileNavLink>
-                <MobileNavLink to="/">All Products</MobileNavLink>
+                <MobileNavLink to="/shop">All Products</MobileNavLink>
               </>
             )}
           </nav>
