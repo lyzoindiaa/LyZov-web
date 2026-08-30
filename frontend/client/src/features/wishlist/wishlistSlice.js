@@ -13,7 +13,9 @@ export const fetchWishlist = createAsyncThunk("wishlist/fetch", async (_, { reje
 
 export const toggleWishlistItem = createAsyncThunk(
   "wishlist/toggle",
-  async (productId, { getState, rejectWithValue }) => {
+  async (payload, { getState, rejectWithValue }) => {
+    const productId = payload.productId || payload;
+    const productData = payload.product || null;
     const { wishlist } = getState();
     const exists = wishlist.products.some((p) => p._id === productId);
     try {
@@ -24,7 +26,7 @@ export const toggleWishlistItem = createAsyncThunk(
       } else {
         await wishlistService.addToWishlist(productId);
         toast.success("Added to wishlist");
-        return { productId, action: "add" };
+        return { productId, action: "add", product: productData };
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update wishlist");
@@ -49,6 +51,9 @@ const wishlistSlice = createSlice({
       .addCase(toggleWishlistItem.fulfilled, (state, action) => {
         if (action.payload.action === "remove") {
           state.products = state.products.filter((p) => p._id !== action.payload.productId);
+        } else if (action.payload.action === "add") {
+          // Fetch the product details to add to wishlist
+          state.products.push(action.payload.product || { _id: action.payload.productId });
         }
       });
   },

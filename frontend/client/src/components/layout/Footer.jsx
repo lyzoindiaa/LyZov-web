@@ -36,7 +36,7 @@ const Footer = () => {
     <footer style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)" }}>
       <div className="container-page" style={{ paddingTop: "3rem", paddingBottom: "3rem" }}>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
-          
+
           {/* Brand column */}
           <div className="sm:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.625rem", textDecoration: "none" }}>
@@ -49,8 +49,13 @@ const Footer = () => {
               Your destination for workout equipment, handcrafted God idols, and curated lifestyle accessories. Delivered safely across India.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", paddingTop: "0.25rem" }}>
-              {[Instagram, Twitter, Linkedin, Youtube].map((Icon, i) => (
-                <a key={i} href="#" className="btn-icon" style={{ border: "1px solid var(--border)", width: "2rem", height: "2rem" }} aria-label="Social">
+              {[
+                { Icon: Instagram, url: "https://instagram.com/lyzov_store", label: "Instagram" },
+                { Icon: Twitter, url: "https://twitter.com/lyzov_store", label: "Twitter" },
+                { Icon: Linkedin, url: "https://linkedin.com/company/lyzov-store", label: "LinkedIn" },
+                { Icon: Youtube, url: "https://youtube.com/@lyzov_store", label: "YouTube" },
+              ].map(({ Icon, url, label }) => (
+                <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="btn-icon" style={{ border: "1px solid var(--border)", width: "2rem", height: "2rem" }} aria-label={label}>
                   <Icon size={14} />
                 </a>
               ))}

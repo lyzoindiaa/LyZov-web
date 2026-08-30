@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ClipboardList, HeartHandshake, UserCircle2, MapPinned, LogOut } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
+import { resetCartLocal } from "../../features/cart/cartSlice";
 
 const navItems = [
   { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
@@ -47,7 +48,10 @@ const DashboardLayout = () => {
           ))}
           <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden lg:block" />
           <button
-            onClick={() => dispatch(logoutUser())}
+            onClick={() => {
+              dispatch(logoutUser());
+              dispatch(resetCartLocal());
+            }}
             style={{
               display: "flex",
               alignItems: "center",

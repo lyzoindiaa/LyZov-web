@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authService } from "../../services/authService";
 import { setAccessToken } from "../../services/api";
+// Note: resetCartLocal is dispatched in the component when logout completes
 
 export const registerUser = createAsyncThunk("auth/register", async (payload, { rejectWithValue }) => {
   try {
@@ -84,6 +85,8 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
+        state.error = null;
+        state.status = "idle";
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.status = "loading";

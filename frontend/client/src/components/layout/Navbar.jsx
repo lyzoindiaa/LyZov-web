@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toggleMobileMenu, closeMobileMenu, toggleTheme } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
+import { logoutUser } from "../../features/auth/authSlice";
 import { categoryService } from "../../services/categoryService";
 import ThemeToggle from "../ui/ThemeToggle";
 
@@ -78,7 +79,7 @@ const Navbar = () => {
       .then((res) => {
         if (res?.data?.length > 0) setCategories(res.data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -124,7 +125,7 @@ const Navbar = () => {
       }}
     >
       <div className="container-page flex h-18 items-center justify-between gap-6 py-3">
-        
+
         {/* Left: Brand & Navigation */}
         <div className="flex items-center gap-6 sm:gap-8">
           <button
@@ -211,7 +212,7 @@ const Navbar = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          
+
           {/* Search Trigger */}
           <button
             onClick={() => setSearchOpen((v) => !v)}
@@ -284,12 +285,12 @@ const Navbar = () => {
                       </>
                     )}
                     <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.25rem", marginTop: "0.25rem" }}>
-                      <Link to="/logout" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--red)", textDecoration: "none", transition: "background 0.15s" }}
+                      <button onClick={() => dispatch(logoutUser())} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--red)", background: "none", border: "none", cursor: "pointer", transition: "background 0.15s", width: "100%", textAlign: "left" }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--red-bg)"}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
                       >
                         <LogOut size={13} /> Log Out
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}

@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
   const handleWishlistClick = (e) => {
     e.preventDefault();
     if (!isAuthenticated) { toast.info("Please login to save to wishlist"); return; }
-    dispatch(toggleWishlistItem(product._id));
+    dispatch(toggleWishlistItem({ productId: product._id, product }));
   };
 
   const handleQuickAdd = (e) => {
@@ -32,7 +32,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link to={`/shop/${product.slug || product._id}`} className="card-product group">
+    <Link to={`/product/${product.slug || product._id}`} className="card-product group">
 
       {/* Image Area */}
       <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--img-tile)" }}>
@@ -102,7 +102,7 @@ const ProductCard = ({ product }) => {
         {/* Star rating */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
           <div style={{ display: "flex", gap: "1px" }}>
-            {[1,2,3,4,5].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <Star
                 key={i}
                 size={10}

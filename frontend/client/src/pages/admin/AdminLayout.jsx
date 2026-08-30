@@ -16,15 +16,16 @@ import {
   X
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
+import { resetCartLocal } from "../../features/cart/cartSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
 import { useState } from "react";
 
 const navItems = [
-  { label: "Analytics", to: "/admin",            icon: BarChart3,    end: true },
-  { label: "Products",  to: "/admin/products",   icon: Boxes },
-  { label: "Categories",to: "/admin/categories", icon: Tags },
-  { label: "Brands",    to: "/admin/brands",     icon: Award },
-  { label: "Orders",    to: "/admin/orders",     icon: ClipboardList },
+  { label: "Analytics", to: "/admin", icon: BarChart3, end: true },
+  { label: "Products", to: "/admin/products", icon: Boxes },
+  { label: "Categories", to: "/admin/categories", icon: Tags },
+  { label: "Brands", to: "/admin/brands", icon: Award },
+  { label: "Orders", to: "/admin/orders", icon: ClipboardList },
 ];
 
 const AdminLayout = () => {
@@ -64,9 +65,8 @@ const AdminLayout = () => {
           backgroundColor: "var(--surface)",
           padding: "1.25rem",
         }}
-        className={`w-full lg:w-64 shrink-0 flex flex-col justify-between ${
-          mobileOpen ? "block" : "hidden lg:flex"
-        }`}
+        className={`w-full lg:w-64 shrink-0 flex flex-col justify-between ${mobileOpen ? "block" : "hidden lg:flex"
+          }`}
       >
         <div>
           {/* Brand / Logo */}
@@ -130,7 +130,10 @@ const AdminLayout = () => {
           </Link>
 
           <button
-            onClick={() => dispatch(logoutUser())}
+            onClick={() => {
+              dispatch(logoutUser());
+              dispatch(resetCartLocal());
+            }}
             style={{
               display: "flex",
               alignItems: "center",

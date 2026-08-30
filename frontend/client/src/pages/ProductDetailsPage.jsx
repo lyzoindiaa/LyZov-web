@@ -68,14 +68,14 @@ const ProductDetailsPage = () => {
     const rect = btn.getBoundingClientRect();
     const size = Math.max(rect.width, rect.height);
     ripple.className = "ripple";
-    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
     btn.appendChild(ripple);
     setTimeout(() => ripple.remove(), 700);
   };
 
   const handleWishlist = () => {
     if (!isAuthenticated) { toast.info("Please login first"); return; }
-    dispatch(toggleWishlistItem(product._id));
+    dispatch(toggleWishlistItem({ productId: product._id, product }));
   };
 
   const tabs = [
@@ -92,7 +92,7 @@ const ProductDetailsPage = () => {
         <nav style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.75rem", color: "var(--ink-muted)", marginBottom: "1.5rem" }}>
           <Link to="/" style={{ color: "var(--ink-muted)", textDecoration: "none" }}>Home</Link>
           <span>/</span>
-          <Link to="/" style={{ color: "var(--ink-muted)", textDecoration: "none" }}>Shop</Link>
+          <Link to="/shop" style={{ color: "var(--ink-muted)", textDecoration: "none" }}>Shop</Link>
           <span>/</span>
           <span style={{ color: "var(--ink)", fontWeight: 500 }}>{product.title || product.name}</span>
         </nav>
@@ -161,7 +161,7 @@ const ProductDetailsPage = () => {
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.625rem" }}>
                 <div style={{ display: "flex", gap: "2px", color: "#F59E0B" }}>
-                  {[1,2,3,4,5].map((i) => <Star key={i} size={14} fill="currentColor" />)}
+                  {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={14} fill="currentColor" />)}
                 </div>
                 <span style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>({reviews.length || 12} reviews)</span>
                 <span style={{ color: "var(--border-dark)" }}>Â·</span>
