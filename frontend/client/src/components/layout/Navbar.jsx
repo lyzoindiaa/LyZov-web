@@ -9,6 +9,7 @@ import {
 import { toggleMobileMenu, closeMobileMenu, toggleTheme } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
 import { categoryService } from "../../services/categoryService";
+import ThemeToggle from "../ui/ThemeToggle";
 
 /* ── Helper sub-components ─────────────────────────────────── */
 const DropItem = ({ to, icon: Icon, children, accent }) => (
@@ -246,19 +247,8 @@ const Navbar = () => {
             </>
           )}
 
-          {/* Dark / Light Mode Toggle Button */}
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className="btn-icon"
-            aria-label="Toggle dark/light theme"
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {theme === "dark" ? (
-              <SunMedium size={19} className="text-amber-400" />
-            ) : (
-              <MoonStar size={19} className="text-gray-700" />
-            )}
-          </button>
+          {/* Universal Dark / Light Mode Toggle Button */}
+          <ThemeToggle size={18} />
 
           {/* Account / Login */}
           <div className="relative" ref={userRef}>

@@ -36,11 +36,18 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
 import { useAuth } from "./hooks/useAuth";
+import { useSelector } from "react-redux";
 
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const theme = useSelector((state) => state.ui.theme);
+
+  // Global Theme Sync across entire app
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   useEffect(() => {
     dispatch(fetchCurrentUser());
@@ -112,7 +119,7 @@ function App() {
         </Route>
       </Routes>
 
-      <ToastContainer position="bottom-right" autoClose={3000} theme="light" />
+      <ToastContainer position="bottom-right" autoClose={3000} theme={theme === "dark" ? "dark" : "light"} />
     </>
   );
 }

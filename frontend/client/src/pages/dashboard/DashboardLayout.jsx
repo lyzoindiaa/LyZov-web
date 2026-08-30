@@ -16,40 +16,61 @@ const DashboardLayout = () => {
   const { user } = useSelector((state) => state.auth);
 
   return (
-    <div className="container-page py-10 lg:py-14">
+    <div className="container-page py-8 lg:py-12">
       <div className="mb-8">
         <span className="eyebrow">My Account</span>
-        <h1 className="mt-1 font-display text-4xl tracking-tightest">Hi, {user?.name?.split(" ")[0]}</h1>
+        <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em", marginTop: "0.25rem" }}>
+          Hi, {user?.name?.split(" ")[0] || "there"}
+        </h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">
-        <aside className="flex flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <aside
+          style={{
+            backgroundColor: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "1rem",
+            padding: "0.75rem",
+            boxShadow: "var(--shadow-sm)",
+          }}
+          className="flex flex-row gap-1.5 overflow-x-auto lg:flex-col lg:overflow-visible no-scrollbar"
+        >
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) =>
-                `flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-ink text-ivory dark:bg-cream dark:text-ink"
-                    : "text-ink/70 hover:bg-ink/5 dark:text-cream/70 dark:hover:bg-cream/10"
-                }`
-              }
+              className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
             >
               <item.icon size={16} />
-              {item.label}
+              <span>{item.label}</span>
             </NavLink>
           ))}
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden lg:block" />
           <button
             onClick={() => dispatch(logoutUser())}
-            className="flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.625rem",
+              borderRadius: "0.75rem",
+              padding: "0.625rem 0.875rem",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              color: "var(--red)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--red-bg)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
           >
             <LogOut size={16} />
-            Log Out
+            <span>Log Out</span>
           </button>
         </aside>
 
-        <div>
+        <div className="card-surface p-6">
           <Outlet />
         </div>
       </div>
