@@ -102,7 +102,7 @@ const ProductDetailsPage = () => {
 
           {/* Gallery */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <div className="gallery-main" style={{ position: "relative", aspectRatio: "1/1", borderRadius: "1.25rem", overflow: "hidden", border: "1px solid var(--border)", backgroundColor: "var(--bg-raised)" }}>
+            <div className="gallery-main" style={{ position: "relative", aspectRatio: "1/1", borderRadius: "1.25rem", overflow: "hidden", border: "1px solid var(--border)", backgroundColor: "var(--img-tile)" }}>
               <img
                 src={product.images?.[activeImage]?.url || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800"}
                 alt={product.title || product.name}

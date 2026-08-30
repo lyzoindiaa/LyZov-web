@@ -6,69 +6,101 @@
 @tailwind utilities;
 
 /* ============================================================
-   CSS CUSTOM PROPERTIES â€” Light Mode (default)
+   CSS CUSTOM PROPERTIES — Light Mode (Default Luxury)
    ============================================================ */
 :root {
-  --bg:           #FFFFFF;
-  --bg-subtle:    #F9FAFB;
-  --bg-raised:    #F3F4F6;
-  --surface:      #FFFFFF;
-  --border:       #E5E7EB;
-  --border-dark:  #D1D5DB;
+  /* Surfaces */
+  --bg:            #FFFFFF;
+  --bg-subtle:     #F8FAFC;
+  --bg-raised:     #F1F5F9;
+  --surface:       #FFFFFF;
+  --surface-hover: #F8FAFC;
+  --img-tile:      #F8FAFC;
 
-  --ink:          #111827;
-  --ink-light:    #374151;
-  --ink-muted:    #6B7280;
-  --ink-subtle:   #9CA3AF;
+  /* Borders */
+  --border:        #E2E8F0;
+  --border-dark:   #CBD5E1;
+  --glass-bg:      rgba(255, 255, 255, 0.85);
+  --glass-border:  rgba(0, 0, 0, 0.06);
 
-  --accent:       #D97706;
-  --accent-hover: #B45309;
-  --accent-bg:    #FEF3C7;
+  /* Typography */
+  --ink:           #0F172A;
+  --ink-light:     #334155;
+  --ink-muted:     #64748B;
+  --ink-subtle:    #94A3B8;
+  --ink-inverted:  #FFFFFF;
 
-  --brand:        #111827;
-  --brand-hover:  #1F2937;
+  /* Brand / Luxury Gold Accent */
+  --accent:        #D97706;
+  --accent-hover:  #B45309;
+  --accent-bg:     rgba(217, 119, 6, 0.10);
+  --accent-glow:   0 0 20px rgba(217, 119, 6, 0.20);
+  --brand:         #0F172A;
+  --brand-hover:   #1E293B;
 
-  --red:          #EF4444;
-  --red-bg:       #FEF2F2;
-  --green:        #16A34A;
-  --green-bg:     #DCFCE7;
+  /* Status Validation */
+  --red:           #EF4444;
+  --red-bg:        rgba(239, 68, 68, 0.08);
+  --green:         #10B981;
+  --green-bg:      rgba(16, 185, 129, 0.08);
+  --warning:       #F59E0B;
+  --warning-bg:    rgba(245, 158, 11, 0.08);
+  --info:          #2563EB;
+  --info-bg:       rgba(37, 99, 235, 0.08);
 
-  --shadow-sm:    0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-  --shadow-md:    0 4px 20px -2px rgba(0,0,0,0.05);
-  --shadow-lg:    0 10px 30px -4px rgba(0,0,0,0.08);
+  /* Elevation Shadows */
+  --shadow-sm:     0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:     0 4px 16px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg:     0 12px 32px -4px rgba(0, 0, 0, 0.10);
 }
 
 /* ============================================================
-   CSS CUSTOM PROPERTIES â€” Dark Mode
+   CSS CUSTOM PROPERTIES — Dark Mode (Modern Obsidian Luxury)
    ============================================================ */
 html.dark {
-  --bg:           #0D0D0F;
-  --bg-subtle:    #111113;
-  --bg-raised:    #18181B;
-  --surface:      #141416;
-  --border:       #27272A;
-  --border-dark:  #3F3F46;
+  /* Surfaces */
+  --bg:            #090A0D;
+  --bg-subtle:     #101115;
+  --bg-raised:     #18191E;
+  --surface:       #131418;
+  --surface-hover: #1A1B22;
+  --img-tile:      #14151B;
 
-  --ink:          #F4F4F5;
-  --ink-light:    #D4D4D8;
-  --ink-muted:    #A1A1AA;
-  --ink-subtle:   #71717A;
+  /* Borders */
+  --border:        #23252C;
+  --border-dark:   #343742;
+  --glass-bg:      rgba(13, 14, 18, 0.85);
+  --glass-border:  rgba(255, 255, 255, 0.06);
 
-  --accent:       #F59E0B;
-  --accent-hover: #D97706;
-  --accent-bg:    rgba(245,158,11,0.12);
+  /* Typography */
+  --ink:           #F8FAFC;
+  --ink-light:     #E2E8F0;
+  --ink-muted:     #94A3B8;
+  --ink-subtle:    #64748B;
+  --ink-inverted:  #090A0D;
 
-  --brand:        #F4F4F5;
-  --brand-hover:  #FFFFFF;
+  /* Brand / Luxury Gold Accent */
+  --accent:        #F59E0B;
+  --accent-hover:  #D97706;
+  --accent-bg:     rgba(245, 158, 11, 0.14);
+  --accent-glow:   0 0 25px rgba(245, 158, 11, 0.25);
+  --brand:         #FFFFFF;
+  --brand-hover:   #F1F5F9;
 
-  --red:          #F87171;
-  --red-bg:       rgba(248,113,113,0.1);
-  --green:        #4ADE80;
-  --green-bg:     rgba(74,222,128,0.1);
+  /* Status Validation */
+  --red:           #F87171;
+  --red-bg:        rgba(248, 113, 113, 0.12);
+  --green:         #34D399;
+  --green-bg:      rgba(52, 211, 153, 0.12);
+  --warning:       #FBBF24;
+  --warning-bg:    rgba(251, 191, 36, 0.12);
+  --info:          #60A5FA;
+  --info-bg:       rgba(96, 165, 250, 0.12);
 
-  --shadow-sm:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md:    0 4px 20px -2px rgba(0,0,0,0.4);
-  --shadow-lg:    0 10px 30px -4px rgba(0,0,0,0.5);
+  /* Elevation Shadows */
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md:     0 4px 20px -2px rgba(0, 0, 0, 0.6);
+  --shadow-lg:     0 12px 36px -4px rgba(0, 0, 0, 0.8);
 }
 
 /* ============================================================

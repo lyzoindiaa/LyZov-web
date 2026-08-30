@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart, Star, ShoppingBag } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlistItem } from "../../features/wishlist/wishlistSlice";
@@ -35,7 +35,7 @@ const ProductCard = ({ product }) => {
     <Link to={`/shop/${product.slug || product._id}`} className="card-product group">
 
       {/* Image Area */}
-      <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--bg-raised)" }}>
+      <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--img-tile)" }}>
         {/* Main image */}
         <img
           src={mainImage}
