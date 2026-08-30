@@ -27,14 +27,23 @@ const statusTones = {
   refunded: "danger",
 };
 
-const StatCard = ({ icon: Icon, label, value }) => (
-  <div className="card-surface flex items-center gap-4 p-5">
-    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-ivory dark:bg-cream dark:text-ink">
+const statMeta = [
+  { key: "revenue",  cls: "stat-revenue",  icon: DollarSign },
+  { key: "orders",   cls: "stat-orders",   icon: ShoppingBag },
+  { key: "products", cls: "stat-products", icon: Package },
+  { key: "users",    cls: "stat-users",    icon: Users },
+];
+
+const StatCard = ({ icon: Icon, label, value, colorClass }) => (
+  <div className={`card-surface flex items-center gap-4 p-5 ${colorClass}`} style={{ position: "relative", overflow: "hidden" }}>
+    {/* Decorative top-right glow */}
+    <div style={{ position: "absolute", top: "-20px", right: "-20px", width: "80px", height: "80px", borderRadius: "9999px", background: "var(--stat-bg)", opacity: 0.6, pointerEvents: "none" }} />
+    <div className="stat-card-icon">
       <Icon size={18} />
     </div>
     <div>
-      <p className="text-xs text-stone">{label}</p>
-      <p className="text-xl font-semibold tabular-nums">{value}</p>
+      <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", fontWeight: 500 }}>{label}</p>
+      <p style={{ fontSize: "1.375rem", fontWeight: 800, fontVariantNumeric: "tabular-nums", color: "var(--stat-color)" }}>{value}</p>
     </div>
   </div>
 );
@@ -94,10 +103,10 @@ const AdminAnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} />
-        <StatCard icon={ShoppingBag} label="Total Orders" value={stats.totalOrders} />
-        <StatCard icon={Package} label="Total Products" value={stats.totalProducts} />
-        <StatCard icon={Users} label="Total Customers" value={stats.totalUsers} />
+        <StatCard icon={DollarSign} label="Total Revenue"   value={formatCurrency(stats.totalRevenue)} colorClass="stat-revenue" />
+        <StatCard icon={ShoppingBag} label="Total Orders"   value={stats.totalOrders}                  colorClass="stat-orders" />
+        <StatCard icon={Package}    label="Total Products"  value={stats.totalProducts}                colorClass="stat-products" />
+        <StatCard icon={Users}      label="Total Customers" value={stats.totalUsers}                   colorClass="stat-users" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">

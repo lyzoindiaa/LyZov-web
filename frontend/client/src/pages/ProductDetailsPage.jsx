@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag } from "lucide-react";
+import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag, ZoomIn } from "lucide-react";
 import { productService, reviewService } from "../services/productService";
 import { addToCart } from "../features/cart/cartSlice";
 import { toggleWishlistItem } from "../features/wishlist/wishlistSlice";
@@ -58,10 +58,19 @@ const ProductDetailsPage = () => {
   const isWished = wishlistProducts.some((p) => p._id === product._id);
   const stock = selectedVariant ? selectedVariant.stock : product.stock;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
     if (stock <= 0) { toast.error("Out of stock"); return; }
     dispatch(addToCart({ productId: product._id, variantId: selectedVariant?._id, quantity }));
     toast.success(`${product.title || product.name} added to bag!`);
+    // Ripple effect
+    const btn = e.currentTarget;
+    const ripple = document.createElement("span");
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.className = "ripple";
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 700);
   };
 
   const handleWishlist = () => {
@@ -93,11 +102,11 @@ const ProductDetailsPage = () => {
 
           {/* Gallery */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: "1.25rem", overflow: "hidden", border: "1px solid var(--border)", backgroundColor: "var(--bg-raised)" }}>
+            <div className="gallery-main" style={{ position: "relative", aspectRatio: "1/1", borderRadius: "1.25rem", overflow: "hidden", border: "1px solid var(--border)", backgroundColor: "var(--bg-raised)" }}>
               <img
                 src={product.images?.[activeImage]?.url || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800"}
                 alt={product.title || product.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
               />
               {discountPercent > 0 && (
                 <span className="badge badge-dark" style={{ position: "absolute", left: "0.75rem", top: "0.75rem" }}>
@@ -117,6 +126,10 @@ const ProductDetailsPage = () => {
               >
                 <Heart size={18} fill={isWished ? "#EF4444" : "none"} />
               </button>
+              {/* Zoom icon on hover */}
+              <div className="gallery-zoom-icon">
+                <ZoomIn size={16} />
+              </div>
             </div>
 
             {/* Thumbnails */}
@@ -205,7 +218,7 @@ const ProductDetailsPage = () => {
                 <QuantityStepper value={quantity} onChange={setQuantity} max={stock > 0 ? stock : 10} />
               </div>
               <div style={{ display: "flex", gap: "0.75rem" }}>
-                <button onClick={handleAddToCart} disabled={stock <= 0} className="btn-primary" style={{ flex: 1, padding: "0.875rem" }}>
+                <button onClick={handleAddToCart} disabled={stock <= 0} className="btn-primary btn-ripple" style={{ flex: 1, padding: "0.875rem" }}>
                   <ShoppingBag size={17} />
                   {stock <= 0 ? "Out of Stock" : "Add to Bag"}
                 </button>
@@ -257,7 +270,7 @@ const ProductDetailsPage = () => {
           </div>
 
           {activeTab === "description" && (
-            <div className="card-surface" style={{ padding: "1.5rem" }}>
+            <div className="card-surface tab-pane" style={{ padding: "1.5rem" }}>
               <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.7 }}>
                 {product.description || "Crafted with the highest grade materials for unmatched reliability."}
               </p>
@@ -265,7 +278,7 @@ const ProductDetailsPage = () => {
           )}
 
           {activeTab === "reviews" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div className="tab-pane" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {reviews.length === 0 ? (
                 <div className="card-surface" style={{ padding: "2rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
                   No reviews yet â€” be the first to review this product!
@@ -288,7 +301,7 @@ const ProductDetailsPage = () => {
           )}
 
           {activeTab === "shipping" && (
-            <div className="card-surface" style={{ padding: "1.5rem" }}>
+            <div className="card-surface tab-pane" style={{ padding: "1.5rem" }}>
               <h4 style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)", marginBottom: "0.5rem" }}>Doorstep Delivery Across India</h4>
               <p style={{ fontSize: "0.8125rem", color: "var(--ink-light)", lineHeight: 1.7 }}>
                 All products are carefully packaged with shockproof material. Dispatched within 24 hours. Metro deliveries in 2-4 days, other regions in 4-6 days with tracking.

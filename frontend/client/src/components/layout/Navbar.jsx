@@ -10,6 +10,42 @@ import { toggleMobileMenu, closeMobileMenu, toggleTheme } from "../../features/u
 import { openMiniCart } from "../../features/cart/cartSlice";
 import { categoryService } from "../../services/categoryService";
 
+/* ── Helper sub-components ─────────────────────────────────── */
+const DropItem = ({ to, icon: Icon, children, accent }) => (
+  <Link
+    to={to}
+    style={{
+      display: "flex", alignItems: "center", gap: "0.5rem",
+      padding: "0.5rem 0.75rem", borderRadius: "0.625rem",
+      fontSize: "0.75rem", fontWeight: accent ? 700 : 500,
+      color: accent ? "var(--accent)" : "var(--ink-muted)",
+      textDecoration: "none", transition: "all 0.15s",
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-raised)"; if (!accent) e.currentTarget.style.color = "var(--ink)"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ""; if (!accent) e.currentTarget.style.color = "var(--ink-muted)"; }}
+  >
+    {Icon && <Icon size={13} />}
+    {children}
+  </Link>
+);
+
+const MobileNavLink = ({ to, children, accent }) => (
+  <Link
+    to={to}
+    style={{
+      padding: "0.625rem 0.75rem", borderRadius: "0.75rem",
+      fontSize: "0.875rem", fontWeight: 600,
+      color: accent ? "var(--accent)" : "var(--ink)",
+      textDecoration: "none", transition: "background 0.15s",
+    }}
+    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-raised)"}
+    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
+  >
+    {children}
+  </Link>
+);
+
+
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -77,11 +113,14 @@ const Navbar = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-200 ${
-        scrolled
-          ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 shadow-nav"
-          : "bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
-      }`}
+      style={{
+        position: "sticky", top: 0, zIndex: 50, width: "100%",
+        backgroundColor: scrolled ? "rgba(var(--bg-rgb, 255,255,255), 0.96)" : "var(--bg)",
+        backdropFilter: scrolled ? "blur(12px)" : "none",
+        borderBottom: "1px solid var(--border)",
+        boxShadow: scrolled ? "var(--shadow-sm)" : "none",
+        transition: "all 0.25s",
+      }}
     >
       <div className="container-page flex h-18 items-center justify-between gap-6 py-3">
         
@@ -108,88 +147,62 @@ const Navbar = () => {
           <span className="hidden sm:inline text-gray-300 dark:text-gray-700">|</span>
 
           {/* Nav Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
+          <nav className="hidden lg:flex items-center gap-6">
             {isAdmin ? (
-              /* Admin Navigation Links */
               <>
-                <Link
-                  to="/admin/categories"
-                  className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors"
-                >
-                  <FolderPlus size={16} /> Manage Categories
+                <Link to="/admin/categories" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                  <FolderPlus size={14} /> Manage Categories
                 </Link>
-                <Link
-                  to="/admin/products"
-                  className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <PackagePlus size={16} /> Manage Products
+                <Link to="/admin/products" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                  <PackagePlus size={14} /> Manage Products
                 </Link>
-                <Link
-                  to="/admin/orders"
-                  className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <ShoppingCart size={16} /> Orders
+                <Link to="/admin/orders" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                  <ShoppingCart size={14} /> Orders
                 </Link>
-                <Link
-                  to="/admin"
-                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Dashboard
-                </Link>
+                <Link to="/admin" className="nav-link-animated">Dashboard</Link>
               </>
             ) : (
-              /* Regular Customer Navigation Links */
               <>
-                <Link
-                  to="/?sort=popular"
-                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Featured Products
-                </Link>
+                <Link to="/?sort=popular" className="nav-link-animated">Featured</Link>
 
                 {/* Categories Dropdown */}
-                <div className="relative" ref={catRef}>
+                <div style={{ position: "relative" }} ref={catRef}>
                   <button
                     onClick={() => setCatMenuOpen((v) => !v)}
-                    className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.875rem", fontWeight: 500, color: catMenuOpen ? "var(--ink)" : "var(--ink-muted)", background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
                   >
                     <span>Categories</span>
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? "rotate-180 text-gray-900 dark:text-white" : "text-gray-400"}`} />
+                    <ChevronDown size={13} style={{ transition: "transform 0.2s", transform: catMenuOpen ? "rotate(180deg)" : "none", color: "var(--ink-subtle)" }} />
                   </button>
 
                   {catMenuOpen && (
-                    <div className="absolute top-full left-0 mt-3 w-56 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2 shadow-card z-50">
-                      <Link
-                        to="/"
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    <div style={{ position: "absolute", top: "calc(100% + 0.75rem)", left: 0, width: "14rem", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.5rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
+                      <Link to="/" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", textDecoration: "none", transition: "background 0.15s" }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-raised)"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
                       >
                         <span>All Categories</span>
-                        <Tag size={13} className="text-amber-600" />
+                        <Tag size={12} style={{ color: "var(--accent)" }} />
                       </Link>
-                      <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                      <div style={{ borderTop: "1px solid var(--border)", margin: "0.25rem 0" }} />
                       {categories.length > 0 ? (
                         categories.map((c) => (
-                          <Link
-                            key={c._id}
-                            to={`/?category=${c._id}`}
-                            className="block px-3 py-2 rounded-xl text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          <Link key={c._id} to={`/?category=${c._id}`}
+                            style={{ display: "block", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none", transition: "all 0.15s" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-raised)"; e.currentTarget.style.color = "var(--ink)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ""; e.currentTarget.style.color = "var(--ink-muted)"; }}
                           >
                             {c.name}
                           </Link>
                         ))
                       ) : (
-                        <div className="px-3 py-2 text-xs text-gray-400">No categories added yet</div>
+                        <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.75rem", color: "var(--ink-subtle)" }}>No categories yet</div>
                       )}
                     </div>
                   )}
                 </div>
 
-                <Link
-                  to="/"
-                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  All Products
-                </Link>
+                <Link to="/" className="nav-link-animated">All Products</Link>
               </>
             )}
           </nav>
@@ -217,7 +230,7 @@ const Navbar = () => {
               >
                 <ShoppingBag size={19} />
                 {totalItems > 0 && (
-                  <span className="absolute top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-black dark:bg-amber-500 text-[10px] font-bold text-white dark:text-black shadow-soft">
+                  <span className="cart-badge-pulse absolute top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-black dark:bg-amber-500 text-[10px] font-bold text-white dark:text-black shadow-soft">
                     {totalItems > 9 ? "9+" : totalItems}
                   </span>
                 )}
@@ -261,42 +274,31 @@ const Navbar = () => {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2 shadow-card z-50">
-                    <div className="p-2.5 border-b border-gray-100 dark:border-gray-700">
-                      <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{user?.name}</p>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 0.5rem)", width: "13rem", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.375rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
+                    <div style={{ padding: "0.625rem 0.75rem", borderBottom: "1px solid var(--border)", marginBottom: "0.25rem" }}>
+                      <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</p>
+                      <p style={{ fontSize: "11px", color: "var(--ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
                     </div>
-                    <div className="py-1 space-y-0.5 text-xs">
-                      {isAdmin && (
-                        <>
-                          <Link to="/admin/categories" className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-50 dark:hover:bg-gray-700">
-                            <FolderPlus size={14} /> Manage Categories
-                          </Link>
-                          <Link to="/admin/products" className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-50 dark:hover:bg-gray-700">
-                            <PackagePlus size={14} /> Manage Products
-                          </Link>
-                          <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <Settings size={14} /> Admin Overview
-                          </Link>
-                        </>
-                      )}
-                      {!isAdmin && (
-                        <>
-                          <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <LayoutDashboard size={14} /> My Dashboard
-                          </Link>
-                          <Link to="/dashboard/orders" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <Tag size={14} /> My Orders
-                          </Link>
-                          <Link to="/dashboard/wishlist" className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <Heart size={14} /> Wishlist
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                    <div className="pt-1 border-t border-gray-100 dark:border-gray-700">
-                      <Link to="/logout" className="flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs">
-                        <LogOut size={14} /> Log Out
+                    {isAdmin && (
+                      <>
+                        <DropItem to="/admin/categories" icon={FolderPlus} accent>{"Manage Categories"}</DropItem>
+                        <DropItem to="/admin/products" icon={PackagePlus} accent>{"Manage Products"}</DropItem>
+                        <DropItem to="/admin" icon={Settings}>{"Admin Overview"}</DropItem>
+                      </>
+                    )}
+                    {!isAdmin && (
+                      <>
+                        <DropItem to="/dashboard" icon={LayoutDashboard}>{"My Dashboard"}</DropItem>
+                        <DropItem to="/dashboard/orders" icon={Tag}>{"My Orders"}</DropItem>
+                        <DropItem to="/dashboard/wishlist" icon={Heart}>{"Wishlist"}</DropItem>
+                      </>
+                    )}
+                    <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.25rem", marginTop: "0.25rem" }}>
+                      <Link to="/logout" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--red)", textDecoration: "none", transition: "background 0.15s" }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--red-bg)"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
+                      >
+                        <LogOut size={13} /> Log Out
                       </Link>
                     </div>
                   </div>
@@ -313,19 +315,22 @@ const Navbar = () => {
 
       {/* Expandable Search Bar */}
       {searchOpen && (
-        <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 px-4 py-3 animate-fade-in">
-          <form onSubmit={handleSearchSubmit} className="container-page flex items-center gap-3">
-            <Search size={18} className="text-gray-400 flex-shrink-0" />
+        <div className="search-bar-enter" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.875rem 1rem" }}>
+          <form onSubmit={handleSearchSubmit} className="container-page" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <Search size={17} style={{ color: "var(--ink-subtle)", flexShrink: 0 }} />
             <input
               autoFocus
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search products across LyZov Store..."
-              className="w-full bg-transparent text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400"
+              style={{ flex: 1, background: "transparent", fontSize: "0.875rem", color: "var(--ink)", outline: "none", border: "none" }}
             />
             {searchTerm && (
-              <button type="button" onClick={() => setSearchTerm("")} className="text-gray-400 hover:text-gray-600">
-                <X size={16} />
+              <button type="button" onClick={() => setSearchTerm("")} style={{ color: "var(--ink-subtle)", background: "none", border: "none", cursor: "pointer", transition: "color 0.15s" }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "var(--ink)"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "var(--ink-subtle)"}
+              >
+                <X size={15} />
               </button>
             )}
           </form>
@@ -334,38 +339,23 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 lg:hidden p-5 space-y-4">
-          <form onSubmit={handleSearchSubmit} className="flex items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3.5 py-2">
-            <Search size={16} className="text-gray-400 mr-2" />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search products..."
-              className="w-full bg-transparent text-xs text-gray-900 dark:text-white outline-none placeholder:text-gray-400"
-            />
+        <div className="search-bar-enter lg:hidden" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg)", padding: "1.25rem" }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: "flex", alignItems: "center", borderRadius: "0.875rem", border: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.625rem 0.875rem", marginBottom: "1rem", gap: "0.5rem" }}>
+            <Search size={15} style={{ color: "var(--ink-subtle)", flexShrink: 0 }} />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." style={{ flex: 1, background: "transparent", fontSize: "0.8rem", color: "var(--ink)", outline: "none", border: "none" }} />
           </form>
 
-          <nav className="flex flex-col space-y-1">
+          <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             {isAdmin ? (
               <>
-                <Link to="/admin/categories" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  Manage Categories
-                </Link>
-                <Link to="/admin/products" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  Manage Products
-                </Link>
-                <Link to="/admin/orders" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  Manage Orders
-                </Link>
+                <MobileNavLink to="/admin/categories" accent>Manage Categories</MobileNavLink>
+                <MobileNavLink to="/admin/products">Manage Products</MobileNavLink>
+                <MobileNavLink to="/admin/orders">Manage Orders</MobileNavLink>
               </>
             ) : (
               <>
-                <Link to="/?sort=popular" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  Featured Products
-                </Link>
-                <Link to="/" className="px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  All Products
-                </Link>
+                <MobileNavLink to="/?sort=popular">Featured Products</MobileNavLink>
+                <MobileNavLink to="/">All Products</MobileNavLink>
               </>
             )}
           </nav>

@@ -1,0 +1,83 @@
+﻿/* ============================================================
+   PREMIUM UI EXTRAS
+   ============================================================ */
+
+/* Page transition */
+.page-enter { animation: fadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-subtle); }
+
+/* Glassmorphism */
+.glass-card { background: rgba(255,255,255,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.35); border-radius: 1.25rem; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+html.dark .glass-card { background: rgba(20,20,22,0.6); border-color: rgba(255,255,255,0.08); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+
+/* Animated nav underline */
+.nav-link-animated { position: relative; font-size: 0.875rem; font-weight: 500; color: var(--ink-muted); text-decoration: none; transition: color 0.2s; padding-bottom: 2px; }
+.nav-link-animated::after { content: ""; position: absolute; bottom: 0; left: 0; height: 2px; width: 100%; background: var(--accent); border-radius: 2px; transform: scaleX(0); transform-origin: left; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+.nav-link-animated:hover { color: var(--ink); }
+.nav-link-animated:hover::after { transform: scaleX(1); }
+.nav-link-animated.active { color: var(--ink); font-weight: 600; }
+.nav-link-animated.active::after { transform: scaleX(1); }
+
+/* Quick-Add button */
+.quick-add-btn { position: absolute; bottom: 0; left: 0; right: 0; background: var(--ink); color: var(--bg); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.65rem; text-align: center; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); cursor: pointer; border: none; outline: none; }
+.group:hover .quick-add-btn { transform: translateY(0); }
+
+/* Wishlist hover reveal */
+.wishlist-btn-hover { opacity: 0; transform: scale(0.8); transition: opacity 0.2s, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+.group:hover .wishlist-btn-hover, .wishlist-btn-hover.wished { opacity: 1; transform: scale(1); }
+
+/* Card glow */
+.card-product:hover { box-shadow: var(--shadow-lg), 0 0 0 1.5px var(--accent-bg); }
+
+/* Tab fade */
+.tab-pane { animation: fadeIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Gallery zoom icon */
+.gallery-zoom-icon { position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); border-radius: 9999px; padding: 0.45rem; color: #fff; opacity: 0; transform: scale(0.8); transition: all 0.2s; pointer-events: none; }
+.gallery-main:hover .gallery-zoom-icon { opacity: 1; transform: scale(1); }
+
+/* Ripple */
+.btn-ripple { position: relative; overflow: hidden; }
+.btn-ripple .ripple { position: absolute; border-radius: 9999px; background: rgba(255,255,255,0.35); pointer-events: none; animation: rippleOut 0.6s ease-out forwards; }
+
+/* Stat card accents */
+.stat-revenue  { --stat-color: #10B981; --stat-bg: rgba(16,185,129,0.12); }
+.stat-orders   { --stat-color: #3B82F6; --stat-bg: rgba(59,130,246,0.12); }
+.stat-products { --stat-color: #F59E0B; --stat-bg: rgba(245,158,11,0.12); }
+.stat-users    { --stat-color: #8B5CF6; --stat-bg: rgba(139,92,246,0.12); }
+.stat-card-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; background: var(--stat-bg); color: var(--stat-color); flex-shrink: 0; }
+
+/* Admin sidebar */
+.sidebar-nav-item { display: flex; align-items: center; gap: 0.625rem; border-radius: 0.75rem; padding: 0.625rem 0.875rem; font-size: 0.8125rem; font-weight: 500; color: var(--ink-muted); text-decoration: none; transition: all 0.18s; position: relative; }
+.sidebar-nav-item:hover { background-color: var(--bg-raised); color: var(--ink); }
+.sidebar-nav-item.active { background-color: var(--accent-bg); color: var(--accent); font-weight: 700; }
+.sidebar-nav-item.active::before { content: ""; position: absolute; left: 0; top: 25%; bottom: 25%; width: 3px; border-radius: 0 2px 2px 0; background: var(--accent); }
+
+/* Floating label input */
+.input-float-wrap { position: relative; }
+.input-float { width: 100%; border-radius: 0.75rem; border: 1px solid var(--border); background-color: var(--bg-subtle); padding: 1.3rem 1rem 0.5rem; font-size: 0.875rem; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s; }
+.input-float::placeholder { color: transparent; }
+.input-float:focus { border-color: var(--accent); background-color: var(--surface); box-shadow: 0 0 0 3px var(--accent-bg); }
+.input-float-label { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.875rem; color: var(--ink-subtle); pointer-events: none; transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+.input-float:focus ~ .input-float-label, .input-float:not(:placeholder-shown) ~ .input-float-label { top: 0.6rem; transform: translateY(0); font-size: 0.68rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; }
+.input-error { animation: shake 0.4s ease; }
+
+/* Search animated */
+.search-bar-enter { animation: slideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Hero decorative */
+.hero-float { animation: float 5s ease-in-out infinite; }
+.hero-float-delay { animation: float 5s ease-in-out 1.5s infinite; }
+.dot-grid-bg { background-image: radial-gradient(circle, var(--border) 1px, transparent 1px); background-size: 24px 24px; }
+.cart-badge-pulse { animation: badgePulse 1.8s ease-in-out infinite; }
+
+/* Auth split-screen */
+.auth-panel-left { background: linear-gradient(135deg, #0D0D0F 0%, #1a1a2e 40%, #0f3460 100%); position: relative; overflow: hidden; }
+.auth-panel-left::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 70%, rgba(245,158,11,0.18) 0%, transparent 60%); pointer-events: none; }
+.auth-orb-1 { position: absolute; width: 280px; height: 280px; border-radius: 9999px; background: radial-gradient(circle, rgba(245,158,11,0.22), transparent 70%); top: -60px; right: -80px; animation: float 7s ease-in-out infinite; }
+.auth-orb-2 { position: absolute; width: 180px; height: 180px; border-radius: 9999px; background: radial-gradient(circle, rgba(59,130,246,0.18), transparent 70%); bottom: 60px; left: -40px; animation: float 9s ease-in-out 2s infinite; }
