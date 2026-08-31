@@ -7,6 +7,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import ThemeToggle from "../components/ui/ThemeToggle";
+import Logo from "../components/ui/Logo";
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
@@ -63,29 +64,14 @@ const ResetPasswordPage = () => {
 
           {/* Title */}
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", marginBottom: "1rem" }}>
-              <div
-                style={{
-                  width: "2.5rem",
-                  height: "2.5rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                }}
-              >
-                L<span style={{ color: "#F59E0B" }}>Z</span>
-              </div>
-              <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)" }}>LyZov</span>
-            </Link>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+              <Logo size="md" />
+            </div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em" }}>
-              Create New Password
+              Set a New Password
             </h1>
-            <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-              Please enter and confirm your new secure password
+            <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
+              Choose a strong password to keep your LyZov Store account secure.
             </p>
           </div>
 

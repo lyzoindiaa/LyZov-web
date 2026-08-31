@@ -18,6 +18,7 @@ import {
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
+import Logo from "../../components/ui/Logo";
 import { useState } from "react";
 
 const navItems = [
@@ -71,18 +72,16 @@ const AdminLayout = () => {
         <div>
           {/* Brand / Logo */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem", paddingBottom: "1rem", borderBottom: "1px solid var(--border)" }}>
-            <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.625rem", textDecoration: "none" }}>
-              <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "0.75rem", background: "linear-gradient(135deg,#111827,#1F2937)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.9375rem", boxShadow: "0 2px 10px rgba(0,0,0,0.15)" }}>
-                L<span style={{ color: "#F59E0B" }}>Z</span>
-              </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+              <Logo size="sm" />
               <div>
-                <p style={{ fontSize: "1rem", fontWeight: 800, color: "var(--ink)", lineHeight: 1 }}>LyZov</p>
+                <p style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--ink-muted)", lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.06em" }}>Admin Panel</p>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.2rem" }}>
                   <ShieldAlert size={10} className="text-amber-500" />
                   <p style={{ fontSize: "10px", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin Portal</p>
                 </div>
               </div>
-            </Link>
+            </div>
             <button
               onClick={() => setMobileOpen(false)}
               className="lg:hidden btn-icon p-1 text-[var(--ink-muted)]"

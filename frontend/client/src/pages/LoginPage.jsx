@@ -7,6 +7,7 @@ import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, Mail, Lock } from "luci
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import ThemeToggle from "../components/ui/ThemeToggle";
+import Logo from "../components/ui/Logo";
 
 const trustBullets = [
   { icon: ShieldCheck, text: "100% secure checkout & payments" },
@@ -76,39 +77,9 @@ const LoginPage = () => {
         <div className="auth-orb-1" />
         <div className="auth-orb-2" />
 
-        {/* Logo */}
-        <Link
-          to="/"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            textDecoration: "none",
-            marginBottom: "3rem",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <div
-            style={{
-              width: "3rem",
-              height: "3rem",
-              borderRadius: "0.875rem",
-              background: "rgba(255,255,255,0.15)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              fontSize: "1.125rem",
-              color: "#fff",
-            }}
-          >
-            L<span style={{ color: "#F59E0B" }}>Z</span>
-          </div>
-          <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>LyZov Store</span>
-        </Link>
+        <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
+          <Logo size="xl" variant="elevated" />
+        </div>
 
         {/* Headline */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: "34rem" }}>
@@ -128,7 +99,7 @@ const LoginPage = () => {
               marginBottom: "1.5rem",
             }}
           >
-            <Sparkles size={11} /> Premium Marketplace
+            <Sparkles size={11} /> LyZov Premium Store
           </div>
           <h2
             style={{
@@ -140,9 +111,9 @@ const LoginPage = () => {
               marginBottom: "1.25rem",
             }}
           >
-            Your premium
+            Welcome back to
             <br />
-            <span style={{ color: "#F59E0B" }}>shopping</span> destination.
+            <span style={{ color: "#F59E0B" }}>LyZov Store.</span>
           </h2>
           <p
             style={{
@@ -153,7 +124,7 @@ const LoginPage = () => {
               marginBottom: "3rem",
             }}
           >
-            Discover curated fitness gear, handcrafted decor, and lifestyle essentials — all in one place with Pan-India delivery.
+            Sign in to track orders, manage your wishlist, and enjoy a seamless shopping experience — fitness gear, spiritual idols, and lifestyle essentials all in one place.
           </p>
 
           {/* Trust bullets */}
@@ -195,24 +166,7 @@ const LoginPage = () => {
         <div style={{ width: "100%", maxWidth: "23rem" }}>
           {/* Mobile brand header */}
           <div className="lg:hidden" style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-              <div
-                style={{
-                  width: "2.5rem",
-                  height: "2.5rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                }}
-              >
-                L<span style={{ color: "#F59E0B" }}>Z</span>
-              </div>
-              <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)" }}>LyZov Store</span>
-            </Link>
+            <Logo size="lg" variant="elevated" />
           </div>
 
           {/* Title & subtitle */}

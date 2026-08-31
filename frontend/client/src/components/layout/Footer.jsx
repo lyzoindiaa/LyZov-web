@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Twitter, Linkedin, Youtube, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import Logo from "../ui/Logo";
 
 const footerColumns = [
   {
@@ -55,8 +56,8 @@ const Footer = () => {
                 <Truck size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Pan-India Fast Delivery</h5>
-                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Safe & insured dispatch on all orders</p>
+                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Fast Pan-India Delivery</h5>
+                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Secure, insured shipping on every order</p>
               </div>
             </div>
 
@@ -77,8 +78,8 @@ const Footer = () => {
                 <ShieldCheck size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>100% Quality Guaranteed</h5>
-                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Handcrafted excellence & premium grade</p>
+                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Quality You Can Trust</h5>
+                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Handpicked products, inspected before dispatch</p>
               </div>
             </div>
 
@@ -99,8 +100,8 @@ const Footer = () => {
                 <RotateCcw size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Easy Replacement</h5>
-                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Hassle-free 7-day support</p>
+                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>7-Day Easy Replacement</h5>
+                <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Simple returns if something&apos;s not right</p>
               </div>
             </div>
           </div>
@@ -112,30 +113,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand column */}
           <div className="sm:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
-              <div
-                style={{
-                  width: "2.5rem",
-                  height: "2.5rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                  fontSize: "1rem",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                L<span style={{ color: "var(--accent)" }}>Z</span>
-              </div>
-              <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                LyZov Store
-              </span>
-            </Link>
-            <p style={{ maxWidth: "22rem", fontSize: "0.8125rem", color: "var(--ink-muted)", lineHeight: 1.65 }}>
-              Your curated destination for premium fitness gear, handcrafted spiritual idols, and lifestyle essentials. Designed with passion, delivered across India.
+            <Logo size="lg" variant="elevated" />
+            <p style={{ maxWidth: "24rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.7 }}>
+              LyZov is your trusted online store for premium fitness gear, handcrafted spiritual idols, and everyday lifestyle essentials — carefully selected, quality-checked, and delivered safely across India.
             </p>
             <div style={{ display: "flex", gap: "0.625rem", paddingTop: "0.5rem" }}>
               {[

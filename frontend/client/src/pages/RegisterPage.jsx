@@ -7,6 +7,7 @@ import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, User, Mail, Lock } from
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import ThemeToggle from "../components/ui/ThemeToggle";
+import Logo from "../components/ui/Logo";
 
 const trustBullets = [
   { icon: ShieldCheck, text: "Fast & easy sign up in under 30s" },
@@ -80,39 +81,9 @@ const RegisterPage = () => {
         <div className="auth-orb-1" />
         <div className="auth-orb-2" />
 
-        {/* Logo */}
-        <Link
-          to="/"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            textDecoration: "none",
-            marginBottom: "3rem",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <div
-            style={{
-              width: "3rem",
-              height: "3rem",
-              borderRadius: "0.875rem",
-              background: "rgba(255,255,255,0.15)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              fontSize: "1.125rem",
-              color: "#fff",
-            }}
-          >
-            L<span style={{ color: "#F59E0B" }}>Z</span>
-          </div>
-          <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>LyZov Store</span>
-        </Link>
+        <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
+          <Logo size="xl" variant="elevated" />
+        </div>
 
         {/* Headline */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: "34rem" }}>
@@ -132,7 +103,7 @@ const RegisterPage = () => {
               marginBottom: "1.5rem",
             }}
           >
-            <Sparkles size={11} /> Join LyZov VIP
+            <Sparkles size={11} /> Join the LyZov Family
           </div>
           <h2
             style={{
@@ -144,9 +115,9 @@ const RegisterPage = () => {
               marginBottom: "1.25rem",
             }}
           >
-            Start your premium
+            Your journey to
             <br />
-            <span style={{ color: "#F59E0B" }}>shopping journey.</span>
+            <span style={{ color: "#F59E0B" }}>better living</span> starts here.
           </h2>
           <p
             style={{
@@ -157,7 +128,7 @@ const RegisterPage = () => {
               marginBottom: "3rem",
             }}
           >
-            Create an account to track shipments in real time, save custom wishlists, and unlock exclusive discounts.
+            Create your free LyZov account to track shipments, build wishlists, and get early access to new arrivals and member-only deals.
           </p>
 
           {/* Trust bullets */}
@@ -199,24 +170,7 @@ const RegisterPage = () => {
         <div style={{ width: "100%", maxWidth: "23rem" }}>
           {/* Mobile brand header */}
           <div className="lg:hidden" style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-              <div
-                style={{
-                  width: "2.5rem",
-                  height: "2.5rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                }}
-              >
-                L<span style={{ color: "#F59E0B" }}>Z</span>
-              </div>
-              <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)" }}>LyZov Store</span>
-            </Link>
+            <Logo size="lg" variant="elevated" />
           </div>
 
           {/* Title & subtitle */}
@@ -225,7 +179,7 @@ const RegisterPage = () => {
               Create an account
             </h1>
             <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-              Join LyZov to track orders and save favorites
+              Join LyZov Store — track orders, save favorites, shop smarter
             </p>
           </div>
 

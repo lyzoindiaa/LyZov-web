@@ -11,6 +11,7 @@ import { openMiniCart } from "../../features/cart/cartSlice";
 import { logoutUser } from "../../features/auth/authSlice";
 import { categoryService } from "../../services/categoryService";
 import ThemeToggle from "../ui/ThemeToggle";
+import Logo from "../ui/Logo";
 import { toast } from "react-toastify";
 
 /* ── Helper sub-components ─────────────────────────────────── */
@@ -135,10 +136,10 @@ const Navbar = () => {
         transition: "background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
       }}
     >
-      <div className="container-page flex h-18 items-center justify-between gap-6 py-3">
+      <div className="container-page flex min-h-[4.75rem] items-center justify-between gap-4 py-3 lg:gap-6 lg:py-3.5">
 
         {/* Left: Brand & Navigation */}
-        <div className="flex items-center gap-6 sm:gap-8">
+        <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
           <button
             onClick={() => dispatch(toggleMobileMenu())}
             className="btn-icon lg:hidden"
@@ -147,28 +148,9 @@ const Navbar = () => {
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: "none" }}>
-            <div
-              style={{
-                width: "2.5rem", height: "2.5rem",
-                borderRadius: "0.75rem",
-                backgroundColor: "var(--ink)",
-                color: "var(--bg)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 900, fontSize: "1rem",
-                flexShrink: 0,
-                boxShadow: "var(--shadow-sm)",
-              }}
-            >
-              L<span style={{ color: "#F59E0B" }}>Z</span>
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              LyZov
-            </span>
-          </Link>
+          <Logo size="nav" className="navbar-logo" />
 
-          <span style={{ color: "var(--border)", fontSize: "1.25rem", userSelect: "none" }} className="hidden sm:inline">|</span>
+          <span style={{ color: "var(--border)", fontSize: "1.25rem", userSelect: "none" }} className="hidden xl:inline">|</span>
 
           {/* Nav Links */}
           <nav className="hidden lg:flex items-center gap-6">

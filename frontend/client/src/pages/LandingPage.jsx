@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles } from "lucide-react";
 import Hero from "../components/layout/Hero";
+import WhyLyZov from "../components/layout/WhyLyZov";
 import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
@@ -69,6 +70,7 @@ const LandingPage = () => {
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       {/* ── Top Hero Banner (Shown on default home view) ── */}
       {!filters.search && <Hero />}
+      {!filters.search && !isFiltered && <WhyLyZov />}
 
       {/* ── Products Section ── */}
       <section id="store-products" className="container-page py-10 lg:py-14">
@@ -76,7 +78,7 @@ const LandingPage = () => {
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
             <span className="eyebrow flex items-center gap-1.5">
-              <Sparkles size={12} /> Curated Catalog
+              <Sparkles size={12} /> Shop LyZov
             </span>
             <h2
               style={{
@@ -87,10 +89,12 @@ const LandingPage = () => {
                 marginTop: "0.25rem",
               }}
             >
-              {filters.search ? `Results for "${filters.search}"` : "Featured & Trending Items"}
+              {filters.search ? `Results for "${filters.search}"` : "Trending Picks You'll Love"}
             </h2>
-            <p style={{ color: "var(--ink-muted)", fontSize: "0.8125rem", marginTop: "0.25rem" }}>
-              {meta.total > 0 ? `Showing ${products.length} of ${meta.total} available items` : "Explore our latest arrivals"}
+            <p style={{ color: "var(--ink-muted)", fontSize: "0.9375rem", marginTop: "0.35rem", lineHeight: 1.6 }}>
+              {meta.total > 0
+                ? `${meta.total} handpicked products — ${products.length} shown on this page`
+                : "Fresh arrivals and customer favorites, updated regularly"}
             </p>
           </div>
         </div>

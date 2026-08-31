@@ -63,6 +63,11 @@
   --shadow-xl:  0 20px 48px -8px rgba(15, 23, 42, 0.16);
   --shadow-2xl: 0 32px 64px -12px rgba(15, 23, 42, 0.20);
 
+  /* Hero */
+  --hero-gradient: linear-gradient(160deg, #FFFBF5 0%, #FFFFFF 45%, #F8FAFC 100%);
+  --hero-glow-accent: rgba(217, 119, 6, 0.16);
+  --hero-glow-blue: rgba(59, 130, 246, 0.07);
+
   /* Spacing & Radius */
   --radius-sm:     0.375rem;
   --radius-md:     0.75rem;
@@ -127,6 +132,11 @@ html.dark {
   --shadow-lg:  0 12px 36px -4px rgba(0, 0, 0, 0.85);
   --shadow-xl:  0 24px 60px -10px rgba(0, 0, 0, 0.92);
   --shadow-2xl: 0 40px 80px -16px rgba(0, 0, 0, 0.98);
+
+  /* Hero */
+  --hero-gradient: linear-gradient(160deg, #0F1419 0%, #151C26 48%, #0F1419 100%);
+  --hero-glow-accent: rgba(245, 158, 11, 0.12);
+  --hero-glow-blue: rgba(96, 165, 250, 0.06);
 }
 
 /* ============================================================
@@ -180,6 +190,13 @@ html.dark {
     background-clip: text;
     color: #F59E0B;
     display: inline;
+  }
+  html.dark .text-gold-gradient {
+    background: linear-gradient(135deg, #FDE68A 0%, #FBBF24 45%, #F59E0B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: #FBBF24;
   }
 
   /* ── Buttons ── */
