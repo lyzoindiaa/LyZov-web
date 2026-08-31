@@ -1,4 +1,5 @@
-﻿const express = require("express");
+const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
@@ -55,6 +56,7 @@ const globalLimiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "development", // disable in dev
 });
 app.use("/api", globalLimiter);
 
@@ -81,7 +83,20 @@ app.use("/api/addresses", addressRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/email", emailRoutes); // email sending route...
+app.use("/api/email", emailRoutes);
+
+// ── Serve Frontend in Production ──
+if (process.env.NODE_ENV === "production") {
+  const frontendDist = path.join(__dirname, "../../frontend/client/dist");
+  app.use(express.static(frontendDist));
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(path.resolve(frontendDist, "index.html"));
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);

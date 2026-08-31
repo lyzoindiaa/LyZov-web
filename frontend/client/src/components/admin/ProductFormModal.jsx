@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import Modal from "../ui/Modal";
 import Input from "../ui/Input";
@@ -118,25 +118,41 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         />
 
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
-            Description
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+            Description <span className="text-[var(--red)]">*</span>
           </label>
           <textarea
             rows={3}
-            className="input-field"
+            className={`input-field ${
+              errors.description
+                ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
+                : ""
+            }`}
             {...register("description", { required: "Description is required" })}
           />
-          {errors.description && <p className="mt-1.5 text-xs text-red-500">{errors.description.message}</p>}
+          {errors.description && (
+            <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-1">
+              <AlertCircle size={12} className="shrink-0" />
+              <span>{errors.description.message}</span>
+            </p>
+          )}
         </div>
 
         <Input label="Short Description" className="sm:col-span-2" {...register("shortDescription")} />
 
         {/* Category */}
         <div>
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
-            Category
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+            Category <span className="text-[var(--red)]">*</span>
           </label>
-          <select className="input-field" {...register("category", { required: "Category is required" })}>
+          <select
+            className={`input-field ${
+              errors.category
+                ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
+                : ""
+            }`}
+            {...register("category", { required: "Category is required" })}
+          >
             <option value="">Select category</option>
             {categories.map((c) => (
               <option key={c._id} value={c._id}>
@@ -144,7 +160,12 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
               </option>
             ))}
           </select>
-          {errors.category && <p className="mt-1.5 text-xs text-red-500">{errors.category.message}</p>}
+          {errors.category && (
+            <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-1">
+              <AlertCircle size={12} className="shrink-0" />
+              <span>{errors.category.message}</span>
+            </p>
+          )}
         </div>
 
         {/* Brand */}

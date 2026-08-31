@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -41,6 +41,12 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const theme = useSelector((state) => state.ui.theme);
+
+  // Global Theme Sync across entire app
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   useEffect(() => {
     dispatch(fetchCurrentUser());
@@ -51,7 +57,12 @@ function App() {
   }, [isAuthenticated, dispatch]);
 
   useEffect(() => {
-    const handleLogout = () => navigate("/login");
+    const handleLogout = () => {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/admin")) {
+        navigate("/login");
+      }
+    };
     window.addEventListener("auth:logout", handleLogout);
     return () => window.removeEventListener("auth:logout", handleLogout);
   }, [navigate]);
@@ -59,6 +70,13 @@ function App() {
   return (
     <>
       <Routes>
+        {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
+        {/* ── Public & Storefront Routes with Navbar & Footer ── */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ShopPage />} />
@@ -72,10 +90,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           <Route
             path="/dashboard"
@@ -96,6 +110,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        {/* ── Admin Portal ── */}
         <Route
           path="/admin"
           element={
@@ -112,7 +127,7 @@ function App() {
         </Route>
       </Routes>
 
-      <ToastContainer position="bottom-right" autoClose={3000} theme="light" />
+      <ToastContainer position="bottom-right" autoClose={3000} theme={theme === "dark" ? "dark" : "light"} />
     </>
   );
 }

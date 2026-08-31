@@ -1,13 +1,15 @@
 const variantClasses = {
   primary: "btn-primary",
+  accent: "btn-accent",
   secondary: "btn-secondary",
   ghost: "btn-ghost",
+  danger: "btn-danger",
 };
 
 const sizeClasses = {
-  sm: "!px-4 !py-2 !text-xs",
-  md: "",
-  lg: "!px-9 !py-4 !text-base",
+  sm: "btn-sm",
+  md: "btn-md",
+  lg: "btn-lg",
 };
 
 const Button = ({
@@ -27,7 +29,7 @@ const Button = ({
       type={type}
       disabled={disabled || isLoading}
       onClick={onClick}
-      className={`${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`btn ${variantClasses[variant] || "btn-primary"} ${sizeClasses[size] || "btn-md"} ${className}`}
       {...props}
     >
       {isLoading ? (

@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
+import Logo from "../components/ui/Logo";
 
 const NotFoundPage = () => (
   <div className="container-page flex min-h-[70vh] flex-col items-center justify-center gap-4 text-center">
+    <Logo size="lg" />
     <span className="font-display text-8xl italic text-gold">404</span>
     <h1 className="font-display text-2xl">Page not found</h1>
-    <p className="text-sm text-stone">The page you're looking for doesn't exist or has moved.</p>
+    <p className="text-sm text-stone max-w-md leading-relaxed">
+      The page you&apos;re looking for doesn&apos;t exist or may have moved. Head back to LyZov Store to continue shopping.
+    </p>
     <Link to="/" className="btn-primary mt-2">
-      Back to Home
+      Back to LyZov Store
     </Link>
   </div>
 );

@@ -1,60 +1,280 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { loginUser, clearAuthError } from "../features/auth/authSlice";
+import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, Mail, Lock } from "lucide-react";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+import ThemeToggle from "../components/ui/ThemeToggle";
+import Logo from "../components/ui/Logo";
+
+const trustBullets = [
+  { icon: ShieldCheck, text: "100% secure checkout & payments" },
+  { icon: Truck, text: "Free express delivery on orders ₹999+" },
+  { icon: Award, text: "Authentic & quality guaranteed items" },
+];
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { status, error, isAuthenticated } = useSelector((state) => state.auth);
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { status, error, isAuthenticated, user } = useSelector((state) => state.auth);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ mode: "onTouched" });
+
+  // Capture location once on mount — never re-read it so navigate() doesn't
+  // re-trigger this effect and cause a redirect loop.
+  const fromRef = useRef(location.state?.from?.pathname || null);
 
   useEffect(() => {
-    if (isAuthenticated) navigate(location.state?.from?.pathname || "/", { replace: true });
+    if (!isAuthenticated) return;
+    const targetPath = user?.role === "admin" ? "/admin" : fromRef.current || "/dashboard";
+    navigate(targetPath, { replace: true });
+  }, [isAuthenticated, user?.role, navigate]);
+
+  // Clear any stale auth error only when this page unmounts
+  useEffect(() => {
     return () => dispatch(clearAuthError());
-  }, [isAuthenticated]);
+  }, [dispatch]);
 
   const onSubmit = (data) => dispatch(loginUser(data));
 
   return (
-    <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)", padding: "3rem 1rem" }}>
-      <div style={{ width: "100%", maxWidth: "22rem" }}>
-        
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-            <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "9999px", backgroundColor: "var(--ink)", color: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>
-              L<span style={{ color: "#F59E0B" }}>Z</span>
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)" }}>LyZov</span>
-          </Link>
-          <h1 style={{ marginTop: "1rem", fontSize: "1.5rem", fontWeight: 700, color: "var(--ink)" }}>Welcome back</h1>
-          <p style={{ marginTop: "0.25rem", fontSize: "0.875rem", color: "var(--ink-muted)" }}>Sign in to continue to your account</p>
+    <div style={{ minHeight: "100vh", display: "flex", backgroundColor: "var(--bg)", position: "relative" }}>
+      {/* ── Top Bar with Back Link & Single Theme Toggle ────────── */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1.25rem 2rem",
+        }}
+      >
+        <Link
+          to="/"
+          className="btn-secondary flex items-center gap-1.5 text-xs font-semibold"
+          style={{ padding: "0.45rem 1rem", borderRadius: "9999px" }}
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Store</span>
+        </Link>
+        <ThemeToggle size={16} />
+      </div>
+
+      {/* ── Left 60% Brand Showcase Panel (Desktop) ───────────── */}
+      <div
+        className="auth-panel-left hidden lg:flex"
+        style={{
+          width: "60%",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "5rem 4.5rem",
+          flexShrink: 0,
+        }}
+      >
+        <div className="auth-orb-1" />
+        <div className="auth-orb-2" />
+
+        <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
+          <Logo size="xl" variant="elevated" />
         </div>
 
-        {/* Form Card */}
-        <div style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: "1.25rem", padding: "1.75rem", boxShadow: "var(--shadow-md)" }}>
-          <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Input label="Email" type="email" {...register("email", { required: "Email is required" })} error={errors.email?.message} />
-            <Input label="Password" type="password" {...register("password", { required: "Password is required" })} error={errors.password?.message} />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Link to="/forgot-password" style={{ fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none" }} onMouseEnter={(e) => e.target.style.color = "var(--accent)"} onMouseLeave={(e) => e.target.style.color = "var(--ink-muted)"}>
-                Forgot password?
-              </Link>
-            </div>
-            {error && <p style={{ fontSize: "0.75rem", color: "var(--red)", backgroundColor: "var(--red-bg)", padding: "0.5rem 0.75rem", borderRadius: "0.5rem" }}>{error}</p>}
-            <Button type="submit" isLoading={status === "loading"} className="mt-1 w-full">Sign In</Button>
-          </form>
-        </div>
+        {/* Headline */}
+        <div style={{ position: "relative", zIndex: 1, maxWidth: "34rem" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              backgroundColor: "rgba(245,158,11,0.2)",
+              color: "#F59E0B",
+              fontSize: "11px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              padding: "0.35rem 0.85rem",
+              borderRadius: "9999px",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <Sparkles size={11} /> LyZov Premium Store
+          </div>
+          <h2
+            style={{
+              fontSize: "clamp(2.25rem, 3.5vw, 3.25rem)",
+              fontWeight: 900,
+              color: "#fff",
+              lineHeight: 1.12,
+              letterSpacing: "-0.03em",
+              marginBottom: "1.25rem",
+            }}
+          >
+            Welcome back to
+            <br />
+            <span style={{ color: "#F59E0B" }}>LyZov Store.</span>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(255,255,255,0.72)",
+              lineHeight: 1.75,
+              maxWidth: "28rem",
+              marginBottom: "3rem",
+            }}
+          >
+            Sign in to track orders, manage your wishlist, and enjoy a seamless shopping experience — fitness gear, spiritual idols, and lifestyle essentials all in one place.
+          </p>
 
-        <p style={{ marginTop: "1.25rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-          Don't have an account?{" "}
-          <Link to="/register" style={{ fontWeight: 600, color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: "2px" }}>Create one</Link>
-        </p>
+          {/* Trust bullets */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+            {trustBullets.map(({ icon: Icon, text }) => (
+              <div key={text} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div
+                  style={{
+                    width: "2.25rem",
+                    height: "2.25rem",
+                    borderRadius: "9999px",
+                    background: "rgba(255,255,255,0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon size={15} color="rgba(255,255,255,0.9)" />
+                </div>
+                <span style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right 40% Form Panel (Desktop) ──────────────────── */}
+      <div
+        style={{
+          width: "40%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "5rem 2rem 2rem",
+        }}
+        className="w-full lg:w-[40%]"
+      >
+        <div style={{ width: "100%", maxWidth: "23rem" }}>
+          {/* Mobile brand header */}
+          <div className="lg:hidden" style={{ textAlign: "center", marginBottom: "2rem" }}>
+            <Logo size="lg" variant="elevated" />
+          </div>
+
+          {/* Title & subtitle */}
+          <div style={{ marginBottom: "1.75rem" }}>
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em" }}>
+              Welcome back
+            </h1>
+            <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
+              Sign in to continue to your account
+            </p>
+          </div>
+
+          {/* Form container */}
+          <div
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "1.25rem",
+              padding: "1.75rem",
+              boxShadow: "var(--shadow-md)",
+            }}
+          >
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="you@example.com"
+                leftIcon={Mail}
+                required
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address format",
+                  },
+                })}
+                error={errors.email?.message}
+              />
+
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                leftIcon={Lock}
+                required
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 6, message: "Password must be at least 6 characters" },
+                })}
+                error={errors.password?.message}
+              />
+
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "var(--ink-muted)",
+                    textDecoration: "none",
+                    transition: "color 0.15s",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = "var(--accent)")}
+                  onMouseLeave={(e) => (e.target.style.color = "var(--ink-muted)")}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {error && (
+                <div
+                  className="input-error"
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--red)",
+                    backgroundColor: "var(--red-bg)",
+                    border: "1px solid var(--red)/20",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "0.625rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <Button type="submit" variant="primary" size="lg" isLoading={status === "loading"} className="mt-1 w-full btn-ripple">
+                Sign In
+              </Button>
+            </form>
+          </div>
+
+          <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
+            Don't have an account?{" "}
+            <Link to="/register" style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
+              Create one
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
