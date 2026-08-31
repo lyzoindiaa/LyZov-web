@@ -13,7 +13,8 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import StripePaymentForm from "../components/checkout/StripePaymentForm";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 const TAX_RATE = 0.08;
 const FREE_SHIPPING_THRESHOLD = 999;
