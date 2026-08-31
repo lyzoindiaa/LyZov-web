@@ -62,10 +62,7 @@ app.use("/api", globalLimiter);
 
 
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ success: true, message: `LyZov Gentlemen API is healthy ${process.env.CLIENT_URL}`, timestamp: new Date() });
-});
-app.get("/", (req, res) => {
-  res.status(200).json({ success: true, message: "LyZov Gentlemen Backend is now working...", timestamp: new Date() });
+  res.status(200).json({ success: true, message: `LyZov Gentlemen API is healthy ${process.env.CLIENT_URL || ""}`, timestamp: new Date() });
 });
 
 
