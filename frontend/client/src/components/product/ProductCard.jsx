@@ -59,6 +59,7 @@ const ProductCard = ({ product }) => {
           src={mainImage}
           alt={product.images?.[0]?.altText || product.title || product.name}
           loading="lazy"
+          referrerPolicy="no-referrer"
           style={{
             position: "absolute",
             inset: 0,
@@ -74,6 +75,7 @@ const ProductCard = ({ product }) => {
           src={hoverImage}
           alt=""
           loading="lazy"
+          referrerPolicy="no-referrer"
           style={{
             position: "absolute",
             inset: 0,

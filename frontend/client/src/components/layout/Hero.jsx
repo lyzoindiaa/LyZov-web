@@ -113,6 +113,7 @@ const Hero = () => {
                   src={img}
                   alt={alt}
                   loading="eager"
+                  referrerPolicy="no-referrer"
                   className="hero-showcase-img"
                   style={{ objectPosition: objectPosition || "center center" }}
                   onError={(e) => {
