@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
@@ -82,16 +83,26 @@ app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/email", emailRoutes);
 
-// ── Serve Frontend in Production ──
-if (process.env.NODE_ENV === "production") {
-  const frontendDist = path.join(__dirname, "../../frontend/client/dist");
+// ── Serve Frontend ──
+const frontendDist = path.join(__dirname, "../../frontend/client/dist");
+const indexHtmlPath = path.join(frontendDist, "index.html");
+
+if (fs.existsSync(indexHtmlPath)) {
   app.use(express.static(frontendDist));
 
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
-    res.sendFile(path.resolve(frontendDist, "index.html"));
+    res.sendFile(indexHtmlPath);
+  });
+} else {
+  // If dist hasn't been built yet
+  app.get("/", (req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "LyZov API is running. Frontend dist not found — please run 'npm run build' during deployment.",
+    });
   });
 }
 
