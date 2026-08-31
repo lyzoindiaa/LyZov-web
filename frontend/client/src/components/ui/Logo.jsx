@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import logoSrc from "../../assets/lyzov-logo.png";
 import logoDarkSrc from "../../assets/lyzov-logo-dark.png";
@@ -12,7 +13,7 @@ const SIZES = {
 };
 
 /**
- * LyZov wordmark logo — bundled via Vite from src/assets.
+ * LyZov wordmark logo — single image rendered dynamically based on active theme.
  */
 const Logo = ({
   size = "md",
@@ -22,8 +23,11 @@ const Logo = ({
   style = {},
   variant = "default",
 }) => {
+  const theme = useSelector((state) => state.ui?.theme || "dark");
+  const isDark = theme === "dark";
   const height = SIZES[size] ?? SIZES.md;
 
+  const currentSrc = isDark ? logoDarkSrc : logoSrc;
   const imgClass = `logo-img ${variant === "elevated" ? "logo-img-elevated" : ""}`;
   const imgStyle = {
     height,
@@ -35,28 +39,16 @@ const Logo = ({
   };
 
   const image = (
-    <>
-      <img
-        src={logoSrc}
-        alt="LyZov Store — Premium Lifestyle Shopping"
-        width={Math.round(height * 3.2)}
-        height={height}
-        className={`${imgClass} dark:hidden`}
-        style={imgStyle}
-        loading="eager"
-        decoding="async"
-      />
-      <img
-        src={logoDarkSrc}
-        alt="LyZov Store — Premium Lifestyle Shopping"
-        width={Math.round(height * 3.2)}
-        height={height}
-        className={`${imgClass} hidden dark:block`}
-        style={imgStyle}
-        loading="eager"
-        decoding="async"
-      />
-    </>
+    <img
+      src={currentSrc}
+      alt="LyZov Store — Premium Lifestyle Shopping"
+      width={Math.round(height * 3.2)}
+      height={height}
+      className={imgClass}
+      style={imgStyle}
+      loading="eager"
+      decoding="async"
+    />
   );
 
   if (!linked) {

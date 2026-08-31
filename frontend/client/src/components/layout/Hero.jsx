@@ -115,6 +115,13 @@ const Hero = () => {
                   loading="eager"
                   className="hero-showcase-img"
                   style={{ objectPosition: objectPosition || "center center" }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-neutral-900/40 to-neutral-950 -z-10"
+                  style={{ borderRadius: "inherit" }}
                 />
                 <div className={`hero-showcase-overlay ${wide ? "hero-showcase-overlay--wide" : ""}`} />
                 <div className={`hero-showcase-caption ${wide ? "hero-showcase-caption--wide" : ""}`}>
