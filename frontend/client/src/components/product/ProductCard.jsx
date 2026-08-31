@@ -9,11 +9,12 @@ import { toast } from "react-toastify";
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
   const wishlistProducts = useSelector((state) => state.wishlist.products);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const isWished = wishlistProducts.some((p) => p._id === product._id);
-  const mainImage = product.images?.[0]?.url || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=500&auto=format&fit=crop&q=60";
+  const mainImage = product.images?.[0]?.url || "";
   const hoverImage = product.images?.[1]?.url || mainImage;
   const finalPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
   const discountPercent = product.discountPrice > 0 ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0;
@@ -54,40 +55,68 @@ const ProductCard = ({ product }) => {
 
       {/* Image Container (1:1 Aspect Ratio) */}
       <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--img-tile)" }}>
-        {/* Main image */}
-        <img
-          src={mainImage}
-          alt={product.images?.[0]?.altText || product.title || product.name}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-          className="group-hover:opacity-0 group-hover:scale-105"
-        />
-        {/* Hover image */}
-        <img
-          src={hoverImage}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            opacity: 0,
-            transform: "scale(1.05)",
-            transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-          className="group-hover:opacity-100 group-hover:scale-100"
-        />
+        {!imageError && mainImage ? (
+          <>
+            {/* Main image */}
+            <img
+              src={mainImage}
+              alt={product.images?.[0]?.altText || product.title || product.name}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setImageError(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+              className="group-hover:opacity-0 group-hover:scale-105"
+            />
+            {/* Hover image */}
+            {hoverImage && hoverImage !== mainImage && (
+              <img
+                src={hoverImage}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: 0,
+                  transform: "scale(1.05)",
+                  transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+                className="group-hover:opacity-100 group-hover:scale-100"
+              />
+            )}
+          </>
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              background: "linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(15,23,42,0.6) 100%)",
+              color: "var(--ink-muted)",
+              padding: "1rem",
+              textAlign: "center",
+            }}
+          >
+            <ShoppingBag size={32} color="var(--accent)" opacity={0.6} />
+            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              {product.brand?.name || "LyZov Exclusive"}
+            </span>
+          </div>
+        )}
 
         {/* Badges Top-Left */}
         <div style={{ position: "absolute", left: "0.75rem", top: "0.75rem", display: "flex", flexDirection: "column", gap: "0.35rem", zIndex: 10 }}>

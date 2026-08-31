@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, RotateCcw, Award, Sparkles } from "lucide-react";
 
+import gymImg from "../../assets/hero-gym.svg";
+import spiritualImg from "../../assets/hero-spiritual.svg";
+import decorImg from "../../assets/hero-decor.svg";
+
 const trustItems = [
   { icon: Truck, title: "Free Shipping", sub: "On orders above ₹999" },
   { icon: ShieldCheck, title: "Quality Guaranteed", sub: "Every item hand-inspected" },
@@ -18,17 +22,17 @@ const stats = [
 const showcaseCards = [
   {
     to: "/shop?category=equipment",
-    img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=700&auto=format&fit=crop&q=80",
-    alt: "Barbells and gym equipment in a fitness studio",
+    img: gymImg,
+    alt: "Gym and fitness gear",
     badge: "Fitness",
     title: "Gym Equipment",
     aspect: "4/5",
-    objectPosition: "center 40%",
+    objectPosition: "center center",
   },
   {
     to: "/shop?category=spiritual",
-    img: "https://images.unsplash.com/photo-1567702014247-1947012845e7?w=700&auto=format&fit=crop&q=80",
-    alt: "Handcrafted Lord Ganesha idol statue",
+    img: spiritualImg,
+    alt: "Handcrafted Lord Ganesha and god idols",
     badge: "Handcrafted",
     title: "God Idols & Murtis",
     aspect: "4/5",
@@ -36,13 +40,13 @@ const showcaseCards = [
   },
   {
     to: "/shop?category=accessories",
-    img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=900&auto=format&fit=crop&q=80",
-    alt: "Brass diyas and spiritual home decor for puja",
+    img: decorImg,
+    alt: "Brass diyas and spiritual home decor",
     badge: "Spiritual",
     title: "Puja & Home Decor",
     aspect: "16/7",
     wide: true,
-    objectPosition: "center 55%",
+    objectPosition: "center center",
   },
 ];
 
