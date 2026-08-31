@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles } from "lucide-react";
 import Hero from "../components/layout/Hero";
@@ -25,7 +25,13 @@ const LandingPage = () => {
 
   const filters = Object.fromEntries(searchParams.entries());
   const page = Number(filters.page) || 1;
-  const isFiltered = Boolean(filters.search || filters.category || filters.minPrice || filters.sort || inStockOnly);
+  // Stable string key — avoids creating a new object ref on every render
+  const filtersKey = searchParams.toString();
+  const isFiltered = useMemo(
+    () => Boolean(filters.search || filters.category || filters.minPrice || filters.sort || inStockOnly),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filtersKey, inStockOnly]
+  );
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -40,7 +46,9 @@ const LandingPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchParams, inStockOnly]);
+    // Use stable filtersKey string, NOT the searchParams object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersKey, inStockOnly]);
 
   useEffect(() => {
     fetchProducts();
@@ -48,7 +56,8 @@ const LandingPage = () => {
       const el = document.getElementById("store-products");
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }
-  }, [fetchProducts, isFiltered]);
+  // fetchProducts is already stable per filtersKey; isFiltered is memoized
+  }, [fetchProducts]);
 
   const updateFilters = (updates) => {
     const next = { ...filters, ...updates, page: 1 };

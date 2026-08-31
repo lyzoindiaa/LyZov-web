@@ -39,7 +39,7 @@ const Logo = ({
       <img
         src={logoSrc}
         alt="LyZov Store — Premium Lifestyle Shopping"
-        width={Math.round(height * 2.8)}
+        width={Math.round(height * 3.2)}
         height={height}
         className={`${imgClass} dark:hidden`}
         style={imgStyle}
@@ -49,7 +49,7 @@ const Logo = ({
       <img
         src={logoDarkSrc}
         alt="LyZov Store — Premium Lifestyle Shopping"
-        width={Math.round(height * 2.8)}
+        width={Math.round(height * 3.2)}
         height={height}
         className={`${imgClass} hidden dark:block`}
         style={imgStyle}

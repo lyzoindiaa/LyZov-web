@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
@@ -26,13 +26,20 @@ const LoginPage = () => {
     formState: { errors },
   } = useForm({ mode: "onTouched" });
 
+  // Capture location once on mount — never re-read it so navigate() doesn't
+  // re-trigger this effect and cause a redirect loop.
+  const fromRef = useRef(location.state?.from?.pathname || null);
+
   useEffect(() => {
-    if (isAuthenticated) {
-      const targetPath = user?.role === "admin" ? "/admin" : location.state?.from?.pathname || "/dashboard";
-      navigate(targetPath, { replace: true });
-    }
+    if (!isAuthenticated) return;
+    const targetPath = user?.role === "admin" ? "/admin" : fromRef.current || "/dashboard";
+    navigate(targetPath, { replace: true });
+  }, [isAuthenticated, user?.role, navigate]);
+
+  // Clear any stale auth error only when this page unmounts
+  useEffect(() => {
     return () => dispatch(clearAuthError());
-  }, [isAuthenticated, user?.role, navigate, dispatch, location]);
+  }, [dispatch]);
 
   const onSubmit = (data) => dispatch(loginUser(data));
 
