@@ -32,6 +32,7 @@ const footerColumns = [
   },
 ];
 
+
 const Footer = () => {
   return (
     <footer style={{ borderTop: "2px solid var(--accent)", backgroundColor: "var(--bg-subtle)", position: "relative" }}>

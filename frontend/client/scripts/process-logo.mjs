@@ -44,14 +44,14 @@ async function processLogo(input, outputPath, { darkMode = false } = {}) {
 }
 
 const lightOut = path.join(assetsDir, "lyzov-logo-transparent.png");
-const darkOut = path.join(assetsDir, "lyzov-logo-dark.png");
+const darkOut = path.join(assetsDir, "lyzov-logo.png");
 
 await processLogo(inputPath, lightOut);
 await processLogo(inputPath, darkOut, { darkMode: true });
 
 for (const dir of [assetsDir, publicDir]) {
   fs.copyFileSync(lightOut, path.join(dir, "lyzov-logo.png"));
-  fs.copyFileSync(darkOut, path.join(dir, "lyzov-logo-dark.png"));
+  fs.copyFileSync(darkOut, path.join(dir, "lyzov-logo.png"));
 }
 
 fs.unlinkSync(lightOut);

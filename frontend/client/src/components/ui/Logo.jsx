@@ -1,7 +1,6 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import logoSrc from "../../assets/lyzov-logo.png";
-import logoDarkSrc from "../../assets/lyzov-logo-dark.png";
 
 const SIZES = {
   xs: 36,
@@ -27,7 +26,7 @@ const Logo = ({
   const isDark = theme === "dark";
   const height = SIZES[size] ?? SIZES.md;
 
-  const currentSrc = isDark ? logoDarkSrc : logoSrc;
+  const currentSrc = logoSrc;
   const imgClass = `logo-img ${variant === "elevated" ? "logo-img-elevated" : ""}`;
   const imgStyle = {
     height,

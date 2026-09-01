@@ -11,7 +11,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { DollarSign, ShoppingBag, Package, Users } from "lucide-react";
+import { IndianRupee, ShoppingBag, Package, Users } from "lucide-react";
 import { adminService } from "../../services/cartService";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
@@ -28,7 +28,7 @@ const statusTones = {
 };
 
 const statMeta = [
-  { key: "revenue", cls: "stat-revenue", icon: DollarSign },
+  { key: "revenue", cls: "stat-revenue", icon: IndianRupee },
   { key: "orders", cls: "stat-orders", icon: ShoppingBag },
   { key: "products", cls: "stat-products", icon: Package },
   { key: "users", cls: "stat-users", icon: Users },
@@ -122,7 +122,7 @@ const AdminAnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} colorClass="stat-revenue" />
+        <StatCard icon={IndianRupee} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} colorClass="stat-revenue" />
         <StatCard icon={ShoppingBag} label="Total Orders" value={stats.totalOrders} colorClass="stat-orders" />
         <StatCard icon={Package} label="Total Products" value={stats.totalProducts} colorClass="stat-products" />
         <StatCard icon={Users} label="Total Customers" value={stats.totalUsers} colorClass="stat-users" />
