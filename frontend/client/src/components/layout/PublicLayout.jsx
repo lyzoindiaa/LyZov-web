@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import MiniCart from "./MiniCart";
+import AboutLyZov from "./About";
 
 const PublicLayout = () => {
   return (
@@ -11,6 +12,7 @@ const PublicLayout = () => {
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
+      <AboutLyZov />
       <Footer />
     </div>
   );

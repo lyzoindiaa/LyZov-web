@@ -479,3 +479,174 @@ img, video, svg, .btn { transition: unset; }
 html.dark table { background-color: var(--surface); }
 html.dark th { background-color: var(--bg-raised); color: var(--ink-muted); }
 html.dark td { border-color: var(--border); color: var(--ink); }
+.about-lyzov {
+  width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.about-container {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 64px 24px 80px;
+  display: grid;
+  gap: 24px;
+}
+
+.about-header-shell {
+  padding-top: 8px;
+}
+
+.about-header-shell h1 {
+  font-size: clamp(2.2rem, 3.3vw, 3.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.05em;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+
+.about-card {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-subtle) 100%);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-sm);
+  padding: 30px clamp(20px, 2.7vw, 36px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.about-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+.about-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--accent-light-bg) 100%);
+}
+
+.about-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, var(--accent-bg) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.about-header h2 {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  margin: 0 0 20px;
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.about-section {
+  margin: 0;
+}
+
+.about-section h2 {
+  font-size: clamp(1.5rem, 2.1vw, 2.1rem);
+  margin: 0 0 16px;
+  color: var(--ink);
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+.about-section h3 {
+  font-size: 1.2rem;
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.about-section p,
+.about-header p {
+  position: relative;
+  z-index: 1;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--ink-light);
+  margin: 0 0 14px;
+}
+
+.about-section strong,
+.about-header strong {
+  color: var(--ink);
+}
+
+.spiritual-section {
+  padding-top: 30px;
+}
+
+.subcategory {
+  margin-top: 18px;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.about-list li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ink-light);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.about-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bullet-color, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bullet-color, var(--accent)) 18%, transparent);
+}
+
+.bullet-amber { --bullet-color: var(--accent); }
+.bullet-blue { --bullet-color: var(--blue); }
+.bullet-green { --bullet-color: var(--green); }
+.bullet-rose { --bullet-color: var(--red); }
+.bullet-violet { --bullet-color: #8B5CF6; }
+.bullet-cyan { --bullet-color: #06B6D4; }
+
+@media (max-width: 768px) {
+  .about-container {
+    padding: 40px 18px 56px;
+  }
+
+  .about-card {
+    border-radius: 18px;
+    padding: 24px 18px;
+  }
+
+  .about-header-shell h1 {
+    font-size: 2.1rem;
+  }
+
+  .about-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .about-section h2 {
+    font-size: 1.6rem;
+  }
+
+  .about-section p,
+  .about-header p {
+    font-size: 0.9rem;
+  }
+}
