@@ -1,6 +1,8 @@
 const categories = [
     {
         title: "Women's Fashion",
+        tag: "Style & Essentials",
+        accent: "amber",
         description: [
             "Explore a variety of women's clothing and fashion essentials, including kurtis, sarees, dresses, tops, jeans, leggings, nightwear, ethnic outfits, footwear, and seasonal fashion.",
             "Our collection includes everyday styles as well as products suitable for festive occasions and special events.",
@@ -8,12 +10,16 @@ const categories = [
     },
     {
         title: "Men's Fashion",
+        tag: "Everyday Essentials",
+        accent: "blue",
         description: [
             "Discover clothing and accessories for men, including T-shirts, shirts, jeans, trousers, jackets, sweaters, activewear, ethnic wear, kurtas, sherwanis, footwear, wallets, belts, bags, watches, and other accessories.",
         ],
     },
     {
         title: "Kids & Baby Products",
+        tag: "Family First",
+        accent: "green",
         description: [
             "Shop for children of different age groups with products ranging from everyday clothing to festive outfits and useful baby-care essentials.",
             "Our selection includes rompers, kids' dresses, T-shirts, ethnic wear, jackets, school essentials, baby blankets, towels, pillows, and other everyday products.",
@@ -21,6 +27,8 @@ const categories = [
     },
     {
         title: "Home, Kitchen & Lifestyle",
+        tag: "Home Upgrade",
+        accent: "rose",
         description: [
             "Make everyday living easier with useful products for your home and kitchen. Explore cookware, kitchen tools, storage products, bottles, lunch boxes, home furnishings, cushions, curtains, bedsheets, decorative products, organisers, and more.",
             "Whether you're setting up a new home or looking for products for your retail store, LyZov offers a broad selection to explore.",
@@ -28,6 +36,8 @@ const categories = [
     },
     {
         title: "Electronics & Everyday Gadgets",
+        tag: "Smart Living",
+        accent: "violet",
         description: [
             "Find practical electronic accessories and gadgets for home, office, travel, and personal use.",
             "Our selection may include mobile accessories, chargers, data cables, earphones, headphones, speakers, power banks, smart accessories, computer peripherals, storage devices, and other electronic essentials.",
@@ -35,6 +45,8 @@ const categories = [
     },
     {
         title: "Beauty, Personal Care & Grooming",
+        tag: "Wellness & Care",
+        accent: "cyan",
         description: [
             "Discover everyday beauty and personal-care products across skincare, haircare, makeup, grooming, and hygiene categories.",
             "From cosmetics and makeup accessories to hair-care and grooming essentials, LyZov provides multiple options for everyday requirements and retail businesses.",
@@ -106,22 +118,28 @@ function AboutLyZov() {
                 </section>
 
                 {/* Product Categories */}
-                {categories.map((category) => (
-                    <section
-                        className="about-card about-section category-section"
-                        key={category.title}
-                    >
-                        <h2>{category.title}</h2>
+                <div className="about-category-grid">
+                    {categories.map((category) => (
+                        <article
+                            className={`about-card about-category-card category-tone-${category.accent}`}
+                            key={category.title}
+                        >
+                            <span className="category-pill">{category.tag}</span>
+                            <h2>{category.title}</h2>
 
-                        {category.description.map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                        ))}
-                    </section>
-                ))}
+                            {category.description.map((paragraph, index) => (
+                                <p key={index}>{paragraph}</p>
+                            ))}
+                        </article>
+                    ))}
+                </div>
 
                 {/* Spiritual Products */}
                 <section className="about-card about-section spiritual-section">
-                    <h2>🪔 God Idols, Pooja &amp; Spiritual Products</h2>
+                    <div className="spiritual-header">
+                        <span className="category-pill spiritual-pill">Sacred Essentials</span>
+                        <h2>God Idols, Pooja &amp; Spiritual Products</h2>
+                    </div>
 
                     <p>
                         Create a peaceful and devotional space with our collection of{" "}
