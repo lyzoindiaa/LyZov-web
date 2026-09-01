@@ -84,9 +84,9 @@ const LoginPage = () => {
         <div className="auth-orb-1" />
         <div className="auth-orb-2" />
 
-        <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
+        {/* <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
           <Logo size="xl" variant="elevated" />
-        </div>
+        </div> */}
 
         {/* Headline */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: "34rem" }}>

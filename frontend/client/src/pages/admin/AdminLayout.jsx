@@ -75,7 +75,7 @@ const AdminLayout = () => {
             <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
               <Logo size="sm" />
               <div>
-                <p style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--ink-muted)", lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.06em" }}>Admin Panel</p>
+                {/* <p style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--ink-muted)", lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.06em" }}>Admin Panel</p> */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.2rem" }}>
                   <ShieldAlert size={10} className="text-amber-500" />
                   <p style={{ fontSize: "10px", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin Portal</p>
