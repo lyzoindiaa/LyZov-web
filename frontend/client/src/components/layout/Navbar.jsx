@@ -136,10 +136,10 @@ const Navbar = () => {
         transition: "background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
       }}
     >
-      <div className="container-page flex min-h-[4.75rem] items-center justify-between gap-4 py-3 lg:gap-6 lg:py-3.5">
+      <div className="container-page flex w-full max-w-full min-h-[4.75rem] items-center justify-between gap-4 py-3 lg:gap-6 lg:py-3.5">
 
         {/* Left: Brand & Navigation */}
-        <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+        <div className="flex min-w-0 items-center gap-4 sm:gap-6 lg:gap-8">
           <button
             onClick={() => dispatch(toggleMobileMenu())}
             className="btn-icon lg:hidden"
@@ -183,7 +183,7 @@ const Navbar = () => {
                   </button>
 
                   {catMenuOpen && (
-                    <div style={{ position: "absolute", top: "calc(100% + 0.75rem)", left: 0, width: "14rem", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.5rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
+                    <div style={{ position: "absolute", top: "calc(100% + 0.75rem)", left: 0, width: "min(14rem, calc(100vw - 2rem))", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.5rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
                       <Link to="/shop" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", textDecoration: "none", transition: "background 0.15s" }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-raised)"}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
@@ -237,7 +237,7 @@ const Navbar = () => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
 
           {/* Search Trigger */}
           <button
@@ -316,7 +316,21 @@ const Navbar = () => {
                 </button>
 
                 {userMenuOpen && (
-                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 0.5rem)", width: "13rem", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.375rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 0.5rem)",
+                      width: "min(14rem, calc(100vw - 2rem))",
+                      borderRadius: "1rem",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      padding: "0.375rem",
+                      boxShadow: "var(--shadow-lg)",
+                      zIndex: 50,
+                      animation: "fadeIn 0.18s ease",
+                    }}
+                  >
                     <div style={{ padding: "0.625rem 0.75rem", borderBottom: "1px solid var(--border)", marginBottom: "0.25rem" }}>
                       <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</p>
                       <p style={{ fontSize: "11px", color: "var(--ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
@@ -350,11 +364,11 @@ const Navbar = () => {
               <Link
                 to="/login"
                 style={{
-                  fontSize: "0.875rem",
+                  fontSize: "0.8125rem",
                   fontWeight: 700,
                   color: "var(--ink)",
                   textDecoration: "none",
-                  padding: "0.45rem 1rem",
+                  padding: "0.45rem 0.875rem",
                   borderRadius: "9999px",
                   border: "1.5px solid var(--border)",
                   backgroundColor: "var(--surface)",
@@ -362,6 +376,7 @@ const Navbar = () => {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.35rem",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.backgroundColor = "var(--bg-raised)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.backgroundColor = "var(--surface)"; }}
@@ -375,7 +390,7 @@ const Navbar = () => {
 
       {/* Expandable Search Bar */}
       {searchOpen && (
-        <div className="search-bar-enter" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.875rem 1rem" }}>
+        <div className="search-bar-enter" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.75rem 1rem" }}>
           <form onSubmit={handleSearchSubmit} className="container-page" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <Search size={17} style={{ color: "var(--ink-subtle)", flexShrink: 0 }} />
             <input
@@ -399,10 +414,10 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="search-bar-enter lg:hidden" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg)", padding: "1.25rem" }}>
+        <div className="search-bar-enter lg:hidden" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg)", padding: "1rem 1.25rem 1.5rem", maxHeight: "calc(100vh - 4.75rem)", overflowY: "auto" }}>
           <form onSubmit={handleSearchSubmit} style={{ display: "flex", alignItems: "center", borderRadius: "0.875rem", border: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.625rem 0.875rem", marginBottom: "1rem", gap: "0.5rem" }}>
             <Search size={15} style={{ color: "var(--ink-subtle)", flexShrink: 0 }} />
-            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." style={{ flex: 1, background: "transparent", fontSize: "0.8rem", color: "var(--ink)", outline: "none", border: "none" }} />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." style={{ flex: 1, background: "transparent", fontSize: "0.8125rem", color: "var(--ink)", outline: "none", border: "none" }} />
           </form>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -411,12 +426,43 @@ const Navbar = () => {
                 <MobileNavLink to="/admin/categories" accent>Manage Categories</MobileNavLink>
                 <MobileNavLink to="/admin/products">Manage Products</MobileNavLink>
                 <MobileNavLink to="/admin/orders">Manage Orders</MobileNavLink>
+                <MobileNavLink to="/admin">Admin Dashboard</MobileNavLink>
               </>
             ) : (
               <>
                 <MobileNavLink to="/">Home Storefront</MobileNavLink>
-                <MobileNavLink to="/?sort=popular">Featured Products</MobileNavLink>
-                <MobileNavLink to="/shop">All Products</MobileNavLink>
+                <MobileNavLink to="/?sort=popular">Featured Picks</MobileNavLink>
+                <MobileNavLink to="/shop" accent>All Products Catalog</MobileNavLink>
+
+                {/* Mobile Categories Accordion/Links */}
+                {categories.length > 0 && (
+                  <div style={{ margin: "0.5rem 0", padding: "0.5rem 0.75rem", backgroundColor: "var(--bg-subtle)", borderRadius: "0.75rem", border: "1px solid var(--border)" }}>
+                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-subtle)", marginBottom: "0.35rem" }}>
+                      Shop by Category
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                      {categories.map((c) => (
+                        <Link
+                          key={c._id}
+                          to={`/shop?category=${c._id}`}
+                          style={{
+                            fontSize: "0.8125rem",
+                            fontWeight: 500,
+                            color: "var(--ink-muted)",
+                            padding: "0.35rem 0.25rem",
+                            textDecoration: "none",
+                          }}
+                        >
+                          • {c.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
+                <MobileNavLink to={isAuthenticated ? "/dashboard/wishlist" : "/login"}>Saved Wishlist</MobileNavLink>
+                {isAuthenticated && <MobileNavLink to="/dashboard/orders">My Orders</MobileNavLink>}
               </>
             )}
           </nav>

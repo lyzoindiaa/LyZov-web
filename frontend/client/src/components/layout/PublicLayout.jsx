@@ -5,10 +5,10 @@ import MiniCart from "./MiniCart";
 
 const PublicLayout = () => {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="page-shell flex min-h-screen flex-col">
       <Navbar />
       <MiniCart />
-      <main className="flex-1">
+      <main className="flex-1 min-w-0">
         <Outlet />
       </main>
       <Footer />

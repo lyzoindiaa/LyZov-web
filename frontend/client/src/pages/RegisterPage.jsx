@@ -41,7 +41,7 @@ const RegisterPage = () => {
   const passwordVal = watch("password");
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", backgroundColor: "var(--bg)", position: "relative" }}>
+    <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
       {/* ── Top Bar ──────────────────────────────────────── */}
       <div
         style={{
@@ -159,11 +159,12 @@ const RegisterPage = () => {
       {/* ── Right 40% Form Panel (Desktop) ──────────────────── */}
       <div
         style={{
-          width: "40%",
+          width: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "5rem 2rem 2rem",
+          padding: "5rem 1rem 2rem",
+          minWidth: 0,
         }}
         className="w-full lg:w-[40%]"
       >
