@@ -81,10 +81,10 @@ const Hero = () => {
             </p>
 
             <div className="hero-cta-row">
-              <Link to="/shop" className="btn btn-primary btn-lg btn-ripple">
+              <Link to="/shop" className="btn btn-primary btn-lg btn-ripple w-full sm:w-auto">
                 Start Shopping <ArrowRight size={17} />
               </Link>
-              <Link to="/shop?sort=popular" className="btn btn-secondary btn-lg">
+              <Link to="/shop?sort=popular" className="btn btn-secondary btn-lg w-full sm:w-auto">
                 View Bestsellers
               </Link>
             </div>

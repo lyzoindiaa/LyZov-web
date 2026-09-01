@@ -202,7 +202,7 @@ const ShopPage = () => {
           <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" />
 
           {meta.totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-center gap-2">
+            <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => goToPage(page - 1)}

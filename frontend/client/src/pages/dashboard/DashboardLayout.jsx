@@ -51,7 +51,7 @@ const DashboardLayout = () => {
   const isRoot = location.pathname === "/dashboard" || location.pathname === "/dashboard/orders";
 
   return (
-    <div className="container-page py-8 lg:py-12">
+    <div className="container-page w-full max-w-full py-8 lg:py-12">
 
       {/* ── Welcome Hero Banner ───────────────────────────── */}
       <div
@@ -69,6 +69,9 @@ const DashboardLayout = () => {
           justifyContent: "space-between",
           gap: "1rem",
           flexWrap: "wrap",
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
         }}
       >
         {/* Decorative accent line */}
@@ -152,6 +155,9 @@ const DashboardLayout = () => {
             gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
             gap: "0.75rem",
             marginBottom: "2rem",
+            width: "100%",
+            maxWidth: "100%",
+            minWidth: 0,
           }}
         >
           {[
@@ -200,7 +206,7 @@ const DashboardLayout = () => {
       )}
 
       {/* ── Main Layout: Sidebar + Content ──────────────── */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_1fr]">
+      <div className="grid w-full max-w-full grid-cols-1 gap-8 lg:grid-cols-[220px_1fr]">
 
         {/* Sidebar */}
         <aside
@@ -211,8 +217,9 @@ const DashboardLayout = () => {
             padding: "0.75rem",
             boxShadow: "var(--shadow-sm)",
             alignSelf: "start",
+            minWidth: 0,
           }}
-          className="flex flex-row gap-1.5 overflow-x-auto lg:flex-col lg:overflow-visible no-scrollbar lg:sticky lg:top-6"
+          className="flex min-w-0 flex-row gap-1.5 overflow-x-auto lg:flex-col lg:overflow-visible no-scrollbar lg:sticky lg:top-6"
         >
           {navItems.map((item) => (
             <NavLink

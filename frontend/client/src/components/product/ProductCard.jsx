@@ -50,8 +50,7 @@ const ProductCard = ({ product }) => {
   return (
     <Link
       to={`/product/${product.slug || product._id}`}
-      className="card-product group hover-lift"
-      style={{ maxWidth: "340px", width: "100%" }}
+      className="card-product group hover-lift w-full flex flex-col justify-between"
     >
 
       {/* Image Container (1:1 Aspect Ratio) */}
@@ -168,57 +167,59 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-        {/* Brand */}
-        <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)" }}>
-          {product.brand?.name || "LyZov Store"}
-        </p>
+      <div className="p-2.5 sm:p-4 flex flex-col gap-1 sm:gap-1.5 flex-1 justify-between">
+        <div className="flex flex-col gap-1">
+          {/* Brand */}
+          <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)" }} className="sm:text-[10px]">
+            {product.brand?.name || "LyZov Store"}
+          </p>
 
-        {/* Title */}
-        <h3
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            color: "var(--ink)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            transition: "color 0.15s",
-          }}
-          className="group-hover:text-[var(--accent)]"
-        >
-          {product.title || product.name}
-        </h3>
+          {/* Title */}
+          <h3
+            style={{
+              fontWeight: 600,
+              color: "var(--ink)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              transition: "color 0.15s",
+            }}
+            className="text-xs sm:text-sm group-hover:text-[var(--accent)]"
+          >
+            {product.title || product.name}
+          </h3>
 
-        {/* Star rating */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-          <div style={{ display: "flex", gap: "1.5px" }}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Star
-                key={i}
-                size={11}
-                fill={i <= Math.round(rating) ? "var(--yellow)" : "none"}
-                color={i <= Math.round(rating) ? "var(--yellow)" : "var(--border-dark)"}
-              />
-            ))}
+          {/* Star rating */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <div style={{ display: "flex", gap: "1.5px" }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star
+                  key={i}
+                  size={10}
+                  className="sm:w-[11px] sm:h-[11px]"
+                  fill={i <= Math.round(rating) ? "var(--yellow)" : "none"}
+                  color={i <= Math.round(rating) ? "var(--yellow)" : "var(--border-dark)"}
+                />
+              ))}
+            </div>
+            <span style={{ fontSize: "10px", color: "var(--ink-subtle)", fontWeight: 500 }} className="sm:text-[11px]">
+              {rating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ""}
+            </span>
           </div>
-          <span style={{ fontSize: "11px", color: "var(--ink-subtle)", fontWeight: 500 }}>
-            {rating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ""}
-          </span>
         </div>
 
         {/* Price row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
-          <span style={{ fontSize: "0.9375rem", fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
+          <span style={{ fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }} className="text-xs sm:text-sm md:text-base">
             {formatCurrency(finalPrice)}
           </span>
           {product.discountPrice > 0 && (
-            <span style={{ fontSize: "0.8125rem", color: "var(--ink-subtle)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ color: "var(--ink-subtle)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }} className="text-[10px] sm:text-xs">
               {formatCurrency(product.price)}
             </span>
           )}
           {discountPercent > 0 && (
-            <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 700, color: "var(--green)" }}>
+            <span style={{ marginLeft: "auto", fontWeight: 700, color: "var(--green)" }} className="text-[10px] sm:text-xs">
               {discountPercent}% off
             </span>
           )}
