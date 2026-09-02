@@ -13,6 +13,7 @@ const uiSlice = createSlice({
     theme: getInitialTheme(),
     isMobileMenuOpen: false,
     isFilterDrawerOpen: false,
+    searchDraft: "",
   },
   reducers: {
     toggleTheme: (state) => {
@@ -42,6 +43,9 @@ const uiSlice = createSlice({
     closeFilterDrawer: (state) => {
       state.isFilterDrawerOpen = false;
     },
+    setSearchDraft: (state, action) => {
+      state.searchDraft = action.payload;
+    },
   },
 });
 
@@ -52,6 +56,7 @@ export const {
   closeMobileMenu,
   toggleFilterDrawer,
   closeFilterDrawer,
+  setSearchDraft,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

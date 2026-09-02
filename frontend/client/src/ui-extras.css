@@ -377,6 +377,8 @@ html.dark .hero-dot-grid { opacity: 0.22; }
   .hero-stats { grid-template-columns: 1fr; }
 }
 
+/* Hero stat cards with rounded corners */
+/* Each stat card has a border-radius of 1rem for consistent rounded styling */
 .hero-stat-card {
   padding: 1rem 1.125rem;
   border-radius: 1rem;
@@ -421,6 +423,8 @@ html.dark .hero-stat-card {
   }
 }
 
+/* Hero showcase category cards with rounded corners */
+/* Each card has a border-radius of 1.35rem for a modern, rounded appearance */
 .hero-showcase-card {
   position: relative;
   overflow: hidden;
@@ -539,6 +543,8 @@ html.dark .hero-showcase-card {
   .hero-trust-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
+/* Hero trust cards with rounded corners */
+/* Each trust card has a border-radius of 1rem for a smooth, modern appearance */
 .hero-trust-card {
   display: flex;
   align-items: center;
@@ -594,6 +600,23 @@ html.dark .hero-trust-card {
   background: linear-gradient(135deg, #0D0D0F 0%, #1a1a2e 40%, #0f3460 100%);
   position: relative;
   overflow: hidden;
+}
+.auth-form-logo .logo-wrap {
+  display: inline-flex;
+}
+.auth-form-logo .logo-img {
+  max-width: 8rem;
+}
+@media (max-width: 480px) {
+  .auth-form-logo {
+    text-align: center;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .auth-form-logo .logo-img {
+    max-width: 7rem;
+    height: 50px;
+  }
 }
 .auth-panel-left::before {
   content: "";

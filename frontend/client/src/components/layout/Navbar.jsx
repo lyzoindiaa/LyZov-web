@@ -6,7 +6,7 @@ import {
   ChevronDown, LogOut, LayoutDashboard, Settings,
   Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart
 } from "lucide-react";
-import { toggleMobileMenu, closeMobileMenu, toggleTheme } from "../../features/ui/uiSlice";
+import { toggleMobileMenu, closeMobileMenu, toggleTheme, setSearchDraft } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
 import { logoutUser } from "../../features/auth/authSlice";
 import { categoryService } from "../../services/categoryService";
@@ -98,6 +98,19 @@ const Navbar = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const trimmedSearch = searchTerm.trim();
+    if (!trimmedSearch) return undefined;
+
+    const timer = window.setTimeout(() => {
+      navigate(`/?search=${encodeURIComponent(trimmedSearch)}`);
+      dispatch(setSearchDraft(""));
+      setSearchOpen(false);
+    }, 2000);
+
+    return () => window.clearTimeout(timer);
+  }, [searchTerm, navigate, dispatch]);
+
+  useEffect(() => {
     const h = (e) => {
       if (catRef.current && !catRef.current.contains(e.target)) setCatMenuOpen(false);
       if (userRef.current && !userRef.current.contains(e.target)) setUserMenuOpen(false);
@@ -110,9 +123,21 @@ const Navbar = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/?search=${encodeURIComponent(searchTerm.trim())}`);
+      dispatch(setSearchDraft(""));
       setSearchOpen(false);
       setSearchTerm("");
     }
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    dispatch(setSearchDraft(value));
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    dispatch(setSearchDraft(""));
+    if (location.search.includes("search=")) navigate("/", { replace: true });
   };
 
   const handleCartClick = () => {
@@ -136,7 +161,7 @@ const Navbar = () => {
         transition: "background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
       }}
     >
-      <div className="container-page flex w-full max-w-full min-h-[4.75rem] items-center justify-between gap-4 py-3 lg:gap-6 lg:py-3.5">
+      <div className="container-page flex w-full max-w-full min-h-[4rem] items-center justify-between gap-4 py-2 lg:gap-6 lg:py-2.5">
 
         {/* Left: Brand & Navigation */}
         <div className="flex min-w-0 items-center gap-4 sm:gap-6 lg:gap-8">
@@ -194,7 +219,7 @@ const Navbar = () => {
                       <div style={{ borderTop: "1px solid var(--border)", margin: "0.25rem 0" }} />
                       {categories.length > 0 ? (
                         categories.map((c) => (
-                          <Link key={c._id} to={`/shop?category=${c._id}`}
+                          <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.slug || c._id)}`}
                             style={{ display: "block", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none", transition: "all 0.15s" }}
                             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-raised)"; e.currentTarget.style.color = "var(--ink)"; }}
                             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ""; e.currentTarget.style.color = "var(--ink-muted)"; }}
@@ -396,12 +421,12 @@ const Navbar = () => {
             <input
               autoFocus
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search products across LyZov Store..."
               style={{ flex: 1, background: "transparent", fontSize: "0.875rem", color: "var(--ink)", outline: "none", border: "none" }}
             />
             {searchTerm && (
-              <button type="button" onClick={() => setSearchTerm("")} style={{ color: "var(--ink-subtle)", background: "none", border: "none", cursor: "pointer", transition: "color 0.15s" }}
+              <button type="button" onClick={clearSearch} style={{ color: "var(--ink-subtle)", background: "none", border: "none", cursor: "pointer", transition: "color 0.15s" }}
                 onMouseEnter={(e) => e.currentTarget.style.color = "var(--ink)"}
                 onMouseLeave={(e) => e.currentTarget.style.color = "var(--ink-subtle)"}
               >
@@ -417,7 +442,7 @@ const Navbar = () => {
         <div className="search-bar-enter lg:hidden" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--bg)", padding: "1rem 1.25rem 1.5rem", maxHeight: "calc(100vh - 4.75rem)", overflowY: "auto" }}>
           <form onSubmit={handleSearchSubmit} style={{ display: "flex", alignItems: "center", borderRadius: "0.875rem", border: "1px solid var(--border)", backgroundColor: "var(--bg-subtle)", padding: "0.625rem 0.875rem", marginBottom: "1rem", gap: "0.5rem" }}>
             <Search size={15} style={{ color: "var(--ink-subtle)", flexShrink: 0 }} />
-            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." style={{ flex: 1, background: "transparent", fontSize: "0.8125rem", color: "var(--ink)", outline: "none", border: "none" }} />
+            <input value={searchTerm} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search products..." style={{ flex: 1, background: "transparent", fontSize: "0.8125rem", color: "var(--ink)", outline: "none", border: "none" }} />
           </form>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>

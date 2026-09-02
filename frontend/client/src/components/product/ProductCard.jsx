@@ -161,7 +161,7 @@ const ProductCard = ({ product }) => {
         {!isOutOfStock && (
           <button type="button" onClick={handleQuickAdd} className="quick-add-btn">
             <ShoppingBag size={13} style={{ display: "inline", marginRight: "0.35rem", verticalAlign: "middle" }} />
-            Quick Add
+            Add to Bag
           </button>
         )}
       </div>

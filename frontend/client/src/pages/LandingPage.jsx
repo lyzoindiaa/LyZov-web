@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles } from "lucide-react";
+import { SlidersHorizontal, X, ArrowUpDown, Sparkles } from "lucide-react";
+import { useSelector } from "react-redux";
 import Hero from "../components/layout/Hero";
-import WhyLyZov from "../components/layout/WhyLyZov";
 import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
+import CategoryFilter from "../components/product/CategoryFilter";
 import { productService } from "../services/productService";
 
 const sortOptions = [
@@ -19,12 +20,15 @@ const LandingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
+  const loadMoreRef = useRef(null);
+  const loadingMoreRef = useRef(false);
+  const searchDraft = useSelector((state) => state.ui.searchDraft);
 
   const filters = Object.fromEntries(searchParams.entries());
-  const page = Number(filters.page) || 1;
   // Stable string key — avoids creating a new object ref on every render
   const filtersKey = searchParams.toString();
   const isFiltered = useMemo(
@@ -35,8 +39,11 @@ const LandingPage = () => {
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
+    loadingMoreRef.current = false;
     try {
-      const res = await productService.getProducts({ ...filters, limit: 16 });
+      const queryFilters = { ...filters };
+      delete queryFilters.page;
+      const res = await productService.getProducts({ ...queryFilters, page: 1, limit: 8 });
       let list = res.data || [];
       if (inStockOnly) list = list.filter((p) => (p.stock || 0) > 0);
       setProducts(list);
@@ -56,8 +63,46 @@ const LandingPage = () => {
       const el = document.getElementById("store-products");
       if (el) el.scrollIntoView({ behavior: "smooth" });
     }
-  // fetchProducts is already stable per filtersKey; isFiltered is memoized
+    // fetchProducts is already stable per filtersKey; isFiltered is memoized
   }, [fetchProducts]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (loadingMoreRef.current || meta.page >= meta.totalPages) return;
+
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const queryFilters = { ...filters };
+      delete queryFilters.page;
+      const res = await productService.getProducts({
+        ...queryFilters,
+        page: meta.page + 1,
+        limit: 8,
+      });
+      let nextProducts = res.data || [];
+      if (inStockOnly) nextProducts = nextProducts.filter((p) => (p.stock || 0) > 0);
+      setProducts((currentProducts) => [...currentProducts, ...nextProducts]);
+      setMeta(res.meta || { ...meta, page: meta.page + 1 });
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [filtersKey, inStockOnly, meta]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || isLoading || meta.page >= meta.totalPages) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMoreProducts();
+      },
+      { rootMargin: "320px 0px" }
+    );
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [isLoading, loadMoreProducts, meta.page, meta.totalPages]);
 
   const updateFilters = (updates) => {
     const next = { ...filters, ...updates, page: 1 };
@@ -71,15 +116,17 @@ const LandingPage = () => {
     setInStockOnly(false);
     setSearchParams({});
   };
-  const goToPage = (p) => updateFilters({ page: p });
 
   const hasActiveFilters = filters.category || filters.search || filters.minPrice || inStockOnly;
+  const showHero = !filters.search && !searchDraft;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       {/* ── Top Hero Banner (Shown on default home view) ── */}
-      {!filters.search && <Hero />}
-      {!filters.search && !isFiltered && <WhyLyZov />}
+      {showHero && <Hero />}
+      {/* Category Filter */}
+      {showHero && <CategoryFilter />}
+      {/* {!filters.search && !isFiltered && <WhyLyZov />} */}
 
       {/* ── Products Section ── */}
       <section id="store-products" className="container-page py-10 lg:py-14">
@@ -292,57 +339,9 @@ const LandingPage = () => {
           {/* Product Grid */}
           <div>
             <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your filters" />
-
-            {meta.totalPages > 1 && (
-              <div
-                style={{
-                  marginTop: "3rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <button
-                  type="button"
-                  disabled={page <= 1}
-                  onClick={() => goToPage(page - 1)}
-                  className="btn-icon disabled:opacity-30"
-                  style={{ border: "1px solid var(--border)", width: "2.25rem", height: "2.25rem" }}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                {Array.from({ length: meta.totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => goToPage(i + 1)}
-                    style={{
-                      width: "2.25rem",
-                      height: "2.25rem",
-                      borderRadius: "9999px",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      backgroundColor: page === i + 1 ? "var(--brand)" : "var(--surface)",
-                      color: page === i + 1 ? "var(--bg)" : "var(--ink)",
-                      border: page === i + 1 ? "none" : "1px solid var(--border)",
-                      cursor: "pointer",
-                      transition: "all 0.18s",
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  disabled={page >= meta.totalPages}
-                  onClick={() => goToPage(page + 1)}
-                  className="btn-icon disabled:opacity-30"
-                  style={{ border: "1px solid var(--border)", width: "2.25rem", height: "2.25rem" }}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+            <div ref={loadMoreRef} style={{ minHeight: "1px", marginTop: "2rem" }} aria-hidden="true" />
+            {isLoadingMore && (
+              <p style={{ textAlign: "center", color: "var(--ink-muted)", fontSize: "0.8rem" }}>Loading more products...</p>
             )}
           </div>
         </div>

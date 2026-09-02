@@ -84,10 +84,6 @@ const LoginPage = () => {
         <div className="auth-orb-1" />
         <div className="auth-orb-2" />
 
-        {/* <div style={{ marginBottom: "3rem", position: "relative", zIndex: 1 }}>
-          <Logo size="xl" variant="elevated" />
-        </div> */}
-
         {/* Headline */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: "34rem" }}>
           <div
@@ -172,9 +168,8 @@ const LoginPage = () => {
         className="w-full lg:w-[40%]"
       >
         <div style={{ width: "100%", maxWidth: "23rem" }}>
-          {/* Mobile brand header */}
-          <div className="lg:hidden" style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <Logo size="lg" variant="elevated" />
+          <div className="auth-form-logo" style={{ marginBottom: "1.5rem" }}>
+            <Logo size="md" variant="elevated" />
           </div>
 
           {/* Title & subtitle */}
