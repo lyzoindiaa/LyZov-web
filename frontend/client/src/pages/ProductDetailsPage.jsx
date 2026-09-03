@@ -56,6 +56,22 @@ const ProductDetailsPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
+  useEffect(() => {
+    if (isSlideshowPlaying && product?.images?.length > 1) {
+      slideshowIntervalRef.current = setInterval(() => {
+        setActiveImage((prev) => (prev + 1) % product.images.length);
+      }, 3000);
+    } else if (slideshowIntervalRef.current) {
+      clearInterval(slideshowIntervalRef.current);
+    }
+
+    return () => {
+      if (slideshowIntervalRef.current) {
+        clearInterval(slideshowIntervalRef.current);
+      }
+    };
+  }, [isSlideshowPlaying, product?.images?.length]);
+
   if (isLoading) return <ProductDetailsSkeleton />;
   if (loadError)
     return (
@@ -131,25 +147,6 @@ const ProductDetailsPage = () => {
     }
     dispatch(toggleWishlistItem({ productId: product._id, product }));
   };
-
-  // Slideshow logic
-  useEffect(() => {
-    if (isSlideshowPlaying && product?.images?.length > 1) {
-      slideshowIntervalRef.current = setInterval(() => {
-        setActiveImage((prev) => (prev + 1) % product.images.length);
-      }, 3000);
-    } else {
-      if (slideshowIntervalRef.current) {
-        clearInterval(slideshowIntervalRef.current);
-      }
-    }
-
-    return () => {
-      if (slideshowIntervalRef.current) {
-        clearInterval(slideshowIntervalRef.current);
-      }
-    };
-  }, [isSlideshowPlaying, product?.images?.length]);
 
   const toggleSlideshow = () => {
     setIsSlideshowPlaying((prev) => !prev);
