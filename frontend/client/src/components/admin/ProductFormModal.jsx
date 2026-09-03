@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, X, Trash2, MoveUp, MoveDown, Scissors } from "lucide-react";
 import { toast } from "react-toastify";
 import Modal from "../ui/Modal";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
-import { categoryService, brandService } from "../../services/productService";
+import ImageCropper from "../ui/ImageCropper";
+import { categoryService } from "../../services/categoryService";
+import { brandService } from "../../services/productService";
 import { adminProductService } from "../../services/adminProductService";
 import { adminBrandService } from "../../services/adminBrandService";
 
@@ -13,11 +15,15 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [currentImageToCrop, setCurrentImageToCrop] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   // Quick Add Brand Inline State
   const [showQuickBrand, setShowQuickBrand] = useState(false);
   const [newBrandName, setNewBrandName] = useState("");
   const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const {
     register,
@@ -48,6 +54,20 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         category: product.category?._id || "",
         brand: product.brand?._id || "",
       });
+      // Load existing images with proper structure
+      console.log('Loading product images:', product.images);
+      if (product.images && product.images.length > 0) {
+        const previews = product.images.map((img, index) => ({
+          preview: img.url || img, // Handle both url and direct string formats
+          isNew: false,
+          existingImage: img
+        }));
+        console.log('Setting image previews:', previews);
+        setImagePreviews(previews);
+      } else {
+        console.log('No existing images found');
+        setImagePreviews([]);
+      }
     } else {
       reset({
         title: "",
@@ -59,6 +79,7 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         category: "",
         brand: "",
       });
+      setImagePreviews([]);
     }
     setImages([]);
     setShowQuickBrand(false);
@@ -83,6 +104,115 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const newPreviews = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      isNew: true
+    }));
+
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+    setImages(prev => [...prev, ...files]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setImagePreviews(prev => {
+      const newPreviews = [...prev];
+      // Only revoke URL for new images (blob URLs)
+      if (newPreviews[index].isNew) {
+        URL.revokeObjectURL(newPreviews[index].preview);
+      }
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
+    setImages(prev => {
+      const newImages = [...prev];
+      // Only remove from images array if it's a new file
+      if (prev[index]) {
+        newImages.splice(index, 1);
+      }
+      return newImages;
+    });
+  };
+
+  const handleMoveImage = (fromIndex, toIndex) => {
+    setImagePreviews(prev => {
+      const newPreviews = [...prev];
+      const [movedItem] = newPreviews.splice(fromIndex, 1);
+      newPreviews.splice(toIndex, 0, movedItem);
+      return newPreviews;
+    });
+    setImages(prev => {
+      const newImages = [...prev];
+      const [movedItem] = newImages.splice(fromIndex, 1);
+      newImages.splice(toIndex, 0, movedItem);
+      return newImages;
+    });
+  };
+
+  const handleCropImage = (index) => {
+    setCurrentImageToCrop(index);
+    setShowCropper(true);
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setImagePreviews(prev => {
+      const newPreviews = [...prev];
+      // Revoke old preview URL if it was a blob
+      if (newPreviews[currentImageToCrop].isNew) {
+        URL.revokeObjectURL(newPreviews[currentImageToCrop].preview);
+      }
+      newPreviews[currentImageToCrop] = {
+        file: croppedFile,
+        preview: URL.createObjectURL(croppedFile),
+        isNew: true,
+        existingImage: null // Clear existing image reference since we're replacing it
+      };
+      return newPreviews;
+    });
+    setImages(prev => {
+      const newImages = [...prev];
+      // Ensure the images array is properly synced
+      if (!newImages[currentImageToCrop]) {
+        newImages[currentImageToCrop] = croppedFile;
+      } else {
+        newImages[currentImageToCrop] = croppedFile;
+      }
+      return newImages;
+    });
+    setShowCropper(false);
+    setCurrentImageToCrop(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length === 0) return;
+
+    const newPreviews = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      isNew: true
+    }));
+
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+    setImages(prev => [...prev, ...files]);
+  };
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -91,7 +221,9 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
           formData.append(key, value);
         }
       });
-      images.forEach((file) => formData.append("images", file));
+      // Handle image submission - only send new files
+      const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
+      newImages.forEach((file) => formData.append("images", file));
 
       if (product) {
         await adminProductService.updateProduct(product._id, formData);
@@ -109,7 +241,7 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={product ? "Edit Product" : "Add New Product"} size="xl">
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2 pb-4">
         <Input
           label="Title"
           className="sm:col-span-2"
@@ -233,13 +365,111 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
             Product Images
           </label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => setImages(Array.from(e.target.files))}
-            className="block w-full text-xs text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white dark:file:bg-white dark:file:text-black cursor-pointer"
-          />
+          
+          {/* Image Upload Area */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
+              isDragging
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="cursor-pointer flex flex-col items-center gap-2"
+            >
+              <Plus size={24} className="text-gray-400" />
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                Click to upload or drag and drop
+              </span>
+              <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500">
+                PNG, JPG, GIF up to 10MB each
+              </span>
+            </label>
+          </div>
+
+          {/* Image Previews */}
+          {imagePreviews.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:grid-cols-4">
+              {imagePreviews.map((img, index) => (
+                <div
+                  key={`${index}-${img.preview}`}
+                  className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+                >
+                  <img
+                    src={img.preview}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', img.preview);
+                      e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                    }}
+                  />
+                  
+                  {/* Image Actions Overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCropImage(index)}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                      title="Crop image"
+                    >
+                      <Scissors size={16} className="text-gray-800" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveImage(index, Math.max(0, index - 1))}
+                      disabled={index === 0}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Move left"
+                    >
+                      <MoveUp size={16} className="text-gray-800 -rotate-90" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveImage(index, Math.min(imagePreviews.length - 1, index + 1))}
+                      disabled={index === imagePreviews.length - 1}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Move right"
+                    >
+                      <MoveDown size={16} className="text-gray-800 -rotate-90" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="p-2 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                      title="Remove image"
+                    >
+                      <Trash2 size={16} className="text-white" />
+                    </button>
+                  </div>
+                  
+                  {/* Image Number Badge */}
+                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    {index + 1}
+                  </div>
+                  
+                  {/* Existing Image Indicator */}
+                  {!img.isNew && (
+                    <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded">
+                      Existing
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="sm:col-span-2 pt-2">
@@ -248,6 +478,19 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
           </Button>
         </div>
       </form>
+
+      {/* Image Cropper Modal */}
+      {showCropper && currentImageToCrop !== null && (
+        <ImageCropper
+          image={imagePreviews[currentImageToCrop]?.preview}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setShowCropper(false);
+            setCurrentImageToCrop(null);
+          }}
+          aspectRatio={1}
+        />
+      )}
     </Modal>
   );
 };

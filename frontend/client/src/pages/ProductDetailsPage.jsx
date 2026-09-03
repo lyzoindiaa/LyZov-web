@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag, ZoomIn, Check, ChevronRight, ArrowLeft } from "lucide-react";
+import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag, ZoomIn, Check, ChevronRight, ArrowLeft, Pause } from "lucide-react";
 import { productService, reviewService } from "../services/productService";
 import { addToCart } from "../features/cart/cartSlice";
 import { toggleWishlistItem } from "../features/wishlist/wishlistSlice";
@@ -27,6 +27,8 @@ const ProductDetailsPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("description");
+  const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(false);
+  const slideshowIntervalRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -113,6 +115,37 @@ const ProductDetailsPage = () => {
       return;
     }
     dispatch(toggleWishlistItem({ productId: product._id, product }));
+  };
+
+  // Slideshow logic
+  useEffect(() => {
+    if (isSlideshowPlaying && product?.images?.length > 1) {
+      slideshowIntervalRef.current = setInterval(() => {
+        setActiveImage((prev) => (prev + 1) % product.images.length);
+      }, 3000);
+    } else {
+      if (slideshowIntervalRef.current) {
+        clearInterval(slideshowIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (slideshowIntervalRef.current) {
+        clearInterval(slideshowIntervalRef.current);
+      }
+    };
+  }, [isSlideshowPlaying, product?.images?.length]);
+
+  const toggleSlideshow = () => {
+    setIsSlideshowPlaying((prev) => !prev);
+  };
+
+  const handleNextImage = () => {
+    setActiveImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const handlePreviousImage = () => {
+    setActiveImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
   };
 
   const tabs = isAdmin
@@ -239,6 +272,115 @@ const ProductDetailsPage = () => {
               >
                 <Heart size={18} fill={isWished ? "var(--red)" : "none"} />
               </button>
+
+              {/* Navigation Arrows */}
+              {product.images?.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePreviousImage}
+                    style={{
+                      position: "absolute",
+                      left: "1rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: "2.5rem",
+                      height: "2.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: "9999px",
+                      backgroundColor: "var(--glass-bg)",
+                      backdropFilter: "blur(8px)",
+                      border: "1px solid var(--border)",
+                      color: "var(--ink)",
+                      boxShadow: "var(--shadow-sm)",
+                      cursor: "pointer",
+                      zIndex: 5,
+                    }}
+                    aria-label="Previous image"
+                  >
+                    <ChevronRight size={20} style={{ transform: "rotate(180deg)" }} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    style={{
+                      position: "absolute",
+                      right: "1rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: "2.5rem",
+                      height: "2.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: "9999px",
+                      backgroundColor: "var(--glass-bg)",
+                      backdropFilter: "blur(8px)",
+                      border: "1px solid var(--border)",
+                      color: "var(--ink)",
+                      boxShadow: "var(--shadow-sm)",
+                      cursor: "pointer",
+                      zIndex: 5,
+                    }}
+                    aria-label="Next image"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+
+              {/* Slideshow Controls */}
+              {product.images?.length > 1 && (
+                <button
+                  type="button"
+                  onClick={toggleSlideshow}
+                  style={{
+                    position: "absolute",
+                    bottom: "1rem",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    backdropFilter: "blur(8px)",
+                    color: "white",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    zIndex: 5,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {isSlideshowPlaying ? <Pause size={14} /> : <span style={{ fontSize: "12px", fontWeight: "bold" }}>▶</span>}
+                  {isSlideshowPlaying ? "Pause" : "Play Slideshow"}
+                </button>
+              )}
+
+              {/* Image Counter */}
+              {product.images?.length > 1 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "1rem",
+                    right: "1rem",
+                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    color: "white",
+                    padding: "0.25rem 0.75rem",
+                    borderRadius: "9999px",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    zIndex: 5,
+                  }}
+                >
+                  {activeImage + 1} / {product.images.length}
+                </div>
+              )}
+
               {/* Zoom icon on hover */}
               <div className="gallery-zoom-icon">
                 <ZoomIn size={16} />
@@ -252,7 +394,10 @@ const ProductDetailsPage = () => {
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setActiveImage(idx)}
+                    onClick={() => {
+                      setActiveImage(idx);
+                      setIsSlideshowPlaying(false);
+                    }}
                     style={{
                       width: "4.75rem",
                       height: "4.75rem",

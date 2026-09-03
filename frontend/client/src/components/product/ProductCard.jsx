@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, Star, ShoppingBag } from "lucide-react";
+import { Heart, Star, ShoppingBag, Pause } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlistItem } from "../../features/wishlist/wishlistSlice";
 import { addToCart } from "../../features/cart/cartSlice";
@@ -11,17 +11,58 @@ const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const slideshowIntervalRef = useRef(null);
   const wishlistProducts = useSelector((state) => state.wishlist.products);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const isWished = wishlistProducts.some((p) => p._id === product._id);
-  const mainImage = product.images?.[0]?.url || "";
-  const hoverImage = product.images?.[1]?.url || mainImage;
+  const productImages = product.images?.map(img => img.url) || [];
+  const currentImage = productImages[currentImageIndex] || "";
   const finalPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
   const discountPercent = product.discountPrice > 0 ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0;
   const rating = product.rating || 4.5;
   const reviewCount = product.reviewCount || 0;
   const isOutOfStock = product.stock === 0;
+
+  // Auto-rotate images every 2.5 seconds
+  useEffect(() => {
+    if (productImages.length > 1 && !isPaused && isHovered) {
+      slideshowIntervalRef.current = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+      }, 2500);
+    } else {
+      if (slideshowIntervalRef.current) {
+        clearInterval(slideshowIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (slideshowIntervalRef.current) {
+        clearInterval(slideshowIntervalRef.current);
+      }
+    };
+  }, [productImages.length, isPaused, isHovered]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (productImages.length > 1) {
+      setIsPaused(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setCurrentImageIndex(0);
+    setIsPaused(false);
+  };
+
+  const handleImageDotClick = (index) => {
+    setCurrentImageIndex(index);
+    setIsPaused(true);
+  };
 
   const handleWishlistClick = (e) => {
     e.preventDefault();
@@ -51,50 +92,28 @@ const ProductCard = ({ product }) => {
     <Link
       to={`/product/${product.slug || product._id}`}
       className="card-product group hover-lift w-full flex flex-col justify-between"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
 
       {/* Image Container (1:1 Aspect Ratio) */}
       <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--img-tile)" }}>
-        {!imageError && mainImage ? (
-          <>
-            {/* Main image */}
-            <img
-              src={mainImage}
-              alt={product.images?.[0]?.altText || product.title || product.name}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={() => setImageError(true)}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-              className="group-hover:opacity-0 group-hover:scale-105"
-            />
-            {/* Hover image */}
-            {hoverImage && hoverImage !== mainImage && (
-              <img
-                src={hoverImage}
-                alt=""
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  opacity: 0,
-                  transform: "scale(1.05)",
-                  transition: "opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-                className="group-hover:opacity-100 group-hover:scale-100"
-              />
-            )}
-          </>
+        {!imageError && currentImage ? (
+          <img
+            src={currentImage}
+            alt={product.images?.[currentImageIndex]?.altText || product.title || product.name}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setImageError(true)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "opacity 0.3s ease",
+            }}
+          />
         ) : (
           <div
             style={{
@@ -116,6 +135,70 @@ const ProductCard = ({ product }) => {
               {product.brand?.name || "LyZov Exclusive"}
             </span>
           </div>
+        )}
+
+        {/* Image Dots Indicator */}
+        {productImages.length > 1 && isHovered && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "0.75rem",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: "0.375rem",
+              zIndex: 5,
+            }}
+          >
+            {productImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleImageDotClick(index);
+                }}
+                style={{
+                  width: "0.5rem",
+                  height: "0.5rem",
+                  borderRadius: "50%",
+                  backgroundColor: index === currentImageIndex ? "var(--accent)" : "rgba(255, 255, 255, 0.5)",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Play/Pause Control */}
+        {productImages.length > 1 && isHovered && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setIsPaused(!isPaused);
+            }}
+            style={{
+              position: "absolute",
+              top: "0.75rem",
+              left: "0.75rem",
+              width: "2rem",
+              height: "2rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "9999px",
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(8px)",
+              color: "white",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              cursor: "pointer",
+              zIndex: 10,
+              transition: "all 0.2s",
+            }}
+          >
+            {isPaused ? <span style={{ fontSize: "10px", fontWeight: "bold" }}>▶</span> : <Pause size={12} />}
+          </button>
         )}
 
         {/* Badges Top-Left */}

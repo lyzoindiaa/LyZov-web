@@ -3,12 +3,9 @@ import api from "./api";
 export const productService = {
   getProducts: (params) => api.get("/products", { params }).then((res) => res.data),
   getProductBySlug: (slug) => api.get(`/products/${slug}`).then((res) => res.data),
+  getProductById: (id) => api.get(`/products/${id}`).then((res) => res.data),
   getCollection: (type, limit = 12) =>
     api.get(`/products/collections/${type}`, { params: { limit } }).then((res) => res.data),
-};
-
-export const categoryService = {
-  getCategories: () => api.get("/categories").then((res) => res.data),
 };
 
 export const brandService = {
