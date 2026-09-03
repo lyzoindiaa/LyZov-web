@@ -58,7 +58,12 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:slug
 // @access  Public
 const getProductBySlug = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ slug: req.params.slug, isActive: true })
+  const productIdentifier = req.params.slug;
+  const identifierQuery = isValidObjectId(productIdentifier)
+    ? { $or: [{ slug: productIdentifier }, { _id: productIdentifier }] }
+    : { slug: productIdentifier };
+
+  const product = await Product.findOne({ ...identifierQuery, isActive: true })
     .populate("brand", "name slug logo")
     .populate("category", "name slug");
 
