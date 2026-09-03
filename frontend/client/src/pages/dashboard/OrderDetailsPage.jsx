@@ -89,6 +89,10 @@ const OrderDetailsPage = () => {
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone">Payment Summary</h4>
           <div className="flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between text-stone">
+              <span>Payment</span>
+              <span className="capitalize">{order.paymentMethod} · {order.paymentResult?.currency?.toUpperCase() || "INR"}</span>
+            </div>
+            <div className="flex justify-between text-stone">
               <span>Items</span>
               <span className="tabular-nums">{formatCurrency(order.itemsPrice)}</span>
             </div>
