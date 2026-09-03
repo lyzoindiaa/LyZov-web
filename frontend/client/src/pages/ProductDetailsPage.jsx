@@ -26,6 +26,7 @@ const ProductDetailsPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(false);
   const slideshowIntervalRef = useRef(null);
@@ -33,6 +34,7 @@ const ProductDetailsPage = () => {
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
+      setLoadError(false);
       try {
         const res = await productService.getProductBySlug(slug);
         const prod = res.data.product || res.data;
@@ -45,6 +47,7 @@ const ProductDetailsPage = () => {
         setReviews(rv.data || []);
       } catch {
         setProduct(null);
+        setLoadError(true);
       } finally {
         setIsLoading(false);
       }
@@ -54,6 +57,18 @@ const ProductDetailsPage = () => {
   }, [slug]);
 
   if (isLoading) return <ProductDetailsSkeleton />;
+  if (loadError)
+    return (
+      <div className="container-page py-24 text-center">
+        <div className="empty-state card-surface max-w-md mx-auto">
+          <h2 className="empty-state-title">Unable to load product</h2>
+          <p className="empty-state-desc">The store service is unavailable. Please try again in a moment.</p>
+          <button type="button" className="btn-primary mt-3" onClick={() => window.location.reload()}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   if (!product)
     return (
       <div className="container-page py-24 text-center">
