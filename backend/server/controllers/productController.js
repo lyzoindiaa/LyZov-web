@@ -111,9 +111,30 @@ const getProductCollection = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
-  const images = [];
   const uploadedImages = [];
 
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const result = await uploadToCloudinary(file.buffer, "novacart/products");
+      uploadedImages.push({ url: result.secure_url, publicId: result.public_id, altText: req.body.title });
+    }
+  }
+
+  const product = await Product.create({ ...req.body, images: uploadedImages });
+
+  return sendSuccess(res, 201, "Product created successfully", product);
+});
+
+// @desc    Update a product
+// @route   PUT /api/products/:id
+// @access  Private/Admin
+const updateProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    throw ApiError.notFound("Product not found");
+  }
+
+  const uploadedImages = [];
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
       const result = await uploadToCloudinary(file.buffer, "novacart/products");
@@ -131,39 +152,15 @@ const createProduct = asyncHandler(async (req, res) => {
 
     const existingImages = new Map(product.images.map((image) => [image._id.toString(), image]));
     let uploadedIndex = 0;
-    const orderedImages = imageOrder.map((item) => {
-      if (item.isNew) return uploadedImages[uploadedIndex++];
-      return existingImages.get(item.existingImageId);
-    }).filter(Boolean);
+    const orderedImages = imageOrder
+      .map((item) => item.isNew ? uploadedImages[uploadedIndex++] : existingImages.get(item.existingImageId))
+      .filter(Boolean);
     const retainedIds = new Set(orderedImages.map((image) => image._id?.toString()).filter(Boolean));
     const removedImages = product.images.filter((image) => !retainedIds.has(image._id.toString()));
     await Promise.all(removedImages.map((image) => deleteFromCloudinary(image.publicId)));
     product.images = orderedImages;
   } else if (uploadedImages.length > 0) {
     product.images.push(...uploadedImages);
-  }
-
-  const product = await Product.create({ ...req.body, images });
-
-  return sendSuccess(res, 201, "Product created successfully", product);
-});
-
-// @desc    Update a product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
-const updateProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  if (!product) {
-    throw ApiError.notFound("Product not found");
-  }
-
-  if (req.files && req.files.length > 0) {
-    const newImages = [];
-    for (const file of req.files) {
-      const result = await uploadToCloudinary(file.buffer, "novacart/products");
-      newImages.push({ url: result.secure_url, publicId: result.public_id, altText: req.body.title || product.title });
-    }
-    product.images.push(...newImages);
   }
 
   Object.keys(req.body).forEach((key) => {
