@@ -33,8 +33,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   } = useForm();
 
   const loadDropdowns = () => {
-    categoryService.getCategories().then((res) => setCategories(res.data || [])).catch(() => {});
-    brandService.getBrands().then((res) => setBrands(res.data || [])).catch(() => {});
+    categoryService.getCategories().then((res) => setCategories(res.data || [])).catch(() => { });
+    brandService.getBrands().then((res) => setBrands(res.data || [])).catch(() => { });
   };
 
   useEffect(() => {
@@ -220,14 +220,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           formData.append(key, value);
         }
       });
-      
-      // Handle image submission - only send new files
-        formData.append("imageOrder", JSON.stringify(imagePreviews.map((img) => ({
-          existingImageId: img.existingImage?._id || null,
-          isNew: img.isNew,
-        }))));
 
-        const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
+      // Handle image submission - only send new files
+      formData.append("imageOrder", JSON.stringify(imagePreviews.map((img) => ({
+        existingImageId: img.existingImage?._id || null,
+        isNew: img.isNew,
+      }))));
+
+      const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
       newImages.forEach((file) => formData.append("images", file));
 
       await onSubmit(formData);
@@ -274,11 +274,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           </label>
           <textarea
             rows={3}
-            className={`input-field ${
-              errors.description
+            className={`input-field ${errors.description
                 ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
                 : ""
-            }`}
+              }`}
             {...register("description", { required: "Description is required" })}
           />
           {errors.description && (
@@ -297,11 +296,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
             Category <span className="text-[var(--red)]">*</span>
           </label>
           <select
-            className={`input-field ${
-              errors.category
+            className={`input-field ${errors.category
                 ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
                 : ""
-            }`}
+              }`}
             {...register("category", { required: "Category is required" })}
           >
             <option value="">Select category</option>
@@ -372,7 +370,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           error={errors.price?.message}
         />
         <Input label="Discount Price (₹)" type="number" step="0.01" {...register("discountPrice")} />
-        
+
         <Input
           label="Stock Quantity"
           type="number"
@@ -384,14 +382,13 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
             Product Images
           </label>
-          
+
           {/* Image Upload Area */}
           <div
-            className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
-              isDragging
+            className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${isDragging
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-            }`}
+              }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -435,7 +432,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                       e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
                     }}
                   />
-                  
+
                   {/* Image Actions Overlay */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
@@ -473,12 +470,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                       <Trash2 size={16} className="text-white" />
                     </button>
                   </div>
-                  
+
                   {/* Image Number Badge */}
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                     {index + 1}
                   </div>
-                  
+
                   {/* Existing Image Indicator */}
                   {!img.isNew && (
                     <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded">
