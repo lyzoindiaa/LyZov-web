@@ -78,6 +78,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"],
       default: "pending",
     },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
+    },
     isDelivered: {
       type: Boolean,
       default: false,

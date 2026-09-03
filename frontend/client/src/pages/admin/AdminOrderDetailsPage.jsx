@@ -94,7 +94,6 @@ const AdminOrderDetailsPage = () => {
                     <section className="card-surface p-5">
                         <h2 className="mb-3 text-lg font-semibold">Payment Summary</h2>
                         <div className="flex flex-col gap-2 text-sm">
-                            <div className="flex justify-between text-stone"><span>Payment</span><span className="capitalize">{order.paymentMethod} · {order.paymentResult?.currency?.toUpperCase() || "INR"}</span></div>
                             <div className="flex justify-between text-stone"><span>Items</span><span>{formatCurrency(order.itemsPrice)}</span></div>
                             <div className="flex justify-between text-stone"><span>Tax</span><span>{formatCurrency(order.taxPrice)}</span></div>
                             <div className="flex justify-between text-stone"><span>Shipping</span><span>{order.shippingPrice ? formatCurrency(order.shippingPrice) : "Free"}</span></div>
