@@ -4,13 +4,19 @@ const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
 
+const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
 const getCategories = asyncHandler(async (req, res) => {
   const categories = await Category.find({ isActive: true }).sort("displayOrder name");
   return sendSuccess(res, 200, "Categories fetched successfully", categories);
 });
 
 const getCategoryBySlug = asyncHandler(async (req, res) => {
-  const category = await Category.findOne({ slug: req.params.slug, isActive: true });
+  const identifier = req.params.slug;
+  const identifierQuery = isValidObjectId(identifier)
+    ? { $or: [{ slug: identifier }, { _id: identifier }] }
+    : { slug: identifier };
+  const category = await Category.findOne({ ...identifierQuery, isActive: true });
   if (!category) throw ApiError.notFound("Category not found");
   return sendSuccess(res, 200, "Category fetched successfully", category);
 });

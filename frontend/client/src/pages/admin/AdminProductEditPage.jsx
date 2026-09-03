@@ -17,7 +17,7 @@ const AdminProductEditPage = () => {
       try {
         setIsFetching(true);
         const res = await productService.getProductById(id);
-        setProduct(res.data);
+        setProduct(res.data.product || res.data);
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load product");
         navigate("/admin/products");
