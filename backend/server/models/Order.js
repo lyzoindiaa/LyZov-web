@@ -56,6 +56,9 @@ const orderSchema = new mongoose.Schema(
     paymentResult: {
       id: { type: String },
       status: { type: String },
+      currency: { type: String, default: "inr" },
+      amount: { type: Number, default: 0 },
+      amountReceived: { type: Number, default: 0 },
       updateTime: { type: String },
       email: { type: String },
     },
@@ -73,11 +76,6 @@ const orderSchema = new mongoose.Schema(
     orderStatus: {
       type: String,
       enum: ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"],
-      default: "pending",
-    },
-    approvalStatus: {
-      type: String,
-      enum: ["pending", "accepted", "rejected"],
       default: "pending",
     },
     isDelivered: {

@@ -54,17 +54,9 @@ const AdminOrderDetailsPage = () => {
                     <p className="mt-1 text-sm text-stone">Placed on {formatDate(order.createdAt)}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {order.approvalStatus === "pending" && (
-                        <>
-                            <button type="button" onClick={() => updateOrder({ approvalStatus: "accepted" }, "Order accepted")} className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Accept Order</button>
-                            <button type="button" onClick={() => updateOrder({ approvalStatus: "rejected" }, "Order rejected")} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">Reject Order</button>
-                        </>
-                    )}
-                    {(order.approvalStatus === "accepted" || !order.approvalStatus) && (
-                        <select value={order.orderStatus} onChange={(event) => updateOrder({ status: event.target.value }, "Order status updated")} className="rounded-lg border border-ink/12 bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] outline-none dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">
-                            {statusOptions.map((status) => <option key={status} value={status} className="bg-[var(--surface)] text-[var(--ink)] dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">{status}</option>)}
-                        </select>
-                    )}
+                    <select value={order.orderStatus} onChange={(event) => updateOrder({ status: event.target.value }, "Order status updated")} className="rounded-lg border border-ink/12 bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] outline-none dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">
+                        {statusOptions.map((status) => <option key={status} value={status} className="bg-[var(--surface)] text-[var(--ink)] dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">{status}</option>)}
+                    </select>
                 </div>
             </div>
 

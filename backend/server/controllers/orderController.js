@@ -95,6 +95,9 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentResult = {
       id: intent.id,
       status: intent.status,
+      currency: intent.currency,
+      amount: intent.amount / 100,
+      amountReceived: (intent.amount_received || intent.amount) / 100,
       updateTime: new Date().toISOString(),
       email: req.user.email,
     };
@@ -286,24 +289,12 @@ const getAllOrders = asyncHandler(async (req, res) => {
 // @route   PUT /api/orders/:id/status
 // @access  Private/Admin
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, approvalStatus, note, trackingNumber } = req.body;
+  const { status, note, trackingNumber } = req.body;
 
   const order = await Order.findById(req.params.id);
   if (!order) throw ApiError.notFound("Order not found");
 
-  if (approvalStatus) {
-    if (!["accepted", "rejected"].includes(approvalStatus)) {
-      throw ApiError.badRequest("Invalid approval status");
-    }
-    order.approvalStatus = approvalStatus;
-    if (approvalStatus === "rejected") order.orderStatus = "cancelled";
-    order.statusHistory.push({ status: approvalStatus, note: note || "" });
-  }
-
   if (status) {
-    if (order.approvalStatus && order.approvalStatus !== "accepted") {
-      throw ApiError.badRequest("Accept the order before changing its fulfillment status");
-    }
     order.orderStatus = status;
     order.statusHistory.push({ status, note: note || "" });
   }
