@@ -56,6 +56,9 @@ const orderSchema = new mongoose.Schema(
     paymentResult: {
       id: { type: String },
       status: { type: String },
+      currency: { type: String, default: "inr" },
+      amount: { type: Number, default: 0 },
+      amountReceived: { type: Number, default: 0 },
       updateTime: { type: String },
       email: { type: String },
     },

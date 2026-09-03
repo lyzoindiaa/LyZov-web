@@ -95,6 +95,9 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentResult = {
       id: intent.id,
       status: intent.status,
+      currency: intent.currency,
+      amount: intent.amount / 100,
+      amountReceived: (intent.amount_received || intent.amount) / 100,
       updateTime: new Date().toISOString(),
       email: req.user.email,
     };

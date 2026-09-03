@@ -3,17 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { orderService } from "../../services/cartService";
 import { formatCurrency, formatDate } from "../../utils/formatters";
-import Badge from "../../components/ui/Badge";
 
 const statusOptions = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
-const statusTones = {
-  pending: "warning",
-  processing: "gold",
-  shipped: "neutral",
-  delivered: "success",
-  cancelled: "danger",
-  refunded: "danger",
-};
 
 const AdminOrdersPage = () => {
   const navigate = useNavigate();
