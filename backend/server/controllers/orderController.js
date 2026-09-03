@@ -45,7 +45,7 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: Math.round(totalPrice * 100),
-    currency: "usd",
+    currency: "inr",
     metadata: { userId: req.user._id.toString() },
     automatic_payment_methods: { enabled: true },
   });
@@ -186,7 +186,9 @@ const getMyOrders = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/:id
 // @access  Private
 const getOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id).populate("user", "name email");
+  const order = await Order.findById(req.params.id)
+    .populate("user", "name email")
+    .populate("items.product", "title slug images");
 
   if (!order) {
     throw ApiError.notFound("Order not found");
@@ -284,18 +286,32 @@ const getAllOrders = asyncHandler(async (req, res) => {
 // @route   PUT /api/orders/:id/status
 // @access  Private/Admin
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, note, trackingNumber } = req.body;
+  const { status, approvalStatus, note, trackingNumber } = req.body;
 
   const order = await Order.findById(req.params.id);
   if (!order) throw ApiError.notFound("Order not found");
 
-  order.orderStatus = status;
+  if (approvalStatus) {
+    if (!["accepted", "rejected"].includes(approvalStatus)) {
+      throw ApiError.badRequest("Invalid approval status");
+    }
+    order.approvalStatus = approvalStatus;
+    if (approvalStatus === "rejected") order.orderStatus = "cancelled";
+    order.statusHistory.push({ status: approvalStatus, note: note || "" });
+  }
+
+  if (status) {
+    if (order.approvalStatus && order.approvalStatus !== "accepted") {
+      throw ApiError.badRequest("Accept the order before changing its fulfillment status");
+    }
+    order.orderStatus = status;
+    order.statusHistory.push({ status, note: note || "" });
+  }
   if (trackingNumber) order.trackingNumber = trackingNumber;
   if (status === "delivered") {
     order.isDelivered = true;
     order.deliveredAt = new Date();
   }
-  order.statusHistory.push({ status, note: note || "" });
   await order.save();
 
   await Notification.create({
