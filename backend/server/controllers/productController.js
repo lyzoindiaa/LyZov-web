@@ -112,12 +112,35 @@ const getProductCollection = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const images = [];
+  const uploadedImages = [];
 
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
       const result = await uploadToCloudinary(file.buffer, "novacart/products");
-      images.push({ url: result.secure_url, publicId: result.public_id, altText: req.body.title });
+      uploadedImages.push({ url: result.secure_url, publicId: result.public_id, altText: req.body.title || product.title });
     }
+  }
+
+  if (req.body.imageOrder) {
+    let imageOrder;
+    try {
+      imageOrder = JSON.parse(req.body.imageOrder);
+    } catch {
+      throw ApiError.badRequest("Invalid image order");
+    }
+
+    const existingImages = new Map(product.images.map((image) => [image._id.toString(), image]));
+    let uploadedIndex = 0;
+    const orderedImages = imageOrder.map((item) => {
+      if (item.isNew) return uploadedImages[uploadedIndex++];
+      return existingImages.get(item.existingImageId);
+    }).filter(Boolean);
+    const retainedIds = new Set(orderedImages.map((image) => image._id?.toString()).filter(Boolean));
+    const removedImages = product.images.filter((image) => !retainedIds.has(image._id.toString()));
+    await Promise.all(removedImages.map((image) => deleteFromCloudinary(image.publicId)));
+    product.images = orderedImages;
+  } else if (uploadedImages.length > 0) {
+    product.images.push(...uploadedImages);
   }
 
   const product = await Product.create({ ...req.body, images });

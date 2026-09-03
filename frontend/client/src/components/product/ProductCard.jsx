@@ -27,12 +27,12 @@ const ProductCard = ({ product }) => {
   const reviewCount = product.reviewCount || 0;
   const isOutOfStock = product.stock === 0;
 
-  // Auto-rotate images every 2.5 seconds
+  // Auto-rotate images every second when a product has multiple images.
   useEffect(() => {
-    if (productImages.length > 1 && !isPaused && isHovered) {
+    if (productImages.length > 1 && !isPaused) {
       slideshowIntervalRef.current = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
-      }, 2500);
+      }, 1000);
     } else {
       if (slideshowIntervalRef.current) {
         clearInterval(slideshowIntervalRef.current);

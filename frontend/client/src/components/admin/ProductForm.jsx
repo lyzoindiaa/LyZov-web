@@ -222,7 +222,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
       });
       
       // Handle image submission - only send new files
-      const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
+        formData.append("imageOrder", JSON.stringify(imagePreviews.map((img) => ({
+          existingImageId: img.existingImage?._id || null,
+          isNew: img.isNew,
+        }))));
+
+        const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
       newImages.forEach((file) => formData.append("images", file));
 
       await onSubmit(formData);

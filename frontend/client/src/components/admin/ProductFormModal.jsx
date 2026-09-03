@@ -222,7 +222,12 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
         }
       });
       // Handle image submission - only send new files
-      const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
+        formData.append("imageOrder", JSON.stringify(imagePreviews.map((img) => ({
+          existingImageId: img.existingImage?._id || null,
+          isNew: img.isNew,
+        }))));
+
+        const newImages = imagePreviews.filter(img => img.isNew).map(img => img.file);
       newImages.forEach((file) => formData.append("images", file));
 
       if (product) {
