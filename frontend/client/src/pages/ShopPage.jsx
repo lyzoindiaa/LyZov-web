@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, ChevronLeft, ChevronRight, PackageSearch } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
@@ -17,16 +17,22 @@ const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const loadMoreRef = useRef(null);
+  const loadingMoreRef = useRef(false);
 
   const filters = Object.fromEntries(searchParams.entries());
-  const page = Number(filters.page) || 1;
+  const filtersKey = searchParams.toString();
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
+    loadingMoreRef.current = false;
     try {
-      const res = await productService.getProducts({ ...filters, limit: 12 });
+      const queryFilters = { ...filters };
+      delete queryFilters.page;
+      const res = await productService.getProducts({ ...queryFilters, page: 1, limit: 8 });
       setProducts(res.data || []);
       setMeta(res.meta || { page: 1, totalPages: 1, total: res.data?.length || 0 });
     } catch {
@@ -34,12 +40,53 @@ const ShopPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchParams]);
+  }, [filtersKey]);
 
   useEffect(() => {
     fetchProducts();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const scrollTarget = filters.category ? document.getElementById("shop-products-grid") : null;
+    if (scrollTarget) {
+      window.setTimeout(() => scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [fetchProducts]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (loadingMoreRef.current || meta.page >= meta.totalPages) return;
+
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const queryFilters = { ...filters };
+      delete queryFilters.page;
+      const res = await productService.getProducts({
+        ...queryFilters,
+        page: meta.page + 1,
+        limit: 8,
+      });
+      setProducts((currentProducts) => [...currentProducts, ...(res.data || [])]);
+      setMeta(res.meta || { ...meta, page: meta.page + 1 });
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [filtersKey, meta]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || isLoading || meta.page >= meta.totalPages) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMoreProducts();
+      },
+      { rootMargin: "320px 0px" }
+    );
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [isLoading, loadMoreProducts, meta.page, meta.totalPages]);
 
   const updateFilters = (updates) => {
     const next = { ...filters, ...updates, page: 1 };
@@ -51,15 +98,11 @@ const ShopPage = () => {
 
   const clearFilters = () => setSearchParams({});
 
-  const goToPage = (p) => {
-    updateFilters({ page: p });
-  };
-
   return (
     <div className="container-page py-8 lg:py-12">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-        <div>
+        <div id="shop-products-grid">
           <span className="eyebrow">Store Collection</span>
           <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em", marginTop: "0.25rem" }}>
             {filters.search ? `Results for "${filters.search}"` : "All Products"}
@@ -200,49 +243,9 @@ const ShopPage = () => {
 
         <div>
           <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" />
-
-          {meta.totalPages > 1 && (
-            <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => goToPage(page - 1)}
-                className="btn-icon disabled:opacity-30"
-                style={{ border: "1px solid var(--border)", width: "2.25rem", height: "2.25rem" }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: meta.totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i + 1)}
-                  style={{
-                    width: "2.25rem",
-                    height: "2.25rem",
-                    borderRadius: "9999px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.18s",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: page === i + 1 ? "var(--brand)" : "var(--surface)",
-                    color: page === i + 1 ? "var(--bg)" : "var(--ink)",
-                    border: page === i + 1 ? "none" : "1px solid var(--border)",
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                disabled={page >= meta.totalPages}
-                onClick={() => goToPage(page + 1)}
-                className="btn-icon disabled:opacity-30"
-                style={{ border: "1px solid var(--border)", width: "2.25rem", height: "2.25rem" }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+          <div ref={loadMoreRef} style={{ minHeight: "1px", marginTop: "2rem" }} aria-hidden="true" />
+          {isLoadingMore && (
+            <p style={{ textAlign: "center", color: "var(--ink-muted)", fontSize: "0.8rem" }}>Loading more products...</p>
           )}
         </div>
       </div>

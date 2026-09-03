@@ -6,6 +6,10 @@ import gymImg from "../../assets/hero-gym.svg";
 import spiritualImg from "../../assets/hero-spiritual.svg";
 import decorImg from "../../assets/hero-decor.svg";
 
+
+// Trust items for the hero trust strip
+// Each item has an icon, title, and subtitle describing the guarantee
+// These are displayed in rounded cards (border-radius: 1rem)
 const trustItems = [
   { icon: Truck, title: "Free Shipping", sub: "On orders above ₹999" },
   { icon: ShieldCheck, title: "Quality Guaranteed", sub: "Every item hand-inspected" },
@@ -13,12 +17,17 @@ const trustItems = [
   { icon: Award, title: "Best Value", sub: "Direct store pricing, no markups" },
 ];
 
+// Statistics displayed in the hero section
+// Each stat card has rounded corners (border-radius: 1rem)
 const stats = [
   { value: "500+", label: "Curated Products" },
   { value: "4.8★", label: "Customer Rating" },
   { value: "10k+", label: "Happy Shoppers" },
 ];
 
+// Category cards configuration for hero showcase
+// Each card has rounded corners (border-radius: 1.35rem) and links to specific product categories
+// Cards include: Gym Equipment, God Idols & Murtis, and Puja & Home Decor
 const showcaseCards = [
   {
     to: "/shop?category=equipment",
@@ -57,10 +66,10 @@ const Hero = () => {
       <div className="hero-bg-glow hero-bg-glow--left" />
       <div className="dot-grid-bg hero-dot-grid" />
 
-      <div className="container-page hero-inner">
-        <div className="hero-grid">
-          {/* Left: Content */}
-          <motion.div
+      {/* <div className="container-page hero-inner">
+        <div className="hero-grid"> */}
+      {/* Left: Content */}
+      {/* <motion.div
             className="hero-content"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -97,10 +106,13 @@ const Hero = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </motion.div> */}
 
-          {/* Right: Showcase */}
-          <motion.div
+      {/* Right: Showcase - Category Cards */}
+      {/* This section displays rounded category cards for Gym Equipment, God Idols & Murtis, and Puja & Home Decor */}
+      {/* Each card has rounded corners (border-radius: 1.35rem) as defined in ui-extras.css */}
+      {/* Cards link to specific product categories and include hover effects */}
+      {/* <motion.div
             className="hero-showcase"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -140,14 +152,17 @@ const Hero = () => {
                 </div>
               </Link>
             ))}
-          </motion.div>
-        </div>
-      </div>
+          </motion.div> */}
 
-      {/* Trust strip */}
+
+      {/* </div>
+      </div> */}
+
+      {/* Trust strip - displays shipping, quality, returns, and value guarantees */}
+      {/* Each trust card has rounded corners (border-radius: 1rem) */}
       <div className="hero-trust-strip">
         <div className="container-page">
-          <div className="hero-trust-grid">
+          <div className="hero-trust-grid" style={{ justifyContent: "center" }}>
             {trustItems.map(({ icon: Icon, title, sub }) => (
               <div key={title} className="hero-trust-card">
                 <div className="hero-trust-icon">

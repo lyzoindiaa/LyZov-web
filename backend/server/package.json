@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "npm install --prefix ../../frontend/client && npm run build --prefix ../../frontend/client",
-    "seed": "node utils/seeder.js"
+    "seed": "node utils/seeder.js",
+    "seed:add": "node utils/addProducts.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

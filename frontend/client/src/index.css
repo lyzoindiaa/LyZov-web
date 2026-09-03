@@ -1,6 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap');
 @import './ui-extras.css';
 
+/* Category scroll hide scrollbar */
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+.category-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (min-width: 1024px) {
+  .category-scroll {
+    justify-content: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .category-filter-card {
+    width: 10rem;
+    min-width: 10rem;
+    padding: 0.75rem;
+    border-radius: 1.75rem !important;
+  }
+
+  .category-filter-image {
+    width: 100% !important;
+    height: 8.5rem !important;
+    border-radius: 1.35rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .category-scroll {
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    overflow-x: visible;
+  }
+
+  .category-filter-card {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 0;
+    border-radius: 1.75rem !important;
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -488,7 +532,6 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 .about-hero-carousel {
   width: 100%;
   margin: 0;
-  margin-bottom: 2rem;
 }
 
 .about-hero-image-wrap {
@@ -535,7 +578,7 @@ html.dark td { border-color: var(--border); color: var(--ink); }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-end;
   padding: clamp(1.4rem, 3vw, 3rem) clamp(1.2rem, 5vw, 6rem);
   z-index: 1;
   color: var(--ink-inverted);
@@ -579,6 +622,8 @@ html.dark td { border-color: var(--border); color: var(--ink); }
   padding: 0.95rem 1.5rem;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
+  position: relative;
+  top: 45px;
   transform: translateY(8px);
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
@@ -593,6 +638,13 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 .about-hero-image-wrap:hover .about-hero-button:hover {
   box-shadow: var(--shadow-md);
   filter: brightness(1.04);
+}
+
+@media (min-width: 769px) and (max-width: 1279px) {
+  .about-hero-button {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .about-container {
