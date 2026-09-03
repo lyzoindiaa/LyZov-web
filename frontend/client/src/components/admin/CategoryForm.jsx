@@ -90,19 +90,10 @@ const CategoryForm = ({ category, onSubmit, onCancel, isLoading }) => {
     }
 
     try {
-      // Handle file upload if there's a new image
-      let imageUrl = formData.imageUrl;
-      if (categoryImage) {
-        // In a real app, you'd upload the file to a server here
-        // For now, we'll use the preview URL
-        imageUrl = imagePreview;
-      }
-
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        image: { url: imageUrl || "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800" },
-      };
+      const payload = new FormData();
+      payload.append("name", formData.name);
+      payload.append("description", formData.description);
+      if (categoryImage) payload.append("image", categoryImage);
 
       await onSubmit(payload);
     } catch (err) {

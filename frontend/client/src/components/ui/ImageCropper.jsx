@@ -33,6 +33,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel, aspectRatio = 1 }) => {
       const ctx = canvas.getContext('2d');
       
       const imageElement = new Image();
+      imageElement.crossOrigin = "anonymous";
       imageElement.src = image;
       
       await new Promise((resolve) => {
@@ -79,6 +80,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel, aspectRatio = 1 }) => {
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Crop Image</h3>
           <button
+            type="button"
             onClick={onCancel}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
           >
@@ -128,6 +130,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel, aspectRatio = 1 }) => {
 
           {/* Rotation Button */}
           <button
+            type="button"
             onClick={handleRotate}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium"
           >
@@ -138,12 +141,14 @@ const ImageCropper = ({ image, onCropComplete, onCancel, aspectRatio = 1 }) => {
           {/* Action Buttons */}
           <div className="flex gap-2 sm:gap-3">
             <button
+              type="button"
               onClick={onCancel}
               className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleApplyCrop}
               className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white text-xs sm:text-sm font-medium"
             >
