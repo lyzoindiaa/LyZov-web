@@ -36,16 +36,6 @@ const AdminOrdersPage = () => {
     }
   };
 
-  const handleApprovalChange = async (orderId, approvalStatus) => {
-    try {
-      await orderService.updateOrderStatus(orderId, { approvalStatus });
-      toast.success(approvalStatus === "accepted" ? "Order accepted" : "Order rejected");
-      loadOrders();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Could not update order approval");
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -75,20 +65,19 @@ const AdminOrdersPage = () => {
               <th className="px-5 py-4">Customer</th>
               <th className="px-5 py-4">Date</th>
               <th className="px-5 py-4">Total</th>
-              <th className="px-5 py-4">Approval</th>
               <th className="px-5 py-4">Status</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-stone">
+                <td colSpan={5} className="px-5 py-8 text-center text-stone">
                   Loading orders...
                 </td>
               </tr>
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-stone">
+                <td colSpan={5} className="px-5 py-8 text-center text-stone">
                   No orders found
                 </td>
               </tr>
@@ -104,19 +93,8 @@ const AdminOrdersPage = () => {
                   <td className="px-5 py-4 text-stone">{formatDate(order.createdAt)}</td>
                   <td className="px-5 py-4 tabular-nums">{formatCurrency(order.totalPrice)}</td>
                   <td className="px-5 py-4">
-                    {order.approvalStatus === "pending" || !order.approvalStatus ? (
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => handleApprovalChange(order._id, "accepted")} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600">Accept</button>
-                        <button type="button" onClick={() => handleApprovalChange(order._id, "rejected")} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600">Reject</button>
-                      </div>
-                    ) : (
-                      <span className="text-xs font-semibold capitalize text-stone">{order.approvalStatus}</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
                     <select
                       value={order.orderStatus}
-                      disabled={order.approvalStatus === "pending" && !order.statusHistory?.length}
                       onChange={(e) => handleStatusChange(order._id, e.target.value)}
                       className="rounded-full border border-ink/12 bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--ink)] outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]"
                     >
