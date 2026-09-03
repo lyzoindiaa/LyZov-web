@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Star, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { categoryService, brandService } from "../../services/productService";
+import { categoryService } from "../../services/categoryService";
+import { brandService } from "../../services/productService";
 
 const FilterSidebar = ({ filters, onChange, onClear }) => {
   const [categories, setCategories] = useState([]);

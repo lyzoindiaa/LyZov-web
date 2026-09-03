@@ -1,21 +1,19 @@
 ﻿import { useState, useEffect } from "react";
-import { Plus, Search, Edit2, Trash2, Tag, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Tag, CheckCircle, XCircle, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { categoryService } from "../../services/categoryService";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import Modal from "../../components/ui/Modal";
+import CategoryImageGalleryModal from "../../components/admin/CategoryImageGalleryModal";
 
 const AdminCategoriesPage = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "", imageUrl: "" });
-  const [submitting, setSubmitting] = useState(false);
+  const [viewingCategory, setViewingCategory] = useState(null);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -33,52 +31,17 @@ const AdminCategoriesPage = () => {
     fetchCategories();
   }, []);
 
-  const handleOpenAddModal = () => {
-    setEditingCategory(null);
-    setFormData({ name: "", description: "", imageUrl: "" });
-    setIsModalOpen(true);
+  const handleAdd = () => {
+    navigate("/admin/categories/add");
   };
 
-  const handleOpenEditModal = (cat) => {
-    setEditingCategory(cat);
-    setFormData({
-      name: cat.name || "",
-      description: cat.description || "",
-      imageUrl: cat.image?.url || "",
-    });
-    setIsModalOpen(true);
+  const handleEdit = (cat) => {
+    navigate(`/admin/categories/${cat._id}/edit`);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      toast.error("Category name is required");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        image: { url: formData.imageUrl || "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800" },
-      };
-
-      if (editingCategory) {
-        await categoryService.updateCategory(editingCategory._id, payload);
-        toast.success("Category updated successfully!");
-      } else {
-        await categoryService.createCategory(payload);
-        toast.success("Category created successfully!");
-      }
-
-      setIsModalOpen(false);
-      fetchCategories();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save category");
-    } finally {
-      setSubmitting(false);
-    }
+  const handleViewImage = (cat) => {
+    setViewingCategory(cat);
+    setIsGalleryOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -103,7 +66,7 @@ const AdminCategoriesPage = () => {
           <h1 className="font-display text-2xl font-semibold">Categories Table</h1>
           <p className="mt-1 text-sm text-stone">Manage store categories, slugs, and display states</p>
         </div>
-        <Button onClick={handleOpenAddModal} className="flex items-center gap-2">
+        <Button onClick={handleAdd} className="flex items-center gap-2">
           <Plus size={16} /> Add Category
         </Button>
       </div>
@@ -170,7 +133,14 @@ const AdminCategoriesPage = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => handleOpenEditModal(cat)}
+                        onClick={() => handleViewImage(cat)}
+                        className="rounded-lg p-2 text-stone hover:bg-ink/5 hover:text-blue-500 dark:hover:bg-cream/10 dark:hover:text-blue-400"
+                        title="View Image"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(cat)}
                         className="rounded-lg p-2 text-stone hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream"
                         title="Edit Category"
                       >
@@ -192,46 +162,12 @@ const AdminCategoriesPage = () => {
         </div>
       )}
 
-      {/* Add / Edit Category Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editingCategory ? "Edit Category" : "Add New Category"}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <Input
-            label="Category Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g. Men, Women, Footwear"
-            required
-          />
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-ink dark:text-cream">Description</label>
-            <textarea
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Category overview & details"
-              className="w-full rounded-lg border border-hairline bg-transparent p-3 text-sm outline-none focus:border-ink dark:border-hairline-dark dark:focus:border-cream"
-            />
-          </div>
-          <Input
-            label="Image URL"
-            value={formData.imageUrl}
-            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-            placeholder="https://images.unsplash.com/..."
-          />
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={submitting}>
-              {editingCategory ? "Save Changes" : "Create Category"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      {/* Category Image Gallery Modal */}
+      <CategoryImageGalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        category={viewingCategory}
+      />
     </div>
   );
 };

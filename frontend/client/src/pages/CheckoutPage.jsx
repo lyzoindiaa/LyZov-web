@@ -54,8 +54,8 @@ const CheckoutPage = () => {
     coupon?.code && coupon.discountType === "percentage"
       ? (subtotal * coupon.discountValue) / 100
       : coupon?.code
-      ? coupon.discountValue
-      : 0;
+        ? coupon.discountValue
+        : 0;
   const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
   const taxPrice = Math.round(discountedSubtotal * TAX_RATE * 100) / 100;
   const shippingPrice = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_RATE;
@@ -99,9 +99,10 @@ const CheckoutPage = () => {
   const handlePaymentSuccess = async (paymentIntentId) => {
     setIsPlacingOrder(true);
     try {
-      const address = savedAddresses.find((a) => a._id === selectedAddressId);
+      const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
       const res = await orderService.createOrder({
         shippingAddress: address,
+        paymentMethod: "stripe",
         paymentIntentId,
         items,
         subtotal,

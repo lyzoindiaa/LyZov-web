@@ -1,0 +1,41 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { categoryService } from "../../services/categoryService";
+import CategoryForm from "../../components/admin/CategoryForm";
+
+const AdminCategoryAddPage = () => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (payload) => {
+    try {
+      setIsLoading(true);
+      await categoryService.createCategory(payload);
+      toast.success("Category created successfully");
+      navigate("/admin/categories");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Could not create category");
+      throw err; // Re-throw to let form handle error state
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    navigate("/admin/categories");
+  };
+
+  return (
+    <div className="container-page py-8">
+      <CategoryForm
+        category={null}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+};
+
+export default AdminCategoryAddPage;

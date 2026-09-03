@@ -10,7 +10,7 @@ const StripePaymentForm = ({ onSuccess, isPlacingOrder }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || isProcessing || isPlacingOrder) return;
 
     setIsProcessing(true);
     setErrorMessage(null);
@@ -27,7 +27,7 @@ const StripePaymentForm = ({ onSuccess, isPlacingOrder }) => {
     }
 
     if (paymentIntent?.status === "succeeded") {
-      onSuccess(paymentIntent.id);
+      await onSuccess(paymentIntent.id);
     }
     setIsProcessing(false);
   };

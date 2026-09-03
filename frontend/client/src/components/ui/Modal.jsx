@@ -24,7 +24,7 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -37,10 +37,10 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className={`relative z-10 w-full ${sizeClasses[size]} rounded-2xl bg-ivory p-6 shadow-lift dark:bg-charcoal sm:p-8`}
+            className={`relative z-10 w-full ${sizeClasses[size]} rounded-2xl bg-ivory p-4 sm:p-6 shadow-lift dark:bg-charcoal sm:p-8 max-h-[90vh] overflow-hidden flex flex-col`}
           >
-            <div className="mb-6 flex items-center justify-between">
-              {title && <h3 className="font-display text-xl text-ink dark:text-cream">{title}</h3>}
+            <div className="mb-4 sm:mb-6 flex items-center justify-between flex-shrink-0">
+              {title && <h3 className="font-display text-lg sm:text-xl text-ink dark:text-cream">{title}</h3>}
               <button
                 onClick={onClose}
                 className="ml-auto rounded-full p-2 text-stone transition-colors hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream"
@@ -49,7 +49,9 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
                 <X size={18} />
               </button>
             </div>
-            {children}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {children}
+            </div>
           </motion.div>
         </div>
       )}

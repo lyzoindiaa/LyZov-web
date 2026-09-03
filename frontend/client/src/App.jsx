@@ -29,7 +29,11 @@ import AddressesPage from "./pages/dashboard/AddressesPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
+import AdminProductAddPage from "./pages/admin/AdminProductAddPage";
+import AdminProductEditPage from "./pages/admin/AdminProductEditPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
+import AdminCategoryAddPage from "./pages/admin/AdminCategoryAddPage";
+import AdminCategoryEditPage from "./pages/admin/AdminCategoryEditPage";
 import AdminBrandsPage from "./pages/admin/AdminBrandsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 
@@ -121,7 +125,11 @@ function App() {
         >
           <Route index element={<AdminAnalyticsPage />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/add" element={<AdminProductAddPage />} />
+          <Route path="products/:id/edit" element={<AdminProductEditPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="categories/add" element={<AdminCategoryAddPage />} />
+          <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
           <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
         </Route>
