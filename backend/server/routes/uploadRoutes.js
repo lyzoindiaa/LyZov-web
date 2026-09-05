@@ -14,7 +14,7 @@ const router = express.Router();
 router.post(
   "/",
   protect,
-  authorize("admin"),
+  authorize("seller"),
   upload.single("image"),
   asyncHandler(async (req, res) => {
     if (!req.file) throw ApiError.badRequest("No image file provided");
@@ -35,7 +35,7 @@ router.post(
 router.delete(
   "/:publicId",
   protect,
-  authorize("admin"),
+  authorize("seller"),
   asyncHandler(async (req, res) => {
     await deleteFromCloudinary(decodeURIComponent(req.params.publicId));
     return sendSuccess(res, 200, "Image deleted successfully");

@@ -19,7 +19,7 @@ const AdminCategoryEditPage = () => {
         setCategory(res.data);
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load category");
-        navigate("/admin/categories");
+        navigate("/seller/categories");
       } finally {
         setIsFetching(false);
       }
@@ -33,7 +33,7 @@ const AdminCategoryEditPage = () => {
       setIsLoading(true);
       await categoryService.updateCategory(id, payload);
       toast.success("Category updated successfully");
-      navigate("/admin/categories");
+      navigate("/seller/categories");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update category");
       throw err; // Re-throw to let form handle error state
@@ -43,7 +43,7 @@ const AdminCategoryEditPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/admin/categories");
+    navigate("/seller/categories");
   };
 
   if (isFetching) {
@@ -64,7 +64,7 @@ const AdminCategoryEditPage = () => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Category Not Found</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">The category you're looking for doesn't exist or has been deleted.</p>
           <button
-            onClick={() => navigate("/admin/categories")}
+            onClick={() => navigate("/seller/categories")}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Categories

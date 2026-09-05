@@ -20,7 +20,7 @@ const AdminProductEditPage = () => {
         setProduct(res.data.product || res.data);
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load product");
-        navigate("/admin/products");
+        navigate("/seller/products");
       } finally {
         setIsFetching(false);
       }
@@ -34,7 +34,7 @@ const AdminProductEditPage = () => {
       setIsLoading(true);
       await adminProductService.updateProduct(id, formData);
       toast.success("Product updated successfully");
-      navigate("/admin/products");
+      navigate("/seller/products");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update product");
       throw err; // Re-throw to let form handle error state
@@ -44,7 +44,7 @@ const AdminProductEditPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/admin/products");
+    navigate("/seller/products");
   };
 
   if (isFetching) {
@@ -65,7 +65,7 @@ const AdminProductEditPage = () => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Product Not Found</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">The product you're looking for doesn't exist or has been deleted.</p>
           <button
-            onClick={() => navigate("/admin/products")}
+            onClick={() => navigate("/seller/products")}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Products

@@ -30,11 +30,11 @@ const AdminProductsPage = () => {
   }, []);
 
   const handleEdit = (product) => {
-    navigate(`/admin/products/${product._id}/edit`);
+    navigate(`/seller/products/${product._id}/edit`);
   };
 
   const handleAdd = () => {
-    navigate("/admin/products/add");
+    navigate("/seller/products/add");
   };
 
   const handleViewImages = (product) => {

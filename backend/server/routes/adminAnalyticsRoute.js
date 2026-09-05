@@ -10,10 +10,10 @@ const {
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-// ✅ Sirf admin ke liye accessible
-router.get("/stats", protect, authorize("admin"), getDashboardStats);
-router.get("/revenue", protect, authorize("admin"), getRevenueByDay);
-router.get("/orders-status", protect, authorize("admin"), getOrdersByStatus);
-router.get("/recent-orders", protect, authorize("admin"), getRecentOrders);
+// ✅ Accessible by seller
+router.get("/stats", protect, authorize("seller"), getDashboardStats);
+router.get("/revenue", protect, authorize("seller"), getRevenueByDay);
+router.get("/orders-status", protect, authorize("seller"), getOrdersByStatus);
+router.get("/recent-orders", protect, authorize("seller"), getRecentOrders);
 
 module.exports = router;

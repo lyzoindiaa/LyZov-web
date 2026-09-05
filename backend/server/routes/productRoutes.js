@@ -22,7 +22,7 @@ router.get("/:slug", getProductBySlug);
 router.post(
   "/",
   protect,
-  authorize("admin"),
+  authorize("seller"),
   upload.array("images", 6),
   createProductValidator,
   validate,
@@ -32,14 +32,14 @@ router.post(
 router.put(
   "/:id",
   protect,
-  authorize("admin"),
+  authorize("seller"),
   upload.array("images", 6),
   updateProductValidator,
   validate,
   updateProduct
 );
 
-router.delete("/:id/images/:imageId", protect, authorize("admin"), deleteProductImage);
-router.delete("/:id", protect, authorize("admin"), deleteProduct);
+router.delete("/:id/images/:imageId", protect, authorize("seller"), deleteProductImage);
+router.delete("/:id", protect, authorize("seller"), deleteProduct);
 
 module.exports = router;

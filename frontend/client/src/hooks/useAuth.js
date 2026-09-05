@@ -5,7 +5,8 @@ export const useAuth = () => {
   return {
     user,
     isAuthenticated,
-    isAdmin: user?.role === "admin",
+    isSeller: user?.role === "seller" || user?.role === "admin",
+    isAdmin: user?.role === "seller" || user?.role === "admin",
     status,
     bootstrapped,
   };

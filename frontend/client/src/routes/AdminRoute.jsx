@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, bootstrapped } = useAuth();
+  const { isAuthenticated, isSeller, isAdmin, bootstrapped } = useAuth();
 
   if (!bootstrapped) {
     return (
@@ -15,7 +15,7 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated || (!isSeller && !isAdmin)) {
     return <Navigate to="/" replace />;
   }
 

@@ -13,7 +13,7 @@ const AdminProductAddPage = () => {
       setIsLoading(true);
       await adminProductService.createProduct(formData);
       toast.success("Product created successfully");
-      navigate("/admin/products");
+      navigate("/seller/products");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not create product");
       throw err; // Re-throw to let form handle error state
@@ -23,7 +23,7 @@ const AdminProductAddPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/admin/products");
+    navigate("/seller/products");
   };
 
   return (

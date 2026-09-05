@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Tag, CheckCircle, XCircle, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -32,11 +32,11 @@ const AdminCategoriesPage = () => {
   }, []);
 
   const handleAdd = () => {
-    navigate("/admin/categories/add");
+    navigate("/seller/categories/add");
   };
 
   const handleEdit = (cat) => {
-    navigate(`/admin/categories/${cat._id}/edit`);
+    navigate(`/seller/categories/${cat._id}/edit`);
   };
 
   const handleViewImage = (cat) => {

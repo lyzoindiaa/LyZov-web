@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -64,7 +64,7 @@ function App() {
   useEffect(() => {
     const handleLogout = () => {
       const pathname = window.location.pathname;
-      if (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/admin")) {
+      if (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/admin") || pathname.startsWith("/seller")) {
         navigate("/login");
       }
     };
@@ -115,9 +115,9 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* ── Admin Portal ── */}
+        {/* ── Seller Portal ── */}
         <Route
-          path="/admin"
+          path="/seller"
           element={
             <AdminRoute>
               <AdminLayout />
@@ -135,6 +135,10 @@ function App() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
         </Route>
+
+        {/* ── Backward-Compatible /admin Redirects ── */}
+        <Route path="/admin" element={<Navigate to="/seller" replace />} />
+        <Route path="/admin/*" element={<Navigate to="/seller" replace />} />
       </Routes>
 
       <ToastContainer position="bottom-right" autoClose={3000} theme={theme === "dark" ? "dark" : "light"} />

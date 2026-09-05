@@ -23,23 +23,23 @@ const clearExceptAdmin = async () => {
       mongoose.connection.db.collection("coupons").deleteMany({}),
     ]);
 
-    // Keep ONLY admin user
-    await User.deleteMany({ role: { $ne: "admin" } });
+    // Keep ONLY seller/admin user
+    await User.deleteMany({ role: { $nin: ["seller", "admin"] } });
 
-    let admin = await User.findOne({ email: "admin@lyzov.com" });
-    if (!admin) {
-      console.log("Creating default admin account...");
-      admin = await User.create({
-        name: "LyZov Admin",
-        email: "admin@lyzov.com",
+    let seller = await User.findOne({ email: "seller@lyzov.com" });
+    if (!seller) {
+      console.log("Creating default seller account...");
+      seller = await User.create({
+        name: "LyZov Seller",
+        email: "seller@lyzov.com",
         password: "Admin@1234",
-        role: "admin",
+        role: "seller",
         isEmailVerified: true,
       });
     }
 
-    console.log("Success! All sample data removed. ONLY Admin account remains:");
-    console.log("Admin Email:", admin.email);
+    console.log("Success! All sample data removed. ONLY Seller account remains:");
+    console.log("Seller Email:", seller.email);
     process.exit(0);
   } catch (err) {
     console.error("Cleanup error:", err);

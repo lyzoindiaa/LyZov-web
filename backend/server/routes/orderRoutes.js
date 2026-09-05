@@ -32,10 +32,10 @@ router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
 router.put("/:id/cancel", cancelOrder);
 
-router.get("/", authorize("admin"), getAllOrders);
+router.get("/", authorize("seller"), getAllOrders);
 router.put(
   "/:id/status",
-  authorize("admin"),
+  authorize("seller"),
   [body("status").isIn(["pending", "processing", "shipped", "delivered", "cancelled", "refunded"])],
   validate,
   updateOrderStatus
