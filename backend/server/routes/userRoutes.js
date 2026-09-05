@@ -2,6 +2,8 @@ const express = require("express");
 const { body } = require("express-validator");
 const {
   updateProfile,
+  updateSellerProfile,
+  deleteSellerDocument,
   changePassword,
   getUsers,
   updateUser,
@@ -16,6 +18,21 @@ const router = express.Router();
 router.use(protect);
 
 router.put("/profile", upload.single("avatar"), updateProfile);
+router.put(
+  "/seller/profile",
+  authorize("seller", "admin"),
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "panDocument", maxCount: 1 },
+    { name: "aadhaarDocument", maxCount: 1 },
+  ]),
+  updateSellerProfile
+);
+router.delete(
+  "/seller/document/:docType",
+  authorize("seller", "admin"),
+  deleteSellerDocument
+);
 router.put(
   "/change-password",
   [

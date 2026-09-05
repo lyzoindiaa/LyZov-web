@@ -1,16 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { CheckCircle2, AlertTriangle, RefreshCw, Mail } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Mail,
+  Phone,
+  Camera,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import { userService } from "../../services/cartService";
 import { authService } from "../../services/authService";
+import { setUser, fetchCurrentUser } from "../../features/auth/authSlice";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 
 const ProfilePage = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [isResending, setIsResending] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar?.url || "");
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
+
+  const profileForm = useForm({
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    },
+  });
+  const passwordForm = useForm();
+
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+      setAvatarPreview(user.avatar?.url || "");
+    }
+  }, [user, profileForm]);
 
   const handleResendVerification = async () => {
     if (!user?.email) return;
@@ -25,16 +58,32 @@ const ProfilePage = () => {
     }
   };
 
-  const profileForm = useForm({ defaultValues: { name: user?.name, phone: user?.phone } });
-  const passwordForm = useForm();
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedAvatarFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+    }
+  };
 
   const onProfileSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("phone", data.phone || "");
-      await userService.updateProfile(formData);
-      toast.success("Profile updated successfully");
+      formData.append("name", data.name.trim());
+      formData.append("email", data.email.trim());
+      formData.append("phone", data.phone ? data.phone.trim() : "");
+      if (selectedAvatarFile) {
+        formData.append("avatar", selectedAvatarFile);
+      }
+
+      const res = await userService.updateProfile(formData);
+      if (res.data?.user) {
+        dispatch(setUser(res.data.user));
+      } else {
+        dispatch(fetchCurrentUser());
+      }
+      toast.success("Profile updated successfully!");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update profile");
     }
@@ -46,7 +95,7 @@ const ProfilePage = () => {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
-      toast.success("Password changed. Please log in again.");
+      toast.success("Password changed successfully.");
       passwordForm.reset();
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not change password");
@@ -91,7 +140,7 @@ const ProfilePage = () => {
                 Email Verification Pending
               </h4>
               <p style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "2px" }}>
-                Verify your email to receive order tracking updates and security notifications.
+                Verify your email ({user?.email}) to receive order tracking updates and security notifications.
               </p>
             </div>
           </div>
@@ -109,53 +158,157 @@ const ProfilePage = () => {
         </div>
       )}
 
-      <div className="card-surface p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display text-xl">Personal Information</h3>
-          {user?.isEmailVerified ? (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                color: "var(--green)",
-                backgroundColor: "var(--green-bg)",
-                padding: "0.25rem 0.65rem",
-                borderRadius: "9999px",
-              }}
-            >
-              <CheckCircle2 size={13} />
-              <span>Email Verified</span>
-            </span>
-          ) : (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                color: "#D97706",
-                backgroundColor: "rgba(245, 158, 11, 0.15)",
-                padding: "0.25rem 0.65rem",
-                borderRadius: "9999px",
-              }}
-            >
-              <Mail size={13} />
-              <span>Unverified</span>
-            </span>
-          )}
+      {/* ── Personal Information Form ── */}
+      <div className="card-surface p-6 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-[var(--border)]">
+          <div>
+            <h3 className="font-display text-xl">Personal Information</h3>
+            <p className="text-xs text-[var(--ink-muted)] mt-0.5">Manage your account details and contact information.</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {user?.isEmailVerified ? (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "var(--green)",
+                  backgroundColor: "var(--green-bg)",
+                  padding: "0.25rem 0.65rem",
+                  borderRadius: "9999px",
+                }}
+              >
+                <CheckCircle2 size={13} />
+                <span>Email Verified</span>
+              </span>
+            ) : (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "#D97706",
+                  backgroundColor: "rgba(245, 158, 11, 0.15)",
+                  padding: "0.25rem 0.65rem",
+                  borderRadius: "9999px",
+                }}
+              >
+                <Mail size={13} />
+                <span>Email Unverified</span>
+              </span>
+            )}
+          </div>
         </div>
-        <form
-          onSubmit={profileForm.handleSubmit(onProfileSubmit)}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-        >
-          <Input label="Full Name" {...profileForm.register("name", { required: true })} />
-          <Input label="Email" value={user?.email} disabled className="opacity-60" />
-          <Input label="Phone" {...profileForm.register("phone")} />
-          <div className="sm:col-span-2">
+
+        <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="flex flex-col gap-6">
+          {/* Avatar Upload */}
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div
+                style={{
+                  width: "5rem",
+                  height: "5rem",
+                  borderRadius: "9999px",
+                  overflow: "hidden",
+                  backgroundColor: "var(--bg-subtle)",
+                  border: "2px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={32} style={{ color: "var(--ink-muted)" }} />
+                )}
+              </div>
+              <label
+                htmlFor="avatar-upload"
+                style={{
+                  position: "absolute",
+                  bottom: "0",
+                  right: "0",
+                  backgroundColor: "var(--accent)",
+                  color: "#ffffff",
+                  width: "1.75rem",
+                  height: "1.75rem",
+                  borderRadius: "9999px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                }}
+                title="Change Avatar"
+              >
+                <Camera size={13} />
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                style={{ display: "none" }}
+              />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold">{user?.name || "Customer"}</h4>
+              <p className="text-xs text-[var(--ink-muted)] mt-0.5">Click camera icon to change profile photo</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Full Name"
+              {...profileForm.register("name", { required: "Name is required" })}
+              error={profileForm.formState.errors.name?.message}
+            />
+
+            <div>
+              <Input
+                label="Email Address"
+                type="email"
+                {...profileForm.register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Please provide a valid email",
+                  },
+                })}
+                error={profileForm.formState.errors.email?.message}
+              />
+              <span className="text-[0.7rem] text-[var(--ink-subtle)] mt-1 block">
+                Changing your email address will require re-verification.
+              </span>
+            </div>
+
+            <div>
+              <Input
+                label="Mobile / Phone Number *"
+                type="tel"
+                placeholder="e.g. 9876543210"
+                {...profileForm.register("phone", {
+                  required: "Mobile / Phone number is compulsory",
+                  pattern: {
+                    value: /^[6-9]\d{9}$/,
+                    message: "Please enter a valid 10-digit Indian mobile number",
+                  },
+                })}
+                error={profileForm.formState.errors.phone?.message}
+              />
+              <span className="text-[0.7rem] text-[var(--ink-subtle)] mt-1 block">
+                Compulsory for order confirmation and delivery notifications.
+              </span>
+            </div>
+          </div>
+
+          <div>
             <Button type="submit" isLoading={profileForm.formState.isSubmitting}>
               Save Changes
             </Button>
@@ -163,8 +316,10 @@ const ProfilePage = () => {
         </form>
       </div>
 
-      <div className="card-surface p-6">
-        <h3 className="mb-5 font-display text-xl">Change Password</h3>
+      {/* ── Password Security ── */}
+      <div className="card-surface p-6 sm:p-8">
+        <h3 className="mb-2 font-display text-xl">Change Password</h3>
+        <p className="text-xs text-[var(--ink-muted)] mb-5">Ensure your account is using a long, secure password.</p>
         <form
           onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
@@ -172,15 +327,15 @@ const ProfilePage = () => {
           <Input
             label="Current Password"
             type="password"
-            {...passwordForm.register("currentPassword", { required: "Required" })}
+            {...passwordForm.register("currentPassword", { required: "Current password is required" })}
             error={passwordForm.formState.errors.currentPassword?.message}
           />
-          <div />
+          <div className="hidden sm:block" />
           <Input
             label="New Password"
             type="password"
             {...passwordForm.register("newPassword", {
-              required: "Required",
+              required: "New password is required",
               minLength: { value: 8, message: "Must be at least 8 characters" },
             })}
             error={passwordForm.formState.errors.newPassword?.message}
@@ -193,7 +348,7 @@ const ProfilePage = () => {
             })}
             error={passwordForm.formState.errors.confirmPassword?.message}
           />
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 mt-2">
             <Button type="submit" variant="secondary" isLoading={passwordForm.formState.isSubmitting}>
               Update Password
             </Button>
