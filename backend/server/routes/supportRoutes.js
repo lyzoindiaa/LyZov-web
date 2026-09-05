@@ -1,6 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { submitInquiry } = require("../controllers/supportController");
+const { optionalAuth } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -12,6 +13,6 @@ const supportLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post("/contact", supportLimiter, submitInquiry);
+router.post("/contact", supportLimiter, optionalAuth, submitInquiry);
 
 module.exports = router;

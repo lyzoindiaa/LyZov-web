@@ -23,6 +23,10 @@ const emailLogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    bodyText: {
+      type: String,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["sent", "failed", "simulated"],
@@ -56,5 +60,6 @@ const emailLogSchema = new mongoose.Schema(
 );
 
 emailLogSchema.index({ createdAt: -1 });
+emailLogSchema.index({ relatedUser: 1, createdAt: -1 });
 
 module.exports = mongoose.model("EmailLog", emailLogSchema);

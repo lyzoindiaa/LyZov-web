@@ -86,6 +86,7 @@ class EmailService {
           recipientName,
           template,
           subject,
+          bodyText: text,
           status: "simulated",
           relatedUser,
           relatedOrder,
@@ -115,6 +116,7 @@ class EmailService {
           recipientName,
           template,
           subject,
+          bodyText: text,
           status: "sent",
           relatedUser,
           relatedOrder,
@@ -135,6 +137,7 @@ class EmailService {
           recipientName,
           template,
           subject,
+          bodyText: text,
           status: "failed",
           errorMessage: err.message,
           relatedUser,
@@ -317,7 +320,7 @@ class EmailService {
     });
   }
 
-  async sendSupportInquiry({ name, email, phone, subject, category, message }) {
+  async sendSupportInquiry({ name, email, phone, subject, category, message, relatedUser = null }) {
     const ticketId = "LZ-" + Math.floor(100000 + Math.random() * 900000);
     const { customerEmail, sellerEmail } = templates.customerSupportInquiryTemplate({
       name,
@@ -337,6 +340,7 @@ class EmailService {
       subject: customerEmail.subject,
       text: customerEmail.text,
       html: customerEmail.html,
+      relatedUser,
       metadata: { ticketId, category },
     });
 
@@ -350,7 +354,8 @@ class EmailService {
         subject: sellerEmail.subject,
         text: sellerEmail.text,
         html: sellerEmail.html,
-        metadata: { ticketId, customerEmail: email, category },
+        relatedUser,
+        metadata: { ticketId, customerEmail: email, category, customerVisible: true },
       });
     }
 
