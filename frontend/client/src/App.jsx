@@ -19,6 +19,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ContactPage from "./pages/ContactPage";
+import PolicyPage from "./pages/PolicyPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
@@ -100,6 +101,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Official Store Policies ── */}
+          <Route path="/policies" element={<Navigate to="/policies/privacy-policy" replace />} />
+          <Route path="/policies/:policySlug" element={<PolicyPage />} />
+          <Route path="/privacy-policy" element={<Navigate to="/policies/privacy-policy" replace />} />
+          <Route path="/terms-and-conditions" element={<Navigate to="/policies/terms-and-conditions" replace />} />
+          <Route path="/return-exchange-policy" element={<Navigate to="/policies/return-exchange-policy" replace />} />
+          <Route path="/refund-cancellation-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
+          <Route path="/shipping-delivery-policy" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
+
+          {/* ── Shorthand & Legacy Aliases ── */}
+          <Route path="/privacy" element={<Navigate to="/policies/privacy-policy" replace />} />
+          <Route path="/terms" element={<Navigate to="/policies/terms-and-conditions" replace />} />
+          <Route path="/returns" element={<Navigate to="/policies/return-exchange-policy" replace />} />
+          <Route path="/refund-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
+          <Route path="/shipping" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
 
           <Route
             path="/dashboard"

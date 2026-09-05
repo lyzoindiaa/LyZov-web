@@ -400,6 +400,31 @@ const CheckoutPage = () => {
               <ShieldCheck size={14} style={{ color: "var(--green)" }} />
               <span>Encrypted 256-bit SSL transaction</span>
             </div>
+
+            <p
+              style={{
+                marginTop: "0.85rem",
+                fontSize: "0.6875rem",
+                color: "var(--ink-subtle)",
+                lineHeight: 1.5,
+                borderTop: "1px solid var(--border)",
+                paddingTop: "0.85rem",
+              }}
+            >
+              By completing your order, you agree to LyZov's{" "}
+              <Link to="/terms-and-conditions" target="_blank" className="underline hover:text-accent" style={{ color: "var(--ink-muted)" }}>
+                Terms & Conditions
+              </Link>
+              ,{" "}
+              <Link to="/privacy-policy" target="_blank" className="underline hover:text-accent" style={{ color: "var(--ink-muted)" }}>
+                Privacy Policy
+              </Link>
+              , and{" "}
+              <Link to="/refund-cancellation-policy" target="_blank" className="underline hover:text-accent" style={{ color: "var(--ink-muted)" }}>
+                Refund & Cancellation Policy
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>
