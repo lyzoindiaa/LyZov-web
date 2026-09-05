@@ -127,6 +127,34 @@ const OrderDetailsPage = () => {
         </Button>
       )}
 
+      {/* Policy and support guidance banner */}
+      <div
+        className="card-surface p-4 text-xs text-stone"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "0.75rem",
+          borderRadius: "0.75rem",
+          backgroundColor: "var(--bg-subtle)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <span>
+          Questions about delivery or returns? Review our{" "}
+          <Link to="/return-exchange-policy" target="_blank" className="font-semibold underline hover:text-accent" style={{ color: "var(--ink)" }}>
+            7-Day Return & Exchange Policy
+          </Link>{" "}
+          and{" "}
+          <Link to="/shipping-delivery-policy" target="_blank" className="font-semibold underline hover:text-accent" style={{ color: "var(--ink)" }}>
+            Shipping & Delivery Policy
+          </Link>
+          .
+        </span>
+        <span style={{ color: "var(--ink-muted)" }}>Order #{order.orderNumber}</span>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
         <Link to="/dashboard/orders" className="text-sm text-stone underline-offset-2 hover:underline">
           &larr; Back to Orders

@@ -626,30 +626,54 @@ const ProductDetailsPage = () => {
               }}
             >
               {[
-                [Truck, "Pan-India", "Free over ₹999"],
-                [ShieldCheck, "100% Genuine", "Quality tested"],
-                [RotateCcw, "7-Day Support", "Easy replacement"],
-              ].map(([Icon, t, s], i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                    ...(i === 1
-                      ? {
-                        borderLeft: "1px solid var(--border)",
-                        borderRight: "1px solid var(--border)",
-                      }
-                      : {}),
-                  }}
-                >
-                  <Icon size={18} style={{ color: "var(--accent)" }} />
-                  <p style={{ fontSize: "0.6875rem", fontWeight: 700, color: "var(--ink)" }}>{t}</p>
-                  <p style={{ fontSize: "0.625rem", color: "var(--ink-muted)" }}>{s}</p>
-                </div>
-              ))}
+                [Truck, "Pan-India", "Free over ₹999", "/shipping-delivery-policy"],
+                [ShieldCheck, "100% Genuine", "Quality tested", null],
+                [RotateCcw, "7-Day Support", "Easy replacement", "/return-exchange-policy"],
+              ].map(([Icon, t, s, link], i) => {
+                const content = (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      height: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon size={18} style={{ color: "var(--accent)" }} />
+                    <p style={{ fontSize: "0.6875rem", fontWeight: 700, color: "var(--ink)" }}>{t}</p>
+                    <p style={{ fontSize: "0.625rem", color: "var(--ink-muted)" }}>{s}</p>
+                  </div>
+                );
+
+                const borderStyle =
+                  i === 1
+                    ? {
+                      borderLeft: "1px solid var(--border)",
+                      borderRight: "1px solid var(--border)",
+                    }
+                    : {};
+
+                return link ? (
+                  <Link
+                    key={i}
+                    to={link}
+                    style={{
+                      textDecoration: "none",
+                      ...borderStyle,
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                    title={`View ${t} policy`}
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={i} style={borderStyle}>
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -746,14 +770,37 @@ const ProductDetailsPage = () => {
 
           {activeTab === "shipping" && (
             <div className="card-surface tab-pane p-6 sm:p-8">
-              <h4 style={{ fontWeight: 800, fontSize: "1rem", color: "var(--ink)", marginBottom: "0.75rem" }}>
-                Doorstep Delivery Across India
-              </h4>
-              <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.75 }}>
-                All orders are packaged with premium multi-layer protective materials. Orders are dispatched within
-                24 hours. Metro deliveries arrive in 2-4 business days, and other regions within 4-6 days with real-time
-                SMS tracking.
-              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+                <div>
+                  <h4 style={{ fontWeight: 800, fontSize: "1rem", color: "var(--ink)", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <Truck size={18} style={{ color: "var(--accent)" }} /> Fast Doorstep Delivery Across India
+                  </h4>
+                  <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.7, marginBottom: "0.85rem" }}>
+                    All orders are packaged with heavy-duty multi-layer protective materials. Dispatched within 24-48 hours. Metro deliveries arrive in 2-4 business days with real-time SMS tracking. Free shipping on orders over ₹999.
+                  </p>
+                  <Link
+                    to="/shipping-delivery-policy"
+                    style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--accent)", textDecoration: "underline" }}
+                  >
+                    Read Full Shipping & Delivery Policy →
+                  </Link>
+                </div>
+
+                <div>
+                  <h4 style={{ fontWeight: 800, fontSize: "1rem", color: "var(--ink)", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <RotateCcw size={18} style={{ color: "var(--accent)" }} /> 7-Day Easy Replacement Guarantee
+                  </h4>
+                  <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.7, marginBottom: "0.85rem" }}>
+                    Received a damaged, defective, or incorrect product? Notify our team within 7 days of delivery. We schedule a complimentary doorstep pickup and dispatch a replacement unit or process a refund.
+                  </p>
+                  <Link
+                    to="/return-exchange-policy"
+                    style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--accent)", textDecoration: "underline" }}
+                  >
+                    Read 7-Day Return & Exchange Policy →
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
         </div>

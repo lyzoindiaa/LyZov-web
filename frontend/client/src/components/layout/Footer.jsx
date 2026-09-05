@@ -16,9 +16,19 @@ const footerColumns = [
     title: "Help & Support",
     links: [
       { label: "Track Your Order", to: "/dashboard/orders" },
-      { label: "Shipping Policy", to: "/shipping" },
-      { label: "7-Day Replacement", to: "/returns" },
+      { label: "Shipping Policy", to: "/shipping-delivery-policy" },
+      { label: "7-Day Replacement", to: "/return-exchange-policy" },
       { label: "Contact & Concierge", to: "/contact" },
+    ],
+  },
+  {
+    title: "Policies & Legal",
+    links: [
+      { label: "Privacy Policy", to: "/privacy-policy" },
+      { label: "Terms & Conditions", to: "/terms-and-conditions" },
+      { label: "Return & Exchange", to: "/return-exchange-policy" },
+      { label: "Refund & Cancellation", to: "/refund-cancellation-policy" },
+      { label: "Shipping & Delivery", to: "/shipping-delivery-policy" },
     ],
   },
   {
@@ -40,7 +50,7 @@ const Footer = () => {
       <div style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
         <div className="container-page py-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex items-center gap-3">
+            <Link to="/shipping-delivery-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
               <div
                 style={{
                   width: "2.5rem",
@@ -60,7 +70,7 @@ const Footer = () => {
                 <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Fast Pan-India Delivery</h5>
                 <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Secure, insured shipping on every order</p>
               </div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-3">
               <div
@@ -84,7 +94,7 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <Link to="/return-exchange-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
               <div
                 style={{
                   width: "2.5rem",
@@ -104,16 +114,16 @@ const Footer = () => {
                 <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>7-Day Easy Replacement</h5>
                 <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Simple returns if something&apos;s not right</p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* ── Main Links ── */}
       <div className="container-page" style={{ paddingTop: "3.5rem", paddingBottom: "3rem" }}>
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand column */}
-          <div className="sm:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="sm:col-span-2 lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <Logo size="lg" variant="elevated" />
             <p style={{ maxWidth: "24rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.7 }}>
               LyZov is your trusted online store for premium fitness gear, handcrafted spiritual idols, and everyday lifestyle essentials — carefully selected, quality-checked, and delivered safely across India.
@@ -183,10 +193,12 @@ const Footer = () => {
           }}
         >
           <p>© {new Date().getFullYear()} LyZov Store. All rights reserved.</p>
-          <div style={{ display: "flex", gap: "1.25rem" }}>
-            <Link to="/shipping" className="nav-link" style={{ fontSize: "0.75rem" }}>Privacy Policy</Link>
-            <Link to="/returns" className="nav-link" style={{ fontSize: "0.75rem" }}>Terms of Service</Link>
-            <Link to="/#faq" className="nav-link" style={{ fontSize: "0.75rem" }}>Security</Link>
+          <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
+            <Link to="/privacy-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Privacy Policy</Link>
+            <Link to="/terms-and-conditions" className="nav-link" style={{ fontSize: "0.75rem" }}>Terms & Conditions</Link>
+            <Link to="/return-exchange-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Return & Exchange</Link>
+            <Link to="/refund-cancellation-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Refunds</Link>
+            <Link to="/shipping-delivery-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Shipping</Link>
           </div>
         </div>
       </div>
