@@ -6,13 +6,13 @@ const categorySchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Category name is required"],
-      unique: true,
       trim: true,
     },
     slug: {
       type: String,
       unique: true,
       lowercase: true,
+      index: true,
     },
     description: {
       type: String,
@@ -27,6 +27,25 @@ const categorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
+      index: true,
+    },
+    ancestors: [
+      {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Category",
+          required: true,
+        },
+        name: { type: String, required: true },
+        slug: { type: String, required: true },
+        level: { type: Number, required: true },
+      },
+    ],
+    level: {
+      type: Number,
+      enum: [1, 2, 3], // 1: Category (Root), 2: Subcategory, 3: Item
+      default: 1,
+      index: true,
     },
     isActive: {
       type: Boolean,
@@ -41,10 +60,21 @@ const categorySchema = new mongoose.Schema(
 );
 
 categorySchema.pre("validate", function (next) {
-  if (this.name) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
+  if (this.name && !this.slug) {
+    const baseSlug = slugify(this.name, { lower: true, strict: true });
+    if (this.parent && this.ancestors && this.ancestors.length > 0) {
+      const parentSlug = this.ancestors[this.ancestors.length - 1].slug;
+      this.slug = `${parentSlug}-${baseSlug}`;
+    } else {
+      this.slug = baseSlug;
+    }
   }
   next();
 });
 
+categorySchema.index({ parent: 1, name: 1 }, { unique: true });
+categorySchema.index({ "ancestors._id": 1 });
+categorySchema.index({ parent: 1, displayOrder: 1 });
+
 module.exports = mongoose.model("Category", categorySchema);
+

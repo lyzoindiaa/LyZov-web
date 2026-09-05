@@ -34,10 +34,10 @@ const resolveSlugFilters = async (query) => {
 const getProducts = asyncHandler(async (req, res) => {
   const resolvedQuery = await resolveSlugFilters(req.query);
 
-  const baseQuery = Product.find({ isActive: true }).populate("brand", "name slug").populate(
-    "category",
-    "name slug"
-  );
+  const baseQuery = Product.find({ isActive: true })
+    .populate("brand", "name slug")
+    .populate("category", "name slug level ancestors parent")
+    .populate("categoryPath", "name slug level");
 
   const features = new ApiFeatures(baseQuery, resolvedQuery).search().filter().sort().limitFields().paginate();
 
@@ -65,14 +65,15 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 
   const product = await Product.findOne({ ...identifierQuery, isActive: true })
     .populate("brand", "name slug logo")
-    .populate("category", "name slug");
+    .populate("category", "name slug level ancestors parent")
+    .populate("categoryPath", "name slug level");
 
   if (!product) {
     throw ApiError.notFound("Product not found");
   }
 
   const relatedProducts = await Product.find({
-    category: product.category,
+    categoryPath: product.category,
     _id: { $ne: product._id },
     isActive: true,
   })
@@ -120,7 +121,20 @@ const createProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  const product = await Product.create({ ...req.body, images: uploadedImages });
+  let categoryPath = [];
+  if (req.body.category) {
+    const categoryDoc = await Category.findById(req.body.category);
+    if (categoryDoc) {
+      categoryPath = [
+        ...(categoryDoc.ancestors || []).map((a) => a._id),
+        categoryDoc._id,
+      ];
+    } else {
+      categoryPath = [req.body.category];
+    }
+  }
+
+  const product = await Product.create({ ...req.body, categoryPath, images: uploadedImages });
 
   return sendSuccess(res, 201, "Product created successfully", product);
 });
@@ -161,6 +175,18 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.images = orderedImages;
   } else if (uploadedImages.length > 0) {
     product.images.push(...uploadedImages);
+  }
+
+  if (req.body.category && req.body.category.toString() !== product.category?.toString()) {
+    const categoryDoc = await Category.findById(req.body.category);
+    if (categoryDoc) {
+      product.categoryPath = [
+        ...(categoryDoc.ancestors || []).map((a) => a._id),
+        categoryDoc._id,
+      ];
+    } else {
+      product.categoryPath = [req.body.category];
+    }
   }
 
   Object.keys(req.body).forEach((key) => {
