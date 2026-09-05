@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import HeroImg from "../../assets/Hero.png";
+import { markCollectionHeroSeen } from "../../utils/collectionHero";
 
 const carouselSlides = [
     {
@@ -7,6 +9,7 @@ const carouselSlides = [
         // subtitle: "Now on LyZov",
         button: "Browse Collection",
         image: HeroImg,
+        to: "/shop",
     },
     {
         // title: "Shop Smarter",
@@ -14,10 +17,12 @@ const carouselSlides = [
         button: "View Bestsellers",
         image:
             HeroImg,
+        to: "/shop",
     },
 ];
 
 function CollectionHero() {
+    const navigate = useNavigate();
     const [activeSlide, setActiveSlide] = useState(0);
 
     useEffect(() => {
@@ -32,6 +37,11 @@ function CollectionHero() {
 
     const slide = carouselSlides[activeSlide];
 
+    const handleBrowse = () => {
+        markCollectionHeroSeen();
+        navigate(slide.to || "/shop");
+    };
+
     return (
         <section className="about-hero-carousel" aria-label="LyZov collection banner">
             <div className="about-hero-image-wrap">
@@ -41,7 +51,7 @@ function CollectionHero() {
                     {/* <p className="about-hero-kicker">Curated for every lifestyle</p> */}
                     {/* <h2>{slide.title}</h2>
                     <p>{slide.subtitle}</p> */}
-                    <button type="button" className="about-hero-button">
+                    <button type="button" className="about-hero-button" onClick={handleBrowse}>
                         {slide.button}
                     </button>
                 </div>
