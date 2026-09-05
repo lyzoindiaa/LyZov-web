@@ -17,7 +17,8 @@ const ProductDetailsPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((s) => s.auth);
   const wishlistProducts = useSelector((s) => s.wishlist.products);
-  const isAdmin = user?.role === "admin";
+  const isSeller = user?.role === "seller" || user?.role === "admin";
+  const isAdmin = isSeller;
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -112,8 +113,8 @@ const ProductDetailsPage = () => {
       navigate("/login", { state: { from: { pathname: `/product/${slug}` } } });
       return;
     }
-    if (isAdmin) {
-      toast.info("Admins can manage products, not shop as a customer.");
+    if (isSeller) {
+      toast.info("Sellers can manage products, not shop as a customer.");
       return;
     }
     if (stock <= 0) {
@@ -603,10 +604,10 @@ const ProductDetailsPage = () => {
                 }}
               >
                 <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--ink)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Admin view
+                  Seller view
                 </p>
                 <p style={{ marginTop: "0.35rem", fontSize: "0.8125rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
-                  Customer cart and wishlist actions are hidden for admin accounts.
+                  Customer cart and wishlist actions are hidden for seller accounts.
                 </p>
               </div>
             )}

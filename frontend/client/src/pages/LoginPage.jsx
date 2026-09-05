@@ -32,7 +32,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const targetPath = user?.role === "admin" ? "/admin" : fromRef.current || "/dashboard";
+    const isSeller = user?.role === "seller" || user?.role === "admin";
+    const targetPath = isSeller ? "/seller" : fromRef.current || "/dashboard";
     navigate(targetPath, { replace: true });
   }, [isAuthenticated, user?.role, navigate]);
 

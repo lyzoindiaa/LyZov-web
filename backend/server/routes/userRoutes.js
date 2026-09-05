@@ -30,8 +30,8 @@ router.put(
   changePassword
 );
 
-router.get("/", authorize("admin"), getUsers);
-router.put("/:id", authorize("admin"), updateUser);
-router.delete("/:id", authorize("admin"), deleteUser);
+router.get("/", authorize("seller"), getUsers);
+router.put("/:id", authorize("seller"), updateUser);
+router.delete("/:id", authorize("seller"), deleteUser);
 
 module.exports = router;

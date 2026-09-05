@@ -197,7 +197,7 @@ const getOrderById = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Order not found");
   }
 
-  if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "seller" && req.user.role !== "admin") {
     throw ApiError.forbidden("You do not have access to this order");
   }
 

@@ -85,7 +85,7 @@ const AdminOrdersPage = () => {
               orders.map((order) => (
                 <tr key={order._id} className="border-b border-hairline last:border-0 dark:border-hairline-dark">
                   <td className="px-5 py-4 font-medium">
-                    <button type="button" onClick={() => navigate(`/admin/orders/${order._id}`)} className="text-left hover:text-[var(--accent)] hover:underline">
+                    <button type="button" onClick={() => navigate(`/seller/orders/${order._id}`)} className="text-left hover:text-[var(--accent)] hover:underline">
                       {order.orderNumber}
                     </button>
                   </td>

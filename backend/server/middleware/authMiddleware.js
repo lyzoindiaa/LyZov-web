@@ -34,7 +34,16 @@ const protect = asyncHandler(async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      throw ApiError.forbidden("You do not have permission to perform this action.");
+    }
+    const userRole = req.user.role;
+    const allowed = roles.some((role) => {
+      if (role === userRole) return true;
+      if ((role === "seller" || role === "admin") && (userRole === "seller" || userRole === "admin")) return true;
+      return false;
+    });
+    if (!allowed) {
       throw ApiError.forbidden("You do not have permission to perform this action.");
     }
     next();

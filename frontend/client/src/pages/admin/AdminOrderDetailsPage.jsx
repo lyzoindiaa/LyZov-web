@@ -20,7 +20,7 @@ const AdminOrderDetailsPage = () => {
             setOrder(res.data);
         } catch (err) {
             toast.error(err.response?.data?.message || "Could not load order");
-            navigate("/admin/orders");
+            navigate("/seller/orders");
         } finally {
             setIsLoading(false);
         }
@@ -47,7 +47,7 @@ const AdminOrderDetailsPage = () => {
         <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <button type="button" onClick={() => navigate("/admin/orders")} className="mb-3 inline-flex items-center gap-2 text-sm text-stone hover:text-[var(--accent)]">
+                    <button type="button" onClick={() => navigate("/seller/orders")} className="mb-3 inline-flex items-center gap-2 text-sm text-stone hover:text-[var(--accent)]">
                         <ArrowLeft size={15} /> Back to Orders
                     </button>
                     <h1 className="font-display text-3xl tracking-tightest">{order.orderNumber}</h1>

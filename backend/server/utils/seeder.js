@@ -1,4 +1,4 @@
-﻿const dotenv = require("dotenv");
+const dotenv = require("dotenv");
 const path = require('path'); dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const mongoose = require("mongoose");
@@ -13,18 +13,18 @@ const seed = async () => {
 
   console.log("Clearing existing data...");
   await Promise.all([
-    User.deleteMany({ role: "admin" }),
+    User.deleteMany({ $or: [{ role: { $in: ["admin", "seller"] } }, { email: { $in: ["admin@lyzov.com", "seller@lyzov.com"] } }] }),
     Category.deleteMany(),
     Brand.deleteMany(),
     Product.deleteMany(),
   ]);
 
-  console.log("Creating admin user...");
+  console.log("Creating seller user...");
   await User.create({
-    name: "LyZov Admin",
-    email: "admin@lyzov.com",
+    name: "LyZov Seller",
+    email: "seller@lyzov.com",
     password: "Admin@1234",
-    role: "admin",
+    role: "seller",
     isEmailVerified: true,
   });
 
@@ -133,7 +133,7 @@ const seed = async () => {
   await Product.insertMany(products);
 
   console.log("Seeding complete!");
-  console.log("Admin login -> email: admin@lyzov.com | password: Admin@1234");
+  console.log("Seller login -> email: seller@lyzov.com | password: Admin@1234");
   process.exit(0);
 };
 

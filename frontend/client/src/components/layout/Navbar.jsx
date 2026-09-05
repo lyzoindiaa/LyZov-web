@@ -69,7 +69,8 @@ const Navbar = () => {
   const { totalItems } = useSelector((s) => s.cart);
   const { isAuthenticated, user } = useSelector((s) => s.auth);
 
-  const isAdmin = isAuthenticated && user?.role === "admin";
+  const isSeller = isAuthenticated && (user?.role === "seller" || user?.role === "admin");
+  const isAdmin = isSeller;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -179,18 +180,18 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <nav className="hidden lg:flex items-center gap-6">
-            {isAdmin ? (
+            {isSeller ? (
               <>
-                <Link to="/admin/categories" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <Link to="/seller/categories" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <FolderPlus size={14} /> Manage Categories
                 </Link>
-                <Link to="/admin/products" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <Link to="/seller/products" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <PackagePlus size={14} /> Manage Products
                 </Link>
-                <Link to="/admin/orders" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <Link to="/seller/orders" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <ShoppingCart size={14} /> Orders
                 </Link>
-                <Link to="/admin" className="nav-link-animated">Dashboard</Link>
+                <Link to="/seller" className="nav-link-animated">Dashboard</Link>
               </>
             ) : (
               <>
@@ -360,14 +361,14 @@ const Navbar = () => {
                       <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</p>
                       <p style={{ fontSize: "11px", color: "var(--ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
                     </div>
-                    {isAdmin && (
+                    {isSeller && (
                       <>
-                        <DropItem to="/admin/categories" icon={FolderPlus} accent>{"Manage Categories"}</DropItem>
-                        <DropItem to="/admin/products" icon={PackagePlus} accent>{"Manage Products"}</DropItem>
-                        <DropItem to="/admin" icon={Settings}>{"Admin Overview"}</DropItem>
+                        <DropItem to="/seller/categories" icon={FolderPlus} accent>{"Manage Categories"}</DropItem>
+                        <DropItem to="/seller/products" icon={PackagePlus} accent>{"Manage Products"}</DropItem>
+                        <DropItem to="/seller" icon={Settings}>{"Seller Overview"}</DropItem>
                       </>
                     )}
-                    {!isAdmin && (
+                    {!isSeller && (
                       <>
                         <DropItem to="/dashboard" icon={LayoutDashboard}>{"My Dashboard"}</DropItem>
                         <DropItem to="/dashboard/orders" icon={Tag}>{"My Orders"}</DropItem>
@@ -446,12 +447,12 @@ const Navbar = () => {
           </form>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            {isAdmin ? (
+            {isSeller ? (
               <>
-                <MobileNavLink to="/admin/categories" accent>Manage Categories</MobileNavLink>
-                <MobileNavLink to="/admin/products">Manage Products</MobileNavLink>
-                <MobileNavLink to="/admin/orders">Manage Orders</MobileNavLink>
-                <MobileNavLink to="/admin">Admin Dashboard</MobileNavLink>
+                <MobileNavLink to="/seller/categories" accent>Manage Categories</MobileNavLink>
+                <MobileNavLink to="/seller/products">Manage Products</MobileNavLink>
+                <MobileNavLink to="/seller/orders">Manage Orders</MobileNavLink>
+                <MobileNavLink to="/seller">Seller Dashboard</MobileNavLink>
               </>
             ) : (
               <>

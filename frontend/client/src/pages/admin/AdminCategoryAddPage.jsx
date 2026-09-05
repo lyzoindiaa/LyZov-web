@@ -13,7 +13,7 @@ const AdminCategoryAddPage = () => {
       setIsLoading(true);
       await categoryService.createCategory(payload);
       toast.success("Category created successfully");
-      navigate("/admin/categories");
+      navigate("/seller/categories");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not create category");
       throw err; // Re-throw to let form handle error state
@@ -23,7 +23,7 @@ const AdminCategoryAddPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/admin/categories");
+    navigate("/seller/categories");
   };
 
   return (

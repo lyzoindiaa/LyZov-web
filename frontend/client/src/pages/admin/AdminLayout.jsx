@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { NavLink, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,11 +22,11 @@ import Logo from "../../components/ui/Logo";
 import { useState } from "react";
 
 const navItems = [
-  { label: "Analytics", to: "/admin", icon: BarChart3, end: true },
-  { label: "Products", to: "/admin/products", icon: Boxes },
-  { label: "Categories", to: "/admin/categories", icon: Tags },
-  { label: "Brands", to: "/admin/brands", icon: Award },
-  { label: "Orders", to: "/admin/orders", icon: ClipboardList },
+  { label: "Analytics", to: "/seller", icon: BarChart3, end: true },
+  { label: "Products", to: "/seller/products", icon: Boxes },
+  { label: "Categories", to: "/seller/categories", icon: Tags },
+  { label: "Brands", to: "/seller/brands", icon: Award },
+  { label: "Orders", to: "/seller/orders", icon: ClipboardList },
 ];
 
 const AdminLayout = () => {
@@ -39,10 +39,10 @@ const AdminLayout = () => {
   // Determine breadcrumb title
   const currentPath = location.pathname;
   let activeTitle = "Overview";
-  if (currentPath.includes("/admin/products")) activeTitle = "Products Management";
-  else if (currentPath.includes("/admin/categories")) activeTitle = "Categories Management";
-  else if (currentPath.includes("/admin/brands")) activeTitle = "Brands Management";
-  else if (currentPath.includes("/admin/orders")) activeTitle = "Orders Management";
+  if (currentPath.includes("/products")) activeTitle = "Products Management";
+  else if (currentPath.includes("/categories")) activeTitle = "Categories Management";
+  else if (currentPath.includes("/brands")) activeTitle = "Brands Management";
+  else if (currentPath.includes("/orders")) activeTitle = "Orders Management";
 
   // Keyboard navigation: Alt + Left Arrow to go back
   useEffect(() => {
@@ -78,7 +78,7 @@ const AdminLayout = () => {
                 {/* <p style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--ink-muted)", lineHeight: 1, textTransform: "uppercase", letterSpacing: "0.06em" }}>Admin Panel</p> */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", marginTop: "0.2rem" }}>
                   <ShieldAlert size={10} className="text-amber-500" />
-                  <p style={{ fontSize: "10px", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin Portal</p>
+                  <p style={{ fontSize: "10px", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Seller Portal</p>
                 </div>
               </div>
             </div>
@@ -204,7 +204,7 @@ const AdminLayout = () => {
 
             {/* Breadcrumb path */}
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-[var(--ink-muted)]">
-              <Link to="/admin" className="hover:text-[var(--ink)] transition-colors">Admin</Link>
+              <Link to="/seller" className="hover:text-[var(--ink)] transition-colors">Seller</Link>
               <ChevronRight size={12} className="text-[var(--ink-subtle)]" />
               <span className="font-semibold text-[var(--ink)]">{activeTitle}</span>
             </div>
