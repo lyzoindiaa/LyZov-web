@@ -38,7 +38,6 @@ function CollectionHero() {
     const slide = carouselSlides[activeSlide];
 
     const handleBrowse = () => {
-        markCollectionHeroSeen();
         navigate(slide.to || "/shop");
     };
 
