@@ -13,6 +13,7 @@ const navItems = [
   { label: "Wishlist", to: "/dashboard/wishlist", icon: HeartHandshake },
   { label: "Profile", to: "/dashboard/profile", icon: UserCircle2 },
   { label: "Addresses", to: "/dashboard/addresses", icon: MapPinned },
+  { label: "Email History", to: "/dashboard/emails", icon: Mail },
   { label: "Help & Support", to: "/dashboard/support", icon: Mail },
 ];
 

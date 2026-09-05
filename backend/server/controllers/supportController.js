@@ -26,6 +26,7 @@ const submitInquiry = asyncHandler(async (req, res) => {
     subject: subject.trim(),
     category: category || "General Inquiry",
     message: message.trim(),
+    relatedUser: req.user?._id || null,
   });
 
   return sendSuccess(res, 200, "Your inquiry has been received. Our team will contact you shortly.", {

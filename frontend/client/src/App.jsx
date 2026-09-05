@@ -28,6 +28,7 @@ import OrderDetailsPage from "./pages/dashboard/OrderDetailsPage";
 import WishlistPage from "./pages/dashboard/WishlistPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
 import AddressesPage from "./pages/dashboard/AddressesPage";
+import EmailHistoryPage from "./pages/dashboard/EmailHistoryPage";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
@@ -133,6 +134,7 @@ function App() {
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="addresses" element={<AddressesPage />} />
+            <Route path="emails" element={<EmailHistoryPage />} />
             <Route path="support" element={<ContactPage isDashboard={true} />} />
           </Route>
 

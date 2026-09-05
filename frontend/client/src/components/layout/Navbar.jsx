@@ -496,6 +496,7 @@ const Navbar = () => {
                         <DropItem to="/dashboard" icon={LayoutDashboard}>{"My Dashboard"}</DropItem>
                         <DropItem to="/dashboard/orders" icon={Tag}>{"My Orders"}</DropItem>
                         <DropItem to="/dashboard/wishlist" icon={Heart}>{"Wishlist"}</DropItem>
+                        <DropItem to="/dashboard/emails" icon={Mail}>{"Email History"}</DropItem>
                         <DropItem to="/dashboard/support" icon={Mail}>{"Help & Support"}</DropItem>
                       </>
                     )}
