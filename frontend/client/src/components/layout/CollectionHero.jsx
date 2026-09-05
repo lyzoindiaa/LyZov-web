@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HeroImg from "../../assets/Hero.png";
+import { markCollectionHeroSeen } from "../../utils/collectionHero";
 
 const carouselSlides = [
     {

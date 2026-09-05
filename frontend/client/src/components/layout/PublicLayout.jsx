@@ -4,6 +4,9 @@ import Footer from "./Footer";
 import MiniCart from "./MiniCart";
 import CollectionHero from "./CollectionHero";
 import AboutLyZov from "./About";
+import { hasSeenCollectionHero, markCollectionHeroSeen } from "../../utils/collectionHero";
+
+const isCatalogPath = (pathname) => pathname === "/shop" || pathname.startsWith("/product/");
 
 const PublicLayout = () => {
   const { pathname } = useLocation();
