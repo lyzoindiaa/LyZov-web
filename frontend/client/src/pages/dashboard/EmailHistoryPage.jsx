@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, Clock3, Mail, RefreshCw, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, Eye, Mail, RefreshCw, X, XCircle } from "lucide-react";
 import emailService from "../../services/emailService";
 
 const statusConfig = {
@@ -12,6 +12,7 @@ const EmailHistoryPage = () => {
     const [logs, setLogs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+    const [selectedLog, setSelectedLog] = useState(null);
 
     const loadLogs = async () => {
         setIsLoading(true);
@@ -70,46 +71,115 @@ const EmailHistoryPage = () => {
                     </p>
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-xl border" style={{ borderColor: "var(--border)" }}>
-                    <table className="w-full min-w-[620px] text-left text-sm">
-                        <thead style={{ backgroundColor: "var(--bg)" }}>
-                            <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                                {['To', 'Subject', 'Message', 'Status', 'Sent'].map((heading) => (
-                                    <th key={heading} className="px-4 py-3 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                                        {heading}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {logs.map((log) => {
-                                const status = statusConfig[log.status] || statusConfig.failed;
-                                const StatusIcon = status.icon;
-                                return (
-                                    <tr key={log._id} style={{ borderBottom: "1px solid var(--border)" }}>
-                                        <td className="px-4 py-4" style={{ color: "var(--ink-muted)" }}>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {logs.map((log) => {
+                        const status = statusConfig[log.status] || statusConfig.failed;
+                        const StatusIcon = status.icon;
+
+                        return (
+                            <article
+                                key={log._id}
+                                className="rounded-xl border p-5 transition-shadow hover:shadow-md"
+                                style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}
+                            >
+                                <div className="mb-4 flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
+                                            To
+                                        </p>
+                                        <p className="truncate text-sm font-semibold" style={{ color: "var(--ink)" }}>
                                             {log.recipient}
-                                        </td>
-                                        <td className="max-w-[22rem] px-4 py-4 font-semibold" style={{ color: "var(--ink)" }}>
-                                            <span className="line-clamp-2">{log.subject}</span>
-                                        </td>
-                                        <td className="px-4 py-4" style={{ color: "var(--ink-muted)" }}>
-                                            <span className="line-clamp-3 whitespace-pre-line">{log.bodyText || "Message content unavailable"}</span>
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <span className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: status.color }}>
-                                                <StatusIcon size={14} />
-                                                {status.label}
-                                            </span>
-                                        </td>
-                                        <td className="whitespace-nowrap px-4 py-4" style={{ color: "var(--ink-muted)" }}>
-                                            {new Date(log.sentAt || log.createdAt).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                        </p>
+                                    </div>
+                                    <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold" style={{ color: status.color }}>
+                                        <StatusIcon size={14} />
+                                        {status.label}
+                                    </span>
+                                </div>
+
+                                <p className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
+                                    Subject
+                                </p>
+                                <h3 className="line-clamp-2 text-base font-bold" style={{ color: "var(--ink)" }}>
+                                    {log.subject}
+                                </h3>
+                                <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm" style={{ color: "var(--ink-muted)" }}>
+                                    {log.bodyText || "Message content unavailable"}
+                                </p>
+
+                                <div className="mt-5 flex items-center justify-between gap-3 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+                                    <span className="text-xs" style={{ color: "var(--ink-muted)" }}>
+                                        {new Date(log.sentAt || log.createdAt).toLocaleString("en-IN", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedLog(log)}
+                                        className="btn btn-secondary btn-sm"
+                                        title="View sent email"
+                                    >
+                                        <Eye size={14} />
+                                        View email
+                                    </button>
+                                </div>
+                            </article>
+                        );
+                    })}
+                </div>
+            )}
+
+            {selectedLog && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+                    role="presentation"
+                    onClick={() => setSelectedLog(null)}
+                >
+                    <div
+                        className="w-full max-w-2xl rounded-2xl border p-6 shadow-2xl"
+                        style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="sent-email-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="mb-5 flex items-center justify-between border-b pb-4" style={{ borderColor: "var(--border)" }}>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
+                                    Sent email
+                                </p>
+                                <h3 id="sent-email-title" className="mt-1 text-lg font-bold" style={{ color: "var(--ink)" }}>
+                                    {selectedLog.subject}
+                                </h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedLog(null)}
+                                className="btn btn-ghost btn-sm"
+                                aria-label="Close sent email"
+                                title="Close"
+                            >
+                                <X size={17} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 text-sm" style={{ color: "var(--ink)" }}>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>To</p>
+                                <p className="mt-1 font-semibold">{selectedLog.recipient}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>Message</p>
+                                <p className="mt-2 whitespace-pre-line rounded-lg border p-4" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
+                                    {selectedLog.bodyText || "Message content unavailable"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
