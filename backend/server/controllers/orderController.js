@@ -34,6 +34,117 @@ const calculateTotals = (cart) => {
   return { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice };
 };
 
+/**
+ * Helper to atomically deduct stock for an array of cart/order items.
+ * If any item lacks sufficient stock, all previously deducted items in this batch are rolled back.
+ */
+const deductStockForItems = async (items) => {
+  const deducted = [];
+
+  for (const item of items) {
+    const qty = Number(item.quantity);
+    let updatedProduct = null;
+
+    if (item.variantId) {
+      updatedProduct = await Product.findOneAndUpdate(
+        {
+          _id: item.product,
+          isActive: true,
+          "variants._id": item.variantId,
+          "variants.stock": { $gte: qty },
+        },
+        {
+          $inc: {
+            "variants.$.stock": -qty,
+            numSold: qty,
+          },
+        },
+        { new: true }
+      );
+    } else {
+      updatedProduct = await Product.findOneAndUpdate(
+        {
+          _id: item.product,
+          isActive: true,
+          stock: { $gte: qty },
+        },
+        {
+          $inc: {
+            stock: -qty,
+            numSold: qty,
+          },
+        },
+        { new: true }
+      );
+    }
+
+    if (!updatedProduct) {
+      // Rollback all items deducted in this transaction
+      for (const d of deducted) {
+        if (d.variantId) {
+          await Product.findOneAndUpdate(
+            { _id: d.product, "variants._id": d.variantId },
+            {
+              $inc: {
+                "variants.$.stock": d.quantity,
+                numSold: -d.quantity,
+              },
+            }
+          );
+        } else {
+          await Product.findByIdAndUpdate(d.product, {
+            $inc: {
+              stock: d.quantity,
+              numSold: -d.quantity,
+            },
+          });
+        }
+      }
+
+      throw ApiError.badRequest(
+        `Insufficient stock for item "${item.name || "selected product"}". Please update your cart.`
+      );
+    }
+
+    deducted.push({
+      product: item.product,
+      variantId: item.variantId || null,
+      quantity: qty,
+    });
+  }
+
+  return deducted;
+};
+
+/**
+ * Helper to restore stock and decrement numSold when an order is cancelled or refunded.
+ */
+const restoreStockForItems = async (items) => {
+  if (!items || !items.length) return;
+
+  for (const item of items) {
+    const qty = Number(item.quantity);
+    if (item.variantId) {
+      await Product.findOneAndUpdate(
+        { _id: item.product, "variants._id": item.variantId },
+        {
+          $inc: {
+            "variants.$.stock": qty,
+            numSold: -qty,
+          },
+        }
+      );
+    } else {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: {
+          stock: qty,
+          numSold: -qty,
+        },
+      });
+    }
+  }
+};
+
 // @desc    Create a Stripe payment intent for the current cart
 // @route   POST /api/orders/create-payment-intent
 // @access  Private
@@ -41,6 +152,27 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
   const cart = await Cart.findOne({ user: req.user._id });
   if (!cart || cart.items.length === 0) {
     throw ApiError.badRequest("Your cart is empty");
+  }
+
+  // Stock check before initiating payment flow
+  for (const item of cart.items) {
+    const product = await Product.findById(item.product);
+    if (!product || !product.isActive) {
+      throw ApiError.badRequest(`Product "${item.name}" is no longer available`);
+    }
+
+    let availableStock = product.stock;
+    if (item.variantId) {
+      const variant = product.variants.id(item.variantId);
+      if (!variant) {
+        throw ApiError.badRequest(`Variant for "${item.name}" is no longer available`);
+      }
+      availableStock = variant.stock;
+    }
+
+    if (availableStock < item.quantity) {
+      throw ApiError.badRequest(`Only ${availableStock} item(s) in stock for "${item.name}"`);
+    }
   }
 
   const { totalPrice } = calculateTotals(cart);
@@ -69,22 +201,7 @@ const createOrder = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Your cart is empty");
   }
 
-  for (const item of cart.items) {
-    const product = await Product.findById(item.product);
-    if (!product) throw ApiError.notFound(`Product ${item.name} no longer exists`);
-
-    if (item.variantId) {
-      const variant = product.variants.id(item.variantId);
-      if (!variant || variant.stock < item.quantity) {
-        throw ApiError.badRequest(`Insufficient stock for ${item.name}`);
-      }
-    } else if (product.stock < item.quantity) {
-      throw ApiError.badRequest(`Insufficient stock for ${item.name}`);
-    }
-  }
-
-  const { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice } = calculateTotals(cart);
-
+  // Pre-validate Stripe payment if applicable
   let paymentResult = {};
   let isPaid = false;
 
@@ -106,41 +223,42 @@ const createOrder = asyncHandler(async (req, res) => {
     isPaid = true;
   }
 
-  const order = await Order.create({
-    user: req.user._id,
-    items: cart.items.map((item) => ({
-      product: item.product,
-      name: item.name,
-      image: item.image,
-      price: item.price,
-      color: item.color,
-      size: item.size,
-      quantity: item.quantity,
-    })),
-    shippingAddress,
-    paymentMethod,
-    paymentResult,
-    itemsPrice,
-    taxPrice,
-    shippingPrice,
-    discountAmount,
-    couponCode: cart.coupon?.code || null,
-    totalPrice,
-    isPaid,
-    paidAt: isPaid ? new Date() : undefined,
-    statusHistory: [{ status: "pending", note: "Order placed" }],
-  });
+  // Atomically reserve/deduct stock for all cart items
+  const deductedItems = await deductStockForItems(cart.items);
 
-  for (const item of cart.items) {
-    const product = await Product.findById(item.product);
-    if (item.variantId) {
-      const variant = product.variants.id(item.variantId);
-      variant.stock -= item.quantity;
-    } else {
-      product.stock -= item.quantity;
-    }
-    product.numSold += item.quantity;
-    await product.save();
+  let order;
+  try {
+    const { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice } = calculateTotals(cart);
+
+    order = await Order.create({
+      user: req.user._id,
+      items: cart.items.map((item) => ({
+        product: item.product,
+        variantId: item.variantId || null,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        color: item.color,
+        size: item.size,
+        quantity: item.quantity,
+      })),
+      shippingAddress,
+      paymentMethod,
+      paymentResult,
+      itemsPrice,
+      taxPrice,
+      shippingPrice,
+      discountAmount,
+      couponCode: cart.coupon?.code || null,
+      totalPrice,
+      isPaid,
+      paidAt: isPaid ? new Date() : undefined,
+      statusHistory: [{ status: "pending", note: "Order placed" }],
+    });
+  } catch (err) {
+    // If order record creation fails, restore deducted stock
+    await restoreStockForItems(deductedItems);
+    throw ApiError.internal("Failed to create order: " + err.message);
   }
 
   if (cart.coupon?.code) {
@@ -228,6 +346,9 @@ const cancelOrder = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("This order can no longer be cancelled");
   }
 
+  // Restore inventory immediately upon cancellation
+  await restoreStockForItems(order.items);
+
   // Refund if Stripe payment was made
   if (order.paymentMethod === "stripe" && order.isPaid) {
     try {
@@ -258,25 +379,6 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, 200, "Order cancelled successfully", order);
 });
-
-// const cancelOrder = asyncHandler(async (req, res) => {
-//   const order = await Order.findById(req.params.id);
-
-//   if (!order) throw ApiError.notFound("Order not found");
-//   if (order.user.toString() !== req.user._id.toString()) {
-//     throw ApiError.forbidden("You do not have access to this order");
-//   }
-//   if (!["pending", "processing"].includes(order.orderStatus)) {
-//     throw ApiError.badRequest("This order can no longer be cancelled");
-//   }
-
-//   order.orderStatus = "cancelled";
-//   order.cancelReason = req.body.reason || "Cancelled by customer";
-//   order.statusHistory.push({ status: "cancelled", note: order.cancelReason });
-//   await order.save();
-
-//   return sendSuccess(res, 200, "Order cancelled successfully", order);
-// });
 
 // @desc    Get all orders (admin)
 // @route   GET /api/orders
@@ -313,10 +415,28 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw ApiError.notFound("Order not found");
 
+  const prevStatus = order.orderStatus;
+
   if (status) {
+    // If order is transitioning TO cancelled/refunded from an active status, restore stock
+    if (
+      ["cancelled", "refunded"].includes(status) &&
+      !["cancelled", "refunded"].includes(prevStatus)
+    ) {
+      await restoreStockForItems(order.items);
+    }
+    // If order was cancelled/refunded and is reinstated to an active status, re-deduct stock
+    else if (
+      !["cancelled", "refunded"].includes(status) &&
+      ["cancelled", "refunded"].includes(prevStatus)
+    ) {
+      await deductStockForItems(order.items);
+    }
+
     order.orderStatus = status;
     order.statusHistory.push({ status, note: note || "" });
   }
+
   if (trackingNumber) order.trackingNumber = trackingNumber;
   if (status === "delivered") {
     order.isDelivered = true;
@@ -361,3 +481,4 @@ module.exports = {
   getAllOrders,
   updateOrderStatus,
 };
+

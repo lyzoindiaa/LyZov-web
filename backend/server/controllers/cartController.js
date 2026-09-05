@@ -51,10 +51,19 @@ const addItemToCart = asyncHandler(async (req, res) => {
       String(item.variantId || "") === String(variantId || "")
   );
 
+  const currentCartQty = existingItem ? existingItem.quantity : 0;
+  const requestedTotalQty = currentCartQty + Number(quantity);
+
+  if (availableStock < requestedTotalQty) {
+    throw ApiError.badRequest(
+      `Cannot add ${quantity} item(s). Only ${availableStock} in stock (${currentCartQty} already in cart)`
+    );
+  }
+
   const price = product.discountPrice > 0 ? product.discountPrice : product.price;
 
   if (existingItem) {
-    existingItem.quantity += Number(quantity);
+    existingItem.quantity = requestedTotalQty;
   } else {
     cart.items.push({
       product: product._id,
@@ -64,7 +73,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
       price,
       color,
       size,
-      quantity,
+      quantity: Number(quantity),
     });
   }
 
@@ -78,8 +87,9 @@ const addItemToCart = asyncHandler(async (req, res) => {
 // @access  Private
 const updateCartItem = asyncHandler(async (req, res) => {
   const { quantity } = req.body;
+  const newQty = Number(quantity);
 
-  if (quantity < 1) {
+  if (!newQty || newQty < 1) {
     throw ApiError.badRequest("Quantity must be at least 1");
   }
 
@@ -90,7 +100,26 @@ const updateCartItem = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Cart item not found");
   }
 
-  item.quantity = quantity;
+  // Stock check
+  const product = await Product.findById(item.product);
+  if (!product || !product.isActive) {
+    throw ApiError.badRequest("This product is no longer available");
+  }
+
+  let availableStock = product.stock;
+  if (item.variantId) {
+    const variant = product.variants.id(item.variantId);
+    if (!variant) {
+      throw ApiError.badRequest("This product variant is no longer available");
+    }
+    availableStock = variant.stock;
+  }
+
+  if (availableStock < newQty) {
+    throw ApiError.badRequest(`Only ${availableStock} item(s) available in stock`);
+  }
+
+  item.quantity = newQty;
   await cart.save();
 
   return sendSuccess(res, 200, "Cart item updated", cart);
