@@ -5,7 +5,18 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { MapPin, CreditCard, ShieldCheck, CheckCircle2, Plus } from "lucide-react";
+import {
+  MapPin,
+  CreditCard,
+  ShieldCheck,
+  CheckCircle2,
+  Plus,
+  Banknote,
+  QrCode,
+  Truck,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { orderService, addressService } from "../services/cartService";
 import { resetCartLocal } from "../features/cart/cartSlice";
 import { formatCurrency } from "../utils/formatters";
@@ -27,7 +38,10 @@ const CheckoutPage = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cod"); // "cod" | "stripe"
   const [clientSecret, setClientSecret] = useState(null);
+  const [isLoadingPaymentIntent, setIsLoadingPaymentIntent] = useState(false);
+  const [paymentIntentError, setPaymentIntentError] = useState(null);
   const [step, setStep] = useState("address");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
@@ -66,6 +80,21 @@ const CheckoutPage = () => {
     return savedAddresses.find((a) => a._id === selectedAddressId);
   };
 
+  const fetchPaymentIntent = async () => {
+    setIsLoadingPaymentIntent(true);
+    setPaymentIntentError(null);
+    try {
+      const res = await orderService.createPaymentIntent();
+      setClientSecret(res.data.clientSecret);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Could not initialize online payment gateway";
+      setPaymentIntentError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoadingPaymentIntent(false);
+    }
+  };
+
   const proceedToPayment = async (formData) => {
     let shippingAddress = getShippingAddress();
 
@@ -87,12 +116,48 @@ const CheckoutPage = () => {
       return;
     }
 
+    setStep("payment");
+
+    if (selectedPaymentMethod === "stripe" && !clientSecret) {
+      fetchPaymentIntent();
+    }
+  };
+
+  const handleSelectPaymentMethod = (method) => {
+    setSelectedPaymentMethod(method);
+    if (method === "stripe" && !clientSecret && !isLoadingPaymentIntent) {
+      fetchPaymentIntent();
+    }
+  };
+
+  const handlePlaceCodOrder = async () => {
+    const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
+    if (!address) {
+      toast.error("Please select a valid delivery address");
+      setStep("address");
+      return;
+    }
+
+    setIsPlacingOrder(true);
     try {
-      const res = await orderService.createPaymentIntent();
-      setClientSecret(res.data.clientSecret);
-      setStep("payment");
+      const res = await orderService.createOrder({
+        shippingAddress: address,
+        paymentMethod: "cod",
+        items,
+        subtotal,
+        discountAmount,
+        taxPrice,
+        shippingPrice,
+        total,
+      });
+
+      dispatch(resetCartLocal());
+      toast.success("Order placed successfully with Cash on Delivery!");
+      navigate(`/dashboard/orders/${res.data._id || res.data.order?._id}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Could not initialize payment");
+      toast.error(err.response?.data?.message || "Could not place COD order");
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -112,7 +177,7 @@ const CheckoutPage = () => {
         total,
       });
       dispatch(resetCartLocal());
-      toast.success("Order placed successfully!");
+      toast.success("Payment confirmed & Order placed successfully!");
       navigate(`/dashboard/orders/${res.data._id || res.data.order?._id}`);
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not place order");
@@ -173,7 +238,7 @@ const CheckoutPage = () => {
               2
             </div>
             <span style={{ fontSize: "0.8125rem", fontWeight: step === "payment" ? 700 : 500, color: step === "payment" ? "var(--ink)" : "var(--ink-muted)" }}>
-              Payment
+              Payment Method
             </span>
           </div>
         </div>
@@ -313,19 +378,195 @@ const CheckoutPage = () => {
             </div>
           ) : (
             <div className="card-surface p-6 sm:p-8">
-              <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <CreditCard size={18} style={{ color: "var(--accent)" }} /> Payment Details
-              </h2>
-              {clientSecret && (
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <StripePaymentForm onSuccess={handlePaymentSuccess} isPlacingOrder={isPlacingOrder} />
-                </Elements>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <CreditCard size={18} style={{ color: "var(--accent)" }} /> Choose Payment Method
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setStep("address")}
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "var(--accent)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Change Address
+                </button>
+              </div>
+
+              {/* Payment Method Selector Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem", marginBottom: "1.5rem" }}>
+                {/* Cash on Delivery Option */}
+                <div
+                  onClick={() => handleSelectPaymentMethod("cod")}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "0.75rem",
+                    padding: "1rem",
+                    borderRadius: "0.75rem",
+                    border: `1.5px solid ${selectedPaymentMethod === "cod" ? "var(--accent)" : "var(--border)"}`,
+                    backgroundColor: selectedPaymentMethod === "cod" ? "var(--accent-bg)" : "var(--surface)",
+                    cursor: "pointer",
+                    transition: "all 0.18s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    checked={selectedPaymentMethod === "cod"}
+                    onChange={() => handleSelectPaymentMethod("cod")}
+                    style={{ marginTop: "0.25rem", accentColor: "var(--accent)" }}
+                  />
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <Banknote size={16} style={{ color: "var(--green)" }} />
+                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Cash on Delivery</span>
+                      <span
+                        style={{
+                          fontSize: "0.625rem",
+                          fontWeight: 700,
+                          backgroundColor: "var(--green)",
+                          color: "#ffffff",
+                          padding: "0.1rem 0.4rem",
+                          borderRadius: "9999px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                        }}
+                      >
+                        Available
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.4 }}>
+                      Pay with cash or any UPI app upon delivery at your doorstep.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Online Payment (Stripe) Option */}
+                <div
+                  onClick={() => handleSelectPaymentMethod("stripe")}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "0.75rem",
+                    padding: "1rem",
+                    borderRadius: "0.75rem",
+                    border: `1.5px solid ${selectedPaymentMethod === "stripe" ? "var(--accent)" : "var(--border)"}`,
+                    backgroundColor: selectedPaymentMethod === "stripe" ? "var(--accent-bg)" : "var(--surface)",
+                    cursor: "pointer",
+                    transition: "all 0.18s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    checked={selectedPaymentMethod === "stripe"}
+                    onChange={() => handleSelectPaymentMethod("stripe")}
+                    style={{ marginTop: "0.25rem", accentColor: "var(--accent)" }}
+                  />
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <QrCode size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Pay Online (UPI / Card)</span>
+                    </div>
+                    <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.4 }}>
+                      Instant payment via UPI QR, Cards, NetBanking via Stripe gateway.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected Method Details */}
+              {selectedPaymentMethod === "cod" ? (
+                <div
+                  style={{
+                    padding: "1.25rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: "var(--bg-subtle)",
+                    border: "1px solid var(--border)",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem" }}>
+                    <Truck size={18} style={{ color: "var(--accent)", marginTop: "0.15rem", flexShrink: 0 }} />
+                    <div style={{ fontSize: "0.8125rem", color: "var(--ink)" }}>
+                      <p style={{ fontWeight: 700 }}>How Cash on Delivery works:</p>
+                      <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", marginTop: "0.4rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
+                        <li>No advance payment required.</li>
+                        <li>Pay <strong style={{ color: "var(--ink)" }}>{formatCurrency(total)}</strong> to the courier executive when receiving your parcel.</li>
+                        <li>Most couriers also accept UPI scan & pay upon arrival.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handlePlaceCodOrder}
+                    isLoading={isPlacingOrder}
+                    disabled={isPlacingOrder}
+                    className="w-full mt-4"
+                    style={{ padding: "0.85rem", fontSize: "0.875rem", fontWeight: 700 }}
+                  >
+                    Place Order with Cash on Delivery ({formatCurrency(total)})
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: "1.25rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: "var(--bg-subtle)",
+                    border: "1px solid var(--border)",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  {isLoadingPaymentIntent && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 0", gap: "0.75rem" }}>
+                      <Loader2 className="animate-spin" size={28} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>Initializing secure payment gateway...</span>
+                    </div>
+                  )}
+
+                  {paymentIntentError && !isLoadingPaymentIntent && (
+                    <div style={{ padding: "1rem", borderRadius: "0.5rem", backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.8125rem", marginBottom: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+                        <AlertCircle size={16} /> Online Gateway Notice
+                      </div>
+                      <p>{paymentIntentError}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectPaymentMethod("cod")}
+                        className="underline font-bold mt-2 inline-block"
+                        style={{ color: "#b91c1c" }}
+                      >
+                        Switch to Cash on Delivery (COD) instead →
+                      </button>
+                    </div>
+                  )}
+
+                  {clientSecret && !isLoadingPaymentIntent && (
+                    <div>
+                      <Elements stripe={stripePromise} options={{ clientSecret }}>
+                        <StripePaymentForm onSuccess={handlePaymentSuccess} isPlacingOrder={isPlacingOrder} />
+                      </Elements>
+                      <p style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "var(--ink-subtle)", textAlign: "center" }}>
+                        🔒 256-bit encrypted Stripe checkout. For simulation in test mode, you can use standard Stripe test cards or enable UPI simulation in Stripe Dashboard.
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
+
               <button
                 type="button"
                 onClick={() => setStep("address")}
                 style={{
-                  marginTop: "1.25rem",
                   fontSize: "0.8125rem",
                   fontWeight: 600,
                   color: "var(--ink-muted)",
