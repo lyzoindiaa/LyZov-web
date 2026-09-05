@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const {
   updateProfile,
   updateSellerProfile,
+  deleteSellerDocument,
   changePassword,
   getUsers,
   updateUser,
@@ -26,6 +27,11 @@ router.put(
     { name: "aadhaarDocument", maxCount: 1 },
   ]),
   updateSellerProfile
+);
+router.delete(
+  "/seller/document/:docType",
+  authorize("seller", "admin"),
+  deleteSellerDocument
 );
 router.put(
   "/change-password",

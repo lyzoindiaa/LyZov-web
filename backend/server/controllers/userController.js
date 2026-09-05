@@ -3,6 +3,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
+const { encrypt, decrypt } = require("../utils/encryption");
 
 // @desc    Update own profile (Customer/Common)
 // @route   PUT /api/users/profile
@@ -61,7 +62,6 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
     email,
     phone,
     businessName,
-    businessType,
     storeBio,
     panNumber,
     aadhaarNumber,
@@ -99,7 +99,6 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
   }
 
   if (businessName !== undefined) user.sellerProfile.businessName = businessName.trim();
-  if (businessType !== undefined) user.sellerProfile.businessType = businessType.trim();
   if (storeBio !== undefined) user.sellerProfile.storeBio = storeBio.trim();
 
   let hasKycUpdate = false;
@@ -109,9 +108,12 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
     if (formattedPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formattedPan)) {
       throw ApiError.badRequest("Invalid PAN format (e.g. ABCDE1234F)");
     }
-    if (formattedPan !== user.sellerProfile.panNumber) {
-      user.sellerProfile.panNumber = formattedPan;
-      if (formattedPan) hasKycUpdate = true;
+    const existingDecryptedPan = user.sellerProfile.panNumber ? decrypt(user.sellerProfile.panNumber) : "";
+    if (formattedPan && formattedPan !== existingDecryptedPan) {
+      user.sellerProfile.panNumber = encrypt(formattedPan);
+      hasKycUpdate = true;
+    } else if (!formattedPan) {
+      user.sellerProfile.panNumber = "";
     }
   }
 
@@ -120,9 +122,12 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
     if (cleanAadhaar && !/^\d{12}$/.test(cleanAadhaar)) {
       throw ApiError.badRequest("Aadhaar number must be exactly 12 digits");
     }
-    if (cleanAadhaar !== user.sellerProfile.aadhaarNumber) {
-      user.sellerProfile.aadhaarNumber = cleanAadhaar;
-      if (cleanAadhaar) hasKycUpdate = true;
+    const existingDecryptedAadhaar = user.sellerProfile.aadhaarNumber ? decrypt(user.sellerProfile.aadhaarNumber) : "";
+    if (cleanAadhaar && cleanAadhaar !== existingDecryptedAadhaar) {
+      user.sellerProfile.aadhaarNumber = encrypt(cleanAadhaar);
+      hasKycUpdate = true;
+    } else if (!cleanAadhaar) {
+      user.sellerProfile.aadhaarNumber = "";
     }
   }
 
@@ -187,6 +192,40 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   return sendSuccess(res, 200, "Seller profile updated successfully", { user: user.toSafeObject() });
+});
+
+// @desc    Delete seller KYC document
+// @route   DELETE /api/users/seller/document/:docType
+// @access  Private (Seller/Admin)
+const deleteSellerDocument = asyncHandler(async (req, res) => {
+  const { docType } = req.params; // "pan" or "aadhaar"
+  const user = await User.findById(req.user._id);
+  if (!user) throw ApiError.notFound("User not found");
+
+  if (!user.sellerProfile) {
+    user.sellerProfile = {};
+  }
+
+  if (docType === "pan") {
+    if (user.sellerProfile.panDocument?.publicId) {
+      await deleteFromCloudinary(user.sellerProfile.panDocument.publicId);
+    }
+    user.sellerProfile.panDocument = { url: "", publicId: "" };
+  } else if (docType === "aadhaar") {
+    if (user.sellerProfile.aadhaarDocument?.publicId) {
+      await deleteFromCloudinary(user.sellerProfile.aadhaarDocument.publicId);
+    }
+    user.sellerProfile.aadhaarDocument = { url: "", publicId: "" };
+  } else {
+    throw ApiError.badRequest("Invalid document type. Must be 'pan' or 'aadhaar'");
+  }
+
+  if (["submitted", "verified"].includes(user.sellerProfile.kycStatus)) {
+    user.sellerProfile.kycStatus = "pending";
+  }
+
+  await user.save({ validateBeforeSave: false });
+  return sendSuccess(res, 200, "Document removed successfully", { user: user.toSafeObject() });
 });
 
 // @desc    Change password
@@ -269,4 +308,12 @@ const deleteUser = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, "User deleted successfully");
 });
 
-module.exports = { updateProfile, updateSellerProfile, changePassword, getUsers, updateUser, deleteUser };
+module.exports = {
+  updateProfile,
+  updateSellerProfile,
+  deleteSellerDocument,
+  changePassword,
+  getUsers,
+  updateUser,
+  deleteUser,
+};

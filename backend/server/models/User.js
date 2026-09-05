@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const { decrypt } = require("../utils/encryption");
 
 const userSchema = new mongoose.Schema(
   {
@@ -53,16 +54,10 @@ const userSchema = new mongoose.Schema(
     phoneVerificationExpires: Date,
     sellerProfile: {
       businessName: { type: String, trim: true, default: "" },
-      businessType: {
-        type: String,
-        enum: ["individual", "proprietorship", "partnership", "llp", "private_limited", ""],
-        default: "",
-      },
       storeBio: { type: String, trim: true, default: "" },
       panNumber: {
         type: String,
         trim: true,
-        uppercase: true,
         default: "",
       },
       panDocument: {
@@ -172,6 +167,16 @@ userSchema.methods.toSafeObject = function () {
   delete obj.emailVerificationExpires;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
+
+  if (obj.sellerProfile) {
+    if (obj.sellerProfile.panNumber) {
+      obj.sellerProfile.panNumber = decrypt(obj.sellerProfile.panNumber);
+    }
+    if (obj.sellerProfile.aadhaarNumber) {
+      obj.sellerProfile.aadhaarNumber = decrypt(obj.sellerProfile.aadhaarNumber);
+    }
+  }
+
   return obj;
 };
 

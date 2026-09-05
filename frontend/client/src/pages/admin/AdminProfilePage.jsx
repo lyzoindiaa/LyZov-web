@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import {
   Building2,
   FileText,
-  CreditCard,
   Lock,
   CheckCircle2,
   AlertTriangle,
@@ -18,23 +17,16 @@ import {
   ShieldCheck,
   MapPin,
   Landmark,
-  UserCheck,
   ArrowRight,
-  Shield,
-  HelpCircle,
+  Download,
+  Trash2,
+  FileCheck2,
+  ExternalLink,
 } from "lucide-react";
 import { userService } from "../../services/cartService";
 import { setUser, fetchCurrentUser } from "../../features/auth/authSlice";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
-
-const businessTypes = [
-  { value: "individual", label: "Individual / Sole Proprietor" },
-  { value: "proprietorship", label: "Proprietorship Firm" },
-  { value: "partnership", label: "Partnership" },
-  { value: "llp", label: "Limited Liability Partnership (LLP)" },
-  { value: "private_limited", label: "Private Limited Company (Pvt Ltd)" },
-];
 
 const AdminProfilePage = () => {
   const dispatch = useDispatch();
@@ -49,6 +41,8 @@ const AdminProfilePage = () => {
   const [aadhaarFile, setAadhaarFile] = useState(null);
   const [aadhaarPreview, setAadhaarPreview] = useState(user?.sellerProfile?.aadhaarDocument?.url || "");
   const [showAadhaar, setShowAadhaar] = useState(false);
+  const [isDeletingPan, setIsDeletingPan] = useState(false);
+  const [isDeletingAadhaar, setIsDeletingAadhaar] = useState(false);
 
   // Form hooks
   const storeForm = useForm();
@@ -99,7 +93,6 @@ const AdminProfilePage = () => {
       email: user.email || "",
       phone: user.phone || "",
       businessName: currentSp.businessName || "",
-      businessType: currentSp.businessType || "individual",
       storeBio: currentSp.storeBio || "",
     });
 
@@ -144,6 +137,7 @@ const AdminProfilePage = () => {
     if (file) {
       setPanFile(file);
       setPanPreview(URL.createObjectURL(file));
+      toast.info("New PAN document selected. Save KYC to commit changes.");
     }
   };
 
@@ -152,6 +146,51 @@ const AdminProfilePage = () => {
     if (file) {
       setAadhaarFile(file);
       setAadhaarPreview(URL.createObjectURL(file));
+      toast.info("New Aadhaar document selected. Save KYC to commit changes.");
+    }
+  };
+
+  const handleDeleteDocument = async (docType) => {
+    if (docType === "pan") {
+      if (panFile && !user?.sellerProfile?.panDocument?.url) {
+        setPanFile(null);
+        setPanPreview("");
+        toast.info("PAN attachment removed.");
+        return;
+      }
+      try {
+        setIsDeletingPan(true);
+        const res = await userService.deleteSellerDocument("pan");
+        if (res.data?.user) dispatch(setUser(res.data.user));
+        else dispatch(fetchCurrentUser());
+        setPanFile(null);
+        setPanPreview("");
+        toast.success("PAN document deleted from secure vault.");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to delete PAN document");
+      } finally {
+        setIsDeletingPan(false);
+      }
+    } else if (docType === "aadhaar") {
+      if (aadhaarFile && !user?.sellerProfile?.aadhaarDocument?.url) {
+        setAadhaarFile(null);
+        setAadhaarPreview("");
+        toast.info("Aadhaar attachment removed.");
+        return;
+      }
+      try {
+        setIsDeletingAadhaar(true);
+        const res = await userService.deleteSellerDocument("aadhaar");
+        if (res.data?.user) dispatch(setUser(res.data.user));
+        else dispatch(fetchCurrentUser());
+        setAadhaarFile(null);
+        setAadhaarPreview("");
+        toast.success("Aadhaar document deleted from secure vault.");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to delete Aadhaar document");
+      } finally {
+        setIsDeletingAadhaar(false);
+      }
     }
   };
 
@@ -174,7 +213,6 @@ const AdminProfilePage = () => {
       formData.append("email", data.email.trim());
       formData.append("phone", data.phone.trim());
       formData.append("businessName", data.businessName.trim());
-      formData.append("businessType", data.businessType || "individual");
       formData.append("storeBio", data.storeBio ? data.storeBio.trim() : "");
       if (avatarFile) formData.append("avatar", avatarFile);
 
@@ -211,7 +249,7 @@ const AdminProfilePage = () => {
       if (res.data?.user) dispatch(setUser(res.data.user));
       else dispatch(fetchCurrentUser());
 
-      toast.success("KYC details saved! Moving to Step 3: Address & Bank Settlement...");
+      toast.success("KYC details saved securely! Moving to Step 3: Address & Bank Settlement...");
       setActiveTab("bank");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not save KYC details");
@@ -296,7 +334,7 @@ const AdminProfilePage = () => {
               <div>
                 <h4 className="text-sm font-bold">KYC Documents Submitted & Under Review</h4>
                 <p className="text-xs opacity-85">
-                  Your submitted PAN, Aadhaar, and bank settlement details are under review.
+                  Your encrypted PAN, Aadhaar, and bank settlement details are under review.
                 </p>
               </div>
             </div>
@@ -354,7 +392,7 @@ const AdminProfilePage = () => {
       <div>
         <h1 className="font-display text-2xl lg:text-3xl tracking-tightest">Seller Profile & Business Settings</h1>
         <p className="text-sm text-stone mt-1">
-          Complete mandatory store info, PAN/Aadhaar identification, and bank payout details.
+          Complete mandatory store info, PAN/Aadhaar identification (AES-256 encrypted), and bank payout details.
         </p>
       </div>
 
@@ -509,25 +547,6 @@ const AdminProfilePage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
-                  Business Entity Type *
-                </label>
-                <select
-                  {...storeForm.register("businessType", { required: "Business Entity Type is required" })}
-                  className="w-full rounded-xl border border-hairline bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)] dark:border-hairline-dark dark:bg-[var(--bg-raised)]"
-                >
-                  {businessTypes.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-                {storeForm.formState.errors.businessType && (
-                  <p className="mt-1 text-xs text-rose-500">{storeForm.formState.errors.businessType.message}</p>
-                )}
-              </div>
-
-              <div>
                 <Input
                   label="Contact Person Full Name *"
                   placeholder="e.g. Rahul Sharma"
@@ -597,7 +616,7 @@ const AdminProfilePage = () => {
             <div>
               <h3 className="font-display text-lg font-bold">Step 2: PAN & Aadhaar KYC Identification</h3>
               <p className="text-xs text-stone mt-0.5">
-                PAN and Aadhaar numbers & documents are compulsory (<span className="text-rose-500 font-bold">*</span>) for merchant onboarding.
+                PAN and Aadhaar numbers & documents are encrypted with AES-256 and compulsory (<span className="text-rose-500 font-bold">*</span>).
               </p>
             </div>
             {isStep2Complete && (
@@ -623,7 +642,7 @@ const AdminProfilePage = () => {
                   })}
                   error={kycForm.formState.errors.panNumber?.message}
                 />
-                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory Permanent Account Number</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory Permanent Account Number (Encrypted AES-256)</span>
               </div>
 
               {/* GSTIN (Optional) */}
@@ -667,82 +686,220 @@ const AdminProfilePage = () => {
                     {showAadhaar ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory 12-digit UIDAI Identification</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory 12-digit UIDAI Identification (Encrypted AES-256)</span>
               </div>
             </div>
 
-            {/* Document Uploads */}
+            {/* Document Cards (Protected: No open preview, with Download & Delete/Replace options) */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 pt-2 border-t border-hairline dark:border-hairline-dark">
-              {/* PAN Document */}
+              {/* PAN Document Card */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center justify-between">
-                  <span>PAN Card Document Copy *</span>
-                  {panPreview && <span className="text-emerald-600 lowercase font-normal">(uploaded)</span>}
-                </label>
-                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark min-h-[140px]">
+                  <span>PAN Card Document *</span>
                   {panPreview ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <img src={panPreview} alt="PAN Document" className="max-h-28 rounded-lg object-contain" />
-                      <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={13} /> PAN Copy Attached
-                      </span>
-                    </div>
+                    <span className="text-emerald-600 lowercase font-normal flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Document Attached
+                    </span>
                   ) : (
-                    <div className="flex flex-col items-center gap-1 text-stone">
-                      <FileText size={24} className="text-rose-500" />
-                      <span className="text-xs font-semibold text-rose-500">PAN document copy is required</span>
-                    </div>
+                    <span className="text-rose-500 lowercase font-normal">required</span>
                   )}
-                  <label
-                    htmlFor="pan-doc-upload"
-                    className="mt-1 cursor-pointer text-xs font-bold text-[var(--accent)] hover:underline inline-flex items-center gap-1"
-                  >
-                    <Upload size={13} /> {panPreview ? "Replace Document" : "Upload PAN Copy"}
-                  </label>
-                  <input
-                    id="pan-doc-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePanFileChange}
-                    className="hidden"
-                  />
-                </div>
+                </label>
+
+                {panPreview ? (
+                  <div className="p-4 rounded-xl border border-hairline bg-[var(--surface)] dark:border-hairline-dark dark:bg-[var(--bg-raised)] flex flex-col justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                        <FileCheck2 size={22} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-bold truncate">PAN_Card_Document</h5>
+                          <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 font-semibold">
+                            Encrypted
+                          </span>
+                        </div>
+                        <p className="text-[0.7rem] text-stone truncate mt-0.5">
+                          {panFile ? `Selected: ${panFile.name}` : "Stored securely in merchant vault"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-hairline/60 dark:border-hairline-dark/60 gap-2">
+                      <div className="flex items-center gap-2">
+                        {/* Download Document */}
+                        <a
+                          href={panPreview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download="PAN_Document"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all"
+                          title="Download PAN Document"
+                        >
+                          <Download size={13} />
+                          <span>Download</span>
+                        </a>
+
+                        {/* Direct View in new tab */}
+                        <a
+                          href={panPreview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors"
+                          title="Open Document"
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Replace Document */}
+                        <label
+                          htmlFor="pan-doc-upload"
+                          className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
+                        >
+                          <Upload size={12} />
+                          <span>Replace</span>
+                        </label>
+
+                        {/* Delete Document */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDocument("pan")}
+                          disabled={isDeletingPan}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                          title="Delete PAN Document"
+                        >
+                          <Trash2 size={13} />
+                          <span>{isDeletingPan ? "..." : "Delete"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-dashed border-rose-300 dark:border-rose-900 bg-rose-50/30 dark:bg-rose-950/10 flex flex-col items-center justify-center gap-2 text-center min-h-[120px]">
+                    <FileText size={24} className="text-rose-500" />
+                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">PAN document copy required</span>
+                    <label
+                      htmlFor="pan-doc-upload"
+                      className="mt-1 cursor-pointer text-xs font-bold bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg hover:opacity-90 inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Upload size={13} /> Upload PAN Copy
+                    </label>
+                  </div>
+                )}
+
+                <input
+                  id="pan-doc-upload"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handlePanFileChange}
+                  className="hidden"
+                />
               </div>
 
-              {/* Aadhaar Document */}
+              {/* Aadhaar Document Card */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center justify-between">
-                  <span>Aadhaar Card Document Copy *</span>
-                  {aadhaarPreview && <span className="text-emerald-600 lowercase font-normal">(uploaded)</span>}
-                </label>
-                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark min-h-[140px]">
+                  <span>Aadhaar Card Document *</span>
                   {aadhaarPreview ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <img src={aadhaarPreview} alt="Aadhaar Document" className="max-h-28 rounded-lg object-contain" />
-                      <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={13} /> Aadhaar Copy Attached
-                      </span>
-                    </div>
+                    <span className="text-emerald-600 lowercase font-normal flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Document Attached
+                    </span>
                   ) : (
-                    <div className="flex flex-col items-center gap-1 text-stone">
-                      <FileText size={24} className="text-rose-500" />
-                      <span className="text-xs font-semibold text-rose-500">Aadhaar document copy is required</span>
-                    </div>
+                    <span className="text-rose-500 lowercase font-normal">required</span>
                   )}
-                  <label
-                    htmlFor="aadhaar-doc-upload"
-                    className="mt-1 cursor-pointer text-xs font-bold text-[var(--accent)] hover:underline inline-flex items-center gap-1"
-                  >
-                    <Upload size={13} /> {aadhaarPreview ? "Replace Document" : "Upload Aadhaar Copy"}
-                  </label>
-                  <input
-                    id="aadhaar-doc-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAadhaarFileChange}
-                    className="hidden"
-                  />
-                </div>
+                </label>
+
+                {aadhaarPreview ? (
+                  <div className="p-4 rounded-xl border border-hairline bg-[var(--surface)] dark:border-hairline-dark dark:bg-[var(--bg-raised)] flex flex-col justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                        <FileCheck2 size={22} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-bold truncate">Aadhaar_Card_Document</h5>
+                          <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 font-semibold">
+                            Encrypted
+                          </span>
+                        </div>
+                        <p className="text-[0.7rem] text-stone truncate mt-0.5">
+                          {aadhaarFile ? `Selected: ${aadhaarFile.name}` : "Stored securely in merchant vault"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-hairline/60 dark:border-hairline-dark/60 gap-2">
+                      <div className="flex items-center gap-2">
+                        {/* Download Document */}
+                        <a
+                          href={aadhaarPreview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download="Aadhaar_Document"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all"
+                          title="Download Aadhaar Document"
+                        >
+                          <Download size={13} />
+                          <span>Download</span>
+                        </a>
+
+                        {/* Direct View in new tab */}
+                        <a
+                          href={aadhaarPreview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors"
+                          title="Open Document"
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Replace Document */}
+                        <label
+                          htmlFor="aadhaar-doc-upload"
+                          className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
+                        >
+                          <Upload size={12} />
+                          <span>Replace</span>
+                        </label>
+
+                        {/* Delete Document */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDocument("aadhaar")}
+                          disabled={isDeletingAadhaar}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                          title="Delete Aadhaar Document"
+                        >
+                          <Trash2 size={13} />
+                          <span>{isDeletingAadhaar ? "..." : "Delete"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-dashed border-rose-300 dark:border-rose-900 bg-rose-50/30 dark:bg-rose-950/10 flex flex-col items-center justify-center gap-2 text-center min-h-[120px]">
+                    <FileText size={24} className="text-rose-500" />
+                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">Aadhaar document copy required</span>
+                    <label
+                      htmlFor="aadhaar-doc-upload"
+                      className="mt-1 cursor-pointer text-xs font-bold bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg hover:opacity-90 inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Upload size={13} /> Upload Aadhaar Copy
+                    </label>
+                  </div>
+                )}
+
+                <input
+                  id="aadhaar-doc-upload"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleAadhaarFileChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
