@@ -19,6 +19,9 @@ import {
   MapPin,
   Landmark,
   UserCheck,
+  ArrowRight,
+  Shield,
+  HelpCircle,
 } from "lucide-react";
 import { userService } from "../../services/cartService";
 import { setUser, fetchCurrentUser } from "../../features/auth/authSlice";
@@ -47,49 +50,81 @@ const AdminProfilePage = () => {
   const [aadhaarPreview, setAadhaarPreview] = useState(user?.sellerProfile?.aadhaarDocument?.url || "");
   const [showAadhaar, setShowAadhaar] = useState(false);
 
-  // Forms
+  // Form hooks
   const storeForm = useForm();
   const kycForm = useForm();
   const bankForm = useForm();
   const passwordForm = useForm();
 
+  // Completion calculation
+  const sp = user?.sellerProfile || {};
+  const ba = sp.businessAddress || {};
+  const bd = sp.bankDetails || {};
+
+  const isStep1Complete = Boolean(
+    sp.businessName?.trim() &&
+    user?.name?.trim() &&
+    user?.email?.trim() &&
+    user?.phone?.trim()
+  );
+
+  const isStep2Complete = Boolean(
+    isStep1Complete &&
+    sp.panNumber?.trim() &&
+    sp.panDocument?.url &&
+    sp.aadhaarNumber?.trim() &&
+    sp.aadhaarDocument?.url
+  );
+
+  const isStep3Complete = Boolean(
+    isStep2Complete &&
+    ba.addressLine1?.trim() &&
+    ba.city?.trim() &&
+    ba.state?.trim() &&
+    ba.postalCode?.trim() &&
+    bd.accountHolderName?.trim() &&
+    bd.bankName?.trim() &&
+    bd.accountNumber?.trim() &&
+    bd.ifscCode?.trim()
+  );
+
   const populateForms = () => {
     if (!user) return;
-    const sp = user.sellerProfile || {};
-    const ba = sp.businessAddress || {};
-    const bd = sp.bankDetails || {};
+    const currentSp = user.sellerProfile || {};
+    const currentBa = currentSp.businessAddress || {};
+    const currentBd = currentSp.bankDetails || {};
 
     storeForm.reset({
       name: user.name || "",
       email: user.email || "",
       phone: user.phone || "",
-      businessName: sp.businessName || "",
-      businessType: sp.businessType || "individual",
-      storeBio: sp.storeBio || "",
+      businessName: currentSp.businessName || "",
+      businessType: currentSp.businessType || "individual",
+      storeBio: currentSp.storeBio || "",
     });
 
     kycForm.reset({
-      panNumber: sp.panNumber || "",
-      aadhaarNumber: sp.aadhaarNumber || "",
-      gstNumber: sp.gstNumber || "",
+      panNumber: currentSp.panNumber || "",
+      aadhaarNumber: currentSp.aadhaarNumber || "",
+      gstNumber: currentSp.gstNumber || "",
     });
 
     bankForm.reset({
-      addressLine1: ba.addressLine1 || "",
-      addressLine2: ba.addressLine2 || "",
-      city: ba.city || "",
-      state: ba.state || "",
-      postalCode: ba.postalCode || "",
-      country: ba.country || "India",
-      accountHolderName: bd.accountHolderName || "",
-      accountNumber: bd.accountNumber || "",
-      ifscCode: bd.ifscCode || "",
-      bankName: bd.bankName || "",
+      addressLine1: currentBa.addressLine1 || "",
+      addressLine2: currentBa.addressLine2 || "",
+      city: currentBa.city || "",
+      state: currentBa.state || "",
+      postalCode: currentBa.postalCode || "",
+      country: currentBa.country || "India",
+      accountHolderName: currentBd.accountHolderName || "",
+      accountNumber: currentBd.accountNumber || "",
+      ifscCode: currentBd.ifscCode || "",
+      bankName: currentBd.bankName || "",
     });
 
     setAvatarPreview(user.avatar?.url || "");
-    setPanPreview(sp.panDocument?.url || "");
-    setAadhaarPreview(sp.aadhaarDocument?.url || "");
+    setPanPreview(currentSp.panDocument?.url || "");
+    setAadhaarPreview(currentSp.aadhaarDocument?.url || "");
   };
 
   useEffect(() => {
@@ -120,31 +155,54 @@ const AdminProfilePage = () => {
     }
   };
 
+  const handleTabClick = (tabKey) => {
+    if (tabKey === "kyc" && !isStep1Complete) {
+      toast.warning("🔒 Step 1 (Store & Contact details) must be completed and saved before accessing KYC.");
+      return;
+    }
+    if (tabKey === "bank" && !isStep2Complete) {
+      toast.warning("🔒 Step 2 (PAN & Aadhaar Identification) must be completed and saved before accessing Bank details.");
+      return;
+    }
+    setActiveTab(tabKey);
+  };
+
   const onStoreSubmit = async (data) => {
     try {
       const formData = new FormData();
       formData.append("name", data.name.trim());
       formData.append("email", data.email.trim());
-      formData.append("phone", data.phone ? data.phone.trim() : "");
-      formData.append("businessName", data.businessName ? data.businessName.trim() : "");
-      formData.append("businessType", data.businessType || "");
+      formData.append("phone", data.phone.trim());
+      formData.append("businessName", data.businessName.trim());
+      formData.append("businessType", data.businessType || "individual");
       formData.append("storeBio", data.storeBio ? data.storeBio.trim() : "");
       if (avatarFile) formData.append("avatar", avatarFile);
 
       const res = await userService.updateSellerProfile(formData);
       if (res.data?.user) dispatch(setUser(res.data.user));
       else dispatch(fetchCurrentUser());
-      toast.success("Store details updated successfully!");
+
+      toast.success("Store details saved! Moving to Step 2: KYC Identification...");
+      setActiveTab("kyc");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update store profile");
     }
   };
 
   const onKycSubmit = async (data) => {
+    if (!panFile && !panPreview) {
+      toast.error("Please upload a copy of your PAN Card");
+      return;
+    }
+    if (!aadhaarFile && !aadhaarPreview) {
+      toast.error("Please upload a copy of your Aadhaar Card");
+      return;
+    }
+
     try {
       const formData = new FormData();
-      formData.append("panNumber", data.panNumber ? data.panNumber.trim().toUpperCase() : "");
-      formData.append("aadhaarNumber", data.aadhaarNumber ? data.aadhaarNumber.trim() : "");
+      formData.append("panNumber", data.panNumber.trim().toUpperCase());
+      formData.append("aadhaarNumber", data.aadhaarNumber.trim());
       formData.append("gstNumber", data.gstNumber ? data.gstNumber.trim().toUpperCase() : "");
       if (panFile) formData.append("panDocument", panFile);
       if (aadhaarFile) formData.append("aadhaarDocument", aadhaarFile);
@@ -152,7 +210,9 @@ const AdminProfilePage = () => {
       const res = await userService.updateSellerProfile(formData);
       if (res.data?.user) dispatch(setUser(res.data.user));
       else dispatch(fetchCurrentUser());
-      toast.success("Business identification & KYC details saved!");
+
+      toast.success("KYC details saved! Moving to Step 3: Address & Bank Settlement...");
+      setActiveTab("bank");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not save KYC details");
     }
@@ -164,28 +224,29 @@ const AdminProfilePage = () => {
       formData.append(
         "businessAddress",
         JSON.stringify({
-          addressLine1: data.addressLine1 || "",
-          addressLine2: data.addressLine2 || "",
-          city: data.city || "",
-          state: data.state || "",
-          postalCode: data.postalCode || "",
+          addressLine1: data.addressLine1.trim(),
+          addressLine2: data.addressLine2 ? data.addressLine2.trim() : "",
+          city: data.city.trim(),
+          state: data.state.trim(),
+          postalCode: data.postalCode.trim(),
           country: data.country || "India",
         })
       );
       formData.append(
         "bankDetails",
         JSON.stringify({
-          accountHolderName: data.accountHolderName || "",
-          accountNumber: data.accountNumber || "",
-          ifscCode: (data.ifscCode || "").toUpperCase(),
-          bankName: data.bankName || "",
+          accountHolderName: data.accountHolderName.trim(),
+          accountNumber: data.accountNumber.trim(),
+          ifscCode: data.ifscCode.trim().toUpperCase(),
+          bankName: data.bankName.trim(),
         })
       );
 
       const res = await userService.updateSellerProfile(formData);
       if (res.data?.user) dispatch(setUser(res.data.user));
       else dispatch(fetchCurrentUser());
-      toast.success("Business address & bank settlement details saved!");
+
+      toast.success("Profile setup complete! All business, KYC, and bank details saved successfully.");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not save address and bank details");
     }
@@ -233,9 +294,9 @@ const AdminProfilePage = () => {
                 <Clock size={20} className="text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h4 className="text-sm font-bold">KYC Documents Under Review</h4>
+                <h4 className="text-sm font-bold">KYC Documents Submitted & Under Review</h4>
                 <p className="text-xs opacity-85">
-                  Your submitted PAN and Aadhaar documents are being verified by our compliance team.
+                  Your submitted PAN, Aadhaar, and bank settlement details are under review.
                 </p>
               </div>
             </div>
@@ -273,14 +334,14 @@ const AdminProfilePage = () => {
                 <AlertTriangle size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h4 className="text-sm font-bold">Complete Your Business & KYC Profile</h4>
+                <h4 className="text-sm font-bold">Complete Your Mandatory Business & KYC Profile</h4>
                 <p className="text-xs opacity-85">
-                  Provide your business PAN, Aadhaar, and settlement bank details to unlock all seller capabilities.
+                  Complete each required step to unlock all seller permissions and automated order payouts.
                 </p>
               </div>
             </div>
             <span className="text-xs font-bold px-3 py-1 bg-blue-600 text-white rounded-full uppercase tracking-wider">
-              Pending
+              Profile Incomplete
             </span>
           </div>
         );
@@ -292,53 +353,88 @@ const AdminProfilePage = () => {
       {/* Page Header */}
       <div>
         <h1 className="font-display text-2xl lg:text-3xl tracking-tightest">Seller Profile & Business Settings</h1>
-        <p className="text-sm text-stone mt-1">Manage your brand presence, business identification, PAN/Aadhaar details, and settlements.</p>
+        <p className="text-sm text-stone mt-1">
+          Complete mandatory store info, PAN/Aadhaar identification, and bank payout details.
+        </p>
       </div>
 
-      {/* KYC Banner */}
+      {/* KYC Status Banner */}
       {renderKycStatusBanner()}
 
-      {/* Tabs Bar */}
+      {/* Progressive Step Tabs Bar */}
       <div className="flex flex-wrap gap-2 border-b border-hairline pb-2 dark:border-hairline-dark">
+        {/* Step 1 Tab */}
         <button
           type="button"
-          onClick={() => setActiveTab("store")}
+          onClick={() => handleTabClick("store")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
             activeTab === "store"
               ? "bg-[var(--accent)] text-white shadow-sm"
-              : "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : isStep1Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
           }`}
         >
           <Store size={16} />
-          <span>Store & Contact</span>
+          <span>1. Store & Contact</span>
+          {isStep1Complete ? (
+            <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+          )}
         </button>
 
+        {/* Step 2 Tab */}
         <button
           type="button"
-          onClick={() => setActiveTab("kyc")}
+          onClick={() => handleTabClick("kyc")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
             activeTab === "kyc"
               ? "bg-[var(--accent)] text-white shadow-sm"
-              : "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : isStep1Complete
+                ? isStep2Complete
+                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
+                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
           }`}
         >
           <FileText size={16} />
-          <span>PAN & KYC Identification</span>
+          <span>2. PAN & KYC</span>
+          {!isStep1Complete ? (
+            <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 1 first" />
+          ) : isStep2Complete ? (
+            <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+          )}
         </button>
 
+        {/* Step 3 Tab */}
         <button
           type="button"
-          onClick={() => setActiveTab("bank")}
+          onClick={() => handleTabClick("bank")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
             activeTab === "bank"
               ? "bg-[var(--accent)] text-white shadow-sm"
-              : "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : isStep2Complete
+                ? isStep3Complete
+                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
+                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
           }`}
         >
           <Landmark size={16} />
-          <span>Address & Bank Details</span>
+          <span>3. Address & Bank Payouts</span>
+          {!isStep2Complete ? (
+            <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 2 first" />
+          ) : isStep3Complete ? (
+            <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+          )}
         </button>
 
+        {/* Security Tab */}
         <button
           type="button"
           onClick={() => setActiveTab("security")}
@@ -356,9 +452,18 @@ const AdminProfilePage = () => {
       {/* Tab 1: Store & Contact Info */}
       {activeTab === "store" && (
         <div className="card-surface p-6 sm:p-8">
-          <div className="mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
-            <h3 className="font-display text-lg font-bold">Store & Public Profile</h3>
-            <p className="text-xs text-stone mt-0.5">Details that represent your brand and official communication channels.</p>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+            <div>
+              <h3 className="font-display text-lg font-bold">Step 1: Store & Official Contact</h3>
+              <p className="text-xs text-stone mt-0.5">
+                All fields marked with <span className="text-rose-500 font-bold">*</span> are mandatory to unlock Step 2.
+              </p>
+            </div>
+            {isStep1Complete && (
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                <CheckCircle2 size={14} /> Step 1 Completed
+              </span>
+            )}
           </div>
 
           <form onSubmit={storeForm.handleSubmit(onStoreSubmit)} className="flex flex-col gap-6">
@@ -388,25 +493,27 @@ const AdminProfilePage = () => {
                 />
               </div>
               <div>
-                <h4 className="text-sm font-bold">{user?.sellerProfile?.businessName || user?.name || "LyZov Seller"}</h4>
-                <p className="text-xs text-stone mt-0.5">Recommended format: Square PNG, JPG or WebP (min. 400x400px)</p>
+                <h4 className="text-sm font-bold">{user?.sellerProfile?.businessName || user?.name || "Store Brand Logo"}</h4>
+                <p className="text-xs text-stone mt-0.5">Square PNG, JPG, or WebP recommended</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <Input
-                label="Store / Brand Name"
-                placeholder="e.g. LyZov Gentlemen"
-                {...storeForm.register("businessName", { required: "Store name is required" })}
-                error={storeForm.formState.errors.businessName?.message}
-              />
+              <div>
+                <Input
+                  label="Store / Brand Name *"
+                  placeholder="e.g. LyZov Gentlemen"
+                  {...storeForm.register("businessName", { required: "Store / Brand Name is required" })}
+                  error={storeForm.formState.errors.businessName?.message}
+                />
+              </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
-                  Business Entity Type
+                  Business Entity Type *
                 </label>
                 <select
-                  {...storeForm.register("businessType")}
+                  {...storeForm.register("businessType", { required: "Business Entity Type is required" })}
                   className="w-full rounded-xl border border-hairline bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)] dark:border-hairline-dark dark:bg-[var(--bg-raised)]"
                 >
                   {businessTypes.map((t) => (
@@ -415,46 +522,68 @@ const AdminProfilePage = () => {
                     </option>
                   ))}
                 </select>
+                {storeForm.formState.errors.businessType && (
+                  <p className="mt-1 text-xs text-rose-500">{storeForm.formState.errors.businessType.message}</p>
+                )}
               </div>
 
-              <Input
-                label="Contact Person Name"
-                {...storeForm.register("name", { required: "Contact name is required" })}
-                error={storeForm.formState.errors.name?.message}
-              />
+              <div>
+                <Input
+                  label="Contact Person Full Name *"
+                  placeholder="e.g. Rahul Sharma"
+                  {...storeForm.register("name", { required: "Contact Person Full Name is required" })}
+                  error={storeForm.formState.errors.name?.message}
+                />
+              </div>
 
-              <Input
-                label="Official Email Address"
-                type="email"
-                {...storeForm.register("email", {
-                  required: "Email is required",
-                  pattern: { value: /^\S+@\S+\.\S+$/, message: "Invalid email" },
-                })}
-                error={storeForm.formState.errors.email?.message}
-              />
+              <div>
+                <Input
+                  label="Official Email Address *"
+                  type="email"
+                  placeholder="seller@example.com"
+                  {...storeForm.register("email", {
+                    required: "Official Email is required",
+                    pattern: { value: /^\S+@\S+\.\S+$/, message: "Please provide a valid email" },
+                  })}
+                  error={storeForm.formState.errors.email?.message}
+                />
+              </div>
 
-              <Input
-                label="Support / WhatsApp Phone"
-                placeholder="e.g. 9876543210"
-                {...storeForm.register("phone")}
-              />
+              <div>
+                <Input
+                  label="Mobile / Phone Number *"
+                  type="tel"
+                  placeholder="10-digit mobile number (e.g. 9876543210)"
+                  {...storeForm.register("phone", {
+                    required: "Mobile / Phone number is required",
+                    pattern: {
+                      value: /^[6-9]\d{9}$/,
+                      message: "Please enter a valid 10-digit Indian mobile number",
+                    },
+                  })}
+                  error={storeForm.formState.errors.phone?.message}
+                />
+                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory for OTP alerts & courier pickup notices</span>
+              </div>
 
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
-                  Store Bio / Brand Story
+                  Store Bio / Brand Heritage (Optional)
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Tell customers about your craftsmanship, quality, and heritage..."
+                  placeholder="Tell customers about your products, quality assurance, and heritage..."
                   {...storeForm.register("storeBio")}
                   className="w-full rounded-xl border border-hairline bg-[var(--surface)] p-3.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)] dark:border-hairline-dark dark:bg-[var(--bg-raised)]"
                 />
               </div>
             </div>
 
-            <div>
-              <Button type="submit" isLoading={storeForm.formState.isSubmitting}>
-                Save Store Details
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-stone">Saving will automatically unlock Step 2 (KYC)</span>
+              <Button type="submit" isLoading={storeForm.formState.isSubmitting} className="flex items-center gap-2">
+                <span>Save & Continue to Step 2</span>
+                <ArrowRight size={16} />
               </Button>
             </div>
           </form>
@@ -464,9 +593,18 @@ const AdminProfilePage = () => {
       {/* Tab 2: PAN & KYC Identification */}
       {activeTab === "kyc" && (
         <div className="card-surface p-6 sm:p-8">
-          <div className="mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
-            <h3 className="font-display text-lg font-bold">Tax & Identification Documents</h3>
-            <p className="text-xs text-stone mt-0.5">Required for merchant compliance and automated tax invoice generation.</p>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+            <div>
+              <h3 className="font-display text-lg font-bold">Step 2: PAN & Aadhaar KYC Identification</h3>
+              <p className="text-xs text-stone mt-0.5">
+                PAN and Aadhaar numbers & documents are compulsory (<span className="text-rose-500 font-bold">*</span>) for merchant onboarding.
+              </p>
+            </div>
+            {isStep2Complete && (
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                <CheckCircle2 size={14} /> Step 2 Completed
+              </span>
+            )}
           </div>
 
           <form onSubmit={kycForm.handleSubmit(onKycSubmit)} className="flex flex-col gap-6">
@@ -474,9 +612,10 @@ const AdminProfilePage = () => {
               {/* PAN Number */}
               <div>
                 <Input
-                  label="PAN Card Number"
+                  label="PAN Card Number *"
                   placeholder="e.g. ABCDE1234F"
                   {...kycForm.register("panNumber", {
+                    required: "PAN Card Number is required",
                     pattern: {
                       value: /^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/,
                       message: "Format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)",
@@ -484,10 +623,10 @@ const AdminProfilePage = () => {
                   })}
                   error={kycForm.formState.errors.panNumber?.message}
                 />
-                <span className="text-[0.7rem] text-stone mt-1 block">Permanent Account Number (10 characters)</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory Permanent Account Number</span>
               </div>
 
-              {/* GSTIN */}
+              {/* GSTIN (Optional) */}
               <div>
                 <Input
                   label="GSTIN (Optional)"
@@ -500,17 +639,18 @@ const AdminProfilePage = () => {
                   })}
                   error={kycForm.formState.errors.gstNumber?.message}
                 />
-                <span className="text-[0.7rem] text-stone mt-1 block">Required if annual turnover exceeds threshold</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">Required if annual turnover exceeds GST threshold</span>
               </div>
 
               {/* Aadhaar Number with mask */}
               <div className="sm:col-span-2">
                 <div className="relative">
                   <Input
-                    label="Aadhaar Card Number"
+                    label="Aadhaar Card Number (12 Digits) *"
                     type={showAadhaar ? "text" : "password"}
-                    placeholder="12-digit Aadhaar Number"
+                    placeholder="Enter 12-digit Aadhaar Number"
                     {...kycForm.register("aadhaarNumber", {
+                      required: "12-digit Aadhaar Number is required",
                       pattern: {
                         value: /^\d{12}$/,
                         message: "Aadhaar must be exactly 12 numeric digits",
@@ -527,7 +667,7 @@ const AdminProfilePage = () => {
                     {showAadhaar ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <span className="text-[0.7rem] text-stone mt-1 block">12-digit Unique Identification Authority of India ID</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory 12-digit UIDAI Identification</span>
               </div>
             </div>
 
@@ -535,21 +675,22 @@ const AdminProfilePage = () => {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 pt-2 border-t border-hairline dark:border-hairline-dark">
               {/* PAN Document */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone">
-                  PAN Card Document Copy
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center justify-between">
+                  <span>PAN Card Document Copy *</span>
+                  {panPreview && <span className="text-emerald-600 lowercase font-normal">(uploaded)</span>}
                 </label>
-                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark">
+                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark min-h-[140px]">
                   {panPreview ? (
                     <div className="flex flex-col items-center gap-2">
                       <img src={panPreview} alt="PAN Document" className="max-h-28 rounded-lg object-contain" />
                       <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={13} /> Document Attached
+                        <CheckCircle2 size={13} /> PAN Copy Attached
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-stone">
-                      <FileText size={24} />
-                      <span className="text-xs">No PAN document attached</span>
+                      <FileText size={24} className="text-rose-500" />
+                      <span className="text-xs font-semibold text-rose-500">PAN document copy is required</span>
                     </div>
                   )}
                   <label
@@ -570,21 +711,22 @@ const AdminProfilePage = () => {
 
               {/* Aadhaar Document */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone">
-                  Aadhaar Card Document Copy
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center justify-between">
+                  <span>Aadhaar Card Document Copy *</span>
+                  {aadhaarPreview && <span className="text-emerald-600 lowercase font-normal">(uploaded)</span>}
                 </label>
-                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark">
+                <div className="p-4 rounded-xl border border-dashed border-hairline bg-[var(--bg-subtle)] flex flex-col items-center justify-center gap-2 text-center dark:border-hairline-dark min-h-[140px]">
                   {aadhaarPreview ? (
                     <div className="flex flex-col items-center gap-2">
                       <img src={aadhaarPreview} alt="Aadhaar Document" className="max-h-28 rounded-lg object-contain" />
                       <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={13} /> Document Attached
+                        <CheckCircle2 size={13} /> Aadhaar Copy Attached
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-stone">
-                      <FileText size={24} />
-                      <span className="text-xs">No Aadhaar document attached</span>
+                      <FileText size={24} className="text-rose-500" />
+                      <span className="text-xs font-semibold text-rose-500">Aadhaar document copy is required</span>
                     </div>
                   )}
                   <label
@@ -604,9 +746,17 @@ const AdminProfilePage = () => {
               </div>
             </div>
 
-            <div>
-              <Button type="submit" isLoading={kycForm.formState.isSubmitting}>
-                Save & Submit KYC Details
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("store")}
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+              >
+                ← Back to Step 1
+              </button>
+              <Button type="submit" isLoading={kycForm.formState.isSubmitting} className="flex items-center gap-2">
+                <span>Save & Continue to Step 3</span>
+                <ArrowRight size={16} />
               </Button>
             </div>
           </form>
@@ -616,40 +766,53 @@ const AdminProfilePage = () => {
       {/* Tab 3: Address & Bank Settlement */}
       {activeTab === "bank" && (
         <div className="card-surface p-6 sm:p-8">
-          <div className="mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
-            <h3 className="font-display text-lg font-bold">Business Address & Bank Settlement</h3>
-            <p className="text-xs text-stone mt-0.5">Bank account information for order payouts and merchant business registered address.</p>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+            <div>
+              <h3 className="font-display text-lg font-bold">Step 3: Registered Business Address & Bank Settlement</h3>
+              <p className="text-xs text-stone mt-0.5">
+                All fields marked with <span className="text-rose-500 font-bold">*</span> are compulsory for order payouts and shipping pickups.
+              </p>
+            </div>
+            {isStep3Complete && (
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                <CheckCircle2 size={14} /> Profile Complete
+              </span>
+            )}
           </div>
 
           <form onSubmit={bankForm.handleSubmit(onBankSubmit)} className="flex flex-col gap-6">
             {/* Bank Details Section */}
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] mb-3 flex items-center gap-1.5">
-                <Landmark size={14} /> Settlement Bank Account Details
+                <Landmark size={14} /> Settlement Bank Account Details *
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
-                  label="Account Holder Name"
-                  placeholder="Name as in bank passbook"
-                  {...bankForm.register("accountHolderName")}
+                  label="Account Holder Name *"
+                  placeholder="Name as per bank passbook"
+                  {...bankForm.register("accountHolderName", { required: "Account Holder Name is required" })}
+                  error={bankForm.formState.errors.accountHolderName?.message}
                 />
                 <Input
-                  label="Bank Name"
+                  label="Bank Name *"
                   placeholder="e.g. HDFC Bank, SBI, ICICI"
-                  {...bankForm.register("bankName")}
+                  {...bankForm.register("bankName", { required: "Bank Name is required" })}
+                  error={bankForm.formState.errors.bankName?.message}
                 />
                 <Input
-                  label="Bank Account Number"
-                  placeholder="Enter Account Number"
-                  {...bankForm.register("accountNumber")}
+                  label="Bank Account Number *"
+                  placeholder="Enter Bank Account Number"
+                  {...bankForm.register("accountNumber", { required: "Account Number is required" })}
+                  error={bankForm.formState.errors.accountNumber?.message}
                 />
                 <Input
-                  label="IFSC Code"
+                  label="Bank IFSC Code *"
                   placeholder="e.g. HDFC0001234"
                   {...bankForm.register("ifscCode", {
+                    required: "IFSC Code is required",
                     pattern: {
                       value: /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/,
-                      message: "Invalid IFSC Code format (11 characters)",
+                      message: "Must be an 11-character IFSC Code (e.g. HDFC0001234)",
                     },
                   })}
                   error={bankForm.formState.errors.ifscCode?.message}
@@ -660,30 +823,60 @@ const AdminProfilePage = () => {
             {/* Business Address Section */}
             <div className="pt-4 border-t border-hairline dark:border-hairline-dark">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] mb-3 flex items-center gap-1.5">
-                <MapPin size={14} /> Registered Business / Operational Address
+                <MapPin size={14} /> Registered Operational / Pickup Address *
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
-                  label="Address Line 1"
+                  label="Address Line 1 (Building / Street) *"
                   className="sm:col-span-2"
-                  placeholder="Building No., Street, Area"
-                  {...bankForm.register("addressLine1")}
+                  placeholder="e.g. Plot 42, Textile Market Road"
+                  {...bankForm.register("addressLine1", { required: "Address Line 1 is required" })}
+                  error={bankForm.formState.errors.addressLine1?.message}
                 />
                 <Input
-                  label="Address Line 2 (Optional)"
-                  placeholder="Landmark / Suite"
+                  label="Address Line 2 (Landmark / Suite)"
+                  placeholder="Near City Center"
                   {...bankForm.register("addressLine2")}
                 />
-                <Input label="City" {...bankForm.register("city")} />
-                <Input label="State" {...bankForm.register("state")} />
-                <Input label="Postal Code" {...bankForm.register("postalCode")} />
+                <Input
+                  label="City *"
+                  placeholder="e.g. Surat, Mumbai, Jaipur"
+                  {...bankForm.register("city", { required: "City is required" })}
+                  error={bankForm.formState.errors.city?.message}
+                />
+                <Input
+                  label="State *"
+                  placeholder="e.g. Gujarat, Maharashtra, Rajasthan"
+                  {...bankForm.register("state", { required: "State is required" })}
+                  error={bankForm.formState.errors.state?.message}
+                />
+                <Input
+                  label="Postal / PIN Code (6 Digits) *"
+                  placeholder="e.g. 395002"
+                  {...bankForm.register("postalCode", {
+                    required: "Postal Code is required",
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: "Postal code must be 6 digits",
+                    },
+                  })}
+                  error={bankForm.formState.errors.postalCode?.message}
+                />
                 <Input label="Country" defaultValue="India" {...bankForm.register("country")} />
               </div>
             </div>
 
-            <div>
-              <Button type="submit" isLoading={bankForm.formState.isSubmitting}>
-                Save Address & Bank Details
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("kyc")}
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+              >
+                ← Back to Step 2
+              </button>
+              <Button type="submit" isLoading={bankForm.formState.isSubmitting} className="flex items-center gap-2">
+                <CheckCircle2 size={16} />
+                <span>Save All & Complete Setup</span>
               </Button>
             </div>
           </form>

@@ -290,13 +290,20 @@ const ProfilePage = () => {
 
             <div>
               <Input
-                label="Mobile / Phone Number"
+                label="Mobile / Phone Number *"
                 type="tel"
                 placeholder="e.g. 9876543210"
-                {...profileForm.register("phone")}
+                {...profileForm.register("phone", {
+                  required: "Mobile / Phone number is compulsory",
+                  pattern: {
+                    value: /^[6-9]\d{9}$/,
+                    message: "Please enter a valid 10-digit Indian mobile number",
+                  },
+                })}
+                error={profileForm.formState.errors.phone?.message}
               />
               <span className="text-[0.7rem] text-[var(--ink-subtle)] mt-1 block">
-                Used for delivery and order SMS updates.
+                Compulsory for order confirmation and delivery notifications.
               </span>
             </div>
           </div>
