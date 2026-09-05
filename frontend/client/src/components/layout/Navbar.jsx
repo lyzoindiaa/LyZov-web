@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Search, ShoppingBag, Heart, User, Menu, X,
   ChevronDown, LogOut, LayoutDashboard, Settings,
-  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart
+  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart, Mail
 } from "lucide-react";
 import { toggleMobileMenu, closeMobileMenu, toggleTheme, setSearchDraft } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
@@ -236,6 +236,7 @@ const Navbar = () => {
                 </div>
 
                 <Link to="/shop" className="nav-link-animated">All Products</Link>
+                <Link to="/contact" className="nav-link-animated">Contact</Link>
 
                 {/* Shop CTA */}
                 <Link
@@ -373,6 +374,7 @@ const Navbar = () => {
                         <DropItem to="/dashboard" icon={LayoutDashboard}>{"My Dashboard"}</DropItem>
                         <DropItem to="/dashboard/orders" icon={Tag}>{"My Orders"}</DropItem>
                         <DropItem to="/dashboard/wishlist" icon={Heart}>{"Wishlist"}</DropItem>
+                        <DropItem to="/dashboard/support" icon={Mail}>{"Help & Support"}</DropItem>
                       </>
                     )}
                     <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.25rem", marginTop: "0.25rem" }}>
@@ -489,6 +491,7 @@ const Navbar = () => {
                 <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
                 <MobileNavLink to={isAuthenticated ? "/dashboard/wishlist" : "/login"}>Saved Wishlist</MobileNavLink>
                 {isAuthenticated && <MobileNavLink to="/dashboard/orders">My Orders</MobileNavLink>}
+                <MobileNavLink to="/contact">Contact Support</MobileNavLink>
               </>
             )}
           </nav>

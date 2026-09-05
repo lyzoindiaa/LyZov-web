@@ -17,6 +17,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ContactPage from "./pages/ContactPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
@@ -37,6 +39,7 @@ import AdminCategoryEditPage from "./pages/admin/AdminCategoryEditPage";
 import AdminBrandsPage from "./pages/admin/AdminBrandsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
+import AdminEmailsPage from "./pages/admin/AdminEmailsPage";
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
@@ -80,11 +83,13 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
         {/* ── Public & Storefront Routes with Navbar & Footer ── */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route
@@ -110,6 +115,7 @@ function App() {
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="addresses" element={<AddressesPage />} />
+            <Route path="support" element={<ContactPage isDashboard={true} />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />
@@ -134,6 +140,7 @@ function App() {
           <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
+          <Route path="emails" element={<AdminEmailsPage />} />
         </Route>
 
         {/* ── Backward-Compatible /admin Redirects ── */}

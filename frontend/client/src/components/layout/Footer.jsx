@@ -18,7 +18,7 @@ const footerColumns = [
       { label: "Track Your Order", to: "/dashboard/orders" },
       { label: "Shipping Policy", to: "/shipping" },
       { label: "7-Day Replacement", to: "/returns" },
-      { label: "Contact & FAQ", to: "/#faq" },
+      { label: "Contact & Concierge", to: "/contact" },
     ],
   },
   {

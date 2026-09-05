@@ -6,6 +6,7 @@ const {
   refresh,
   logout,
   verifyEmail,
+  resendVerification,
   forgotPassword,
   resetPassword,
   getMe,
@@ -34,6 +35,7 @@ router.post("/login", authLimiter, loginValidator, validate, login);
 router.post("/refresh", refresh);
 router.post("/logout", protect, logout);
 router.get("/verify-email/:token", verifyEmail);
+router.post("/resend-verification", authLimiter, resendVerification);
 router.post("/forgot-password", authLimiter, forgotPasswordValidator, validate, forgotPassword);
 router.post("/reset-password/:token", resetPasswordValidator, validate, resetPassword);
 router.get("/me", protect, getMe);
