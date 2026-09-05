@@ -264,7 +264,7 @@ const seed = async () => {
 
   console.log("Creating brands...");
   const brands = await Brand.insertMany([
-    { name: "LyZov Atelier", description: "In-house luxury gentleman essentials" },
+    { name: "LyZov Atelier", description: "In-house luxury Store essentials" },
     { name: "Urban Edge", description: "Streetwear and contemporary tailored fits" },
     { name: "Nimbus", description: "Athletic lifestyle and performance footwear" },
     { name: "Aurora Chrono", description: "Artisanal horology and luxury accessories" },

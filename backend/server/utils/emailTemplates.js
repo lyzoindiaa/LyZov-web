@@ -113,7 +113,7 @@ const baseEmailWrapper = ({ title, preheader, content, clientUrl }) => {
 const welcomeVerificationTemplate = ({ name, verifyUrl }) => {
   const content = `
     <h2 style="margin: 0 0 12px; font-size: 22px; color: ${textDark}; font-weight: 700;">
-      Welcome to LyZov, ${name || "Gentleman"}!
+      Welcome to LyZov, ${name || "Store"}!
     </h2>
     <p style="margin: 0 0 20px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
       Thank you for joining our exclusive circle. To complete your account registration and ensure secure access to your orders and curations, please verify your email address.
@@ -136,7 +136,7 @@ const welcomeVerificationTemplate = ({ name, verifyUrl }) => {
 
   return {
     subject: "Welcome to LyZov — Verify your email address",
-    text: `Welcome to LyZov, ${name || "Gentleman"}!\n\nPlease verify your email by opening the following link:\n${verifyUrl}\n\nThis link expires in 24 hours.`,
+    text: `Welcome to LyZov, ${name || "Store"}!\n\nPlease verify your email by opening the following link:\n${verifyUrl}\n\nThis link expires in 24 hours.`,
     html: baseEmailWrapper({
       title: "Verify Your Email — LyZov",
       preheader: "Complete your LyZov account setup to explore our premium curations.",
@@ -158,7 +158,7 @@ const verificationSuccessTemplate = ({ name }) => {
       Email Verified Successfully
     </h2>
     <p style="text-align: center; margin: 0 0 28px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
-      Hello ${name || "Gentleman"}, your email address has been confirmed. Your LyZov account is now fully active and verified.
+      Hello ${name || "Store"}, your email address has been confirmed. Your LyZov account is now fully active and verified.
     </p>
 
     <div style="text-align: center; margin: 28px 0;">
@@ -170,7 +170,7 @@ const verificationSuccessTemplate = ({ name }) => {
 
   return {
     subject: "LyZov — Your email has been verified",
-    text: `Hello ${name || "Gentleman"},\n\nYour email has been verified successfully. Start shopping now at: ${clientUrl}/shop`,
+    text: `Hello ${name || "Store"},\n\nYour email has been verified successfully. Start shopping now at: ${clientUrl}/shop`,
     html: baseEmailWrapper({
       title: "Email Verified — LyZov",
       preheader: "Your email address has been verified. Welcome to LyZov.",
@@ -186,7 +186,7 @@ const passwordResetTemplate = ({ name, resetUrl }) => {
       Password Reset Request
     </h2>
     <p style="margin: 0 0 20px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
-      Hello ${name || "Gentleman"}, we received a request to reset the password for your LyZov account. Click the button below to choose a new password.
+      Hello ${name || "Store"}, we received a request to reset the password for your LyZov account. Click the button below to choose a new password.
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
@@ -206,7 +206,7 @@ const passwordResetTemplate = ({ name, resetUrl }) => {
 
   return {
     subject: "LyZov — Password Reset Request",
-    text: `Hello ${name || "Gentleman"},\n\nYou requested a password reset. Reset your password here:\n${resetUrl}\n\nThis link expires in 15 minutes. If you didn't request this, ignore this email.`,
+    text: `Hello ${name || "Store"},\n\nYou requested a password reset. Reset your password here:\n${resetUrl}\n\nThis link expires in 15 minutes. If you didn't request this, ignore this email.`,
     html: baseEmailWrapper({
       title: "Reset Your Password — LyZov",
       preheader: "Reset instructions for your LyZov account.",
@@ -223,7 +223,7 @@ const passwordResetSuccessTemplate = ({ name }) => {
       Password Successfully Changed
     </h2>
     <p style="margin: 0 0 20px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
-      Hello ${name || "Gentleman"}, your password has been reset successfully. You can now log into your LyZov account using your new credentials.
+      Hello ${name || "Store"}, your password has been reset successfully. You can now log into your LyZov account using your new credentials.
     </p>
 
     <div style="text-align: center; margin: 28px 0;">
@@ -239,7 +239,7 @@ const passwordResetSuccessTemplate = ({ name }) => {
 
   return {
     subject: "LyZov — Password Changed Successfully",
-    text: `Hello ${name || "Gentleman"},\n\nYour LyZov password has been changed successfully. You can sign in at: ${clientUrl}/login`,
+    text: `Hello ${name || "Store"},\n\nYour LyZov password has been changed successfully. You can sign in at: ${clientUrl}/login`,
     html: baseEmailWrapper({
       title: "Password Changed — LyZov",
       preheader: "Your password has been changed successfully.",
@@ -255,7 +255,7 @@ const formatPrice = (val) => "₹" + Number(val || 0).toLocaleString("en-IN");
 const orderConfirmationTemplate = ({ order, user }) => {
   const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
   const orderUrl = `${clientUrl}/dashboard/orders/${order._id}`;
-  const recipientName = order.shippingAddress?.fullName || user?.name || "Valued Gentleman";
+  const recipientName = order.shippingAddress?.fullName || user?.name || "Valued Store";
 
   // Item rows
   const itemRowsHtml = (order.items || [])
@@ -433,7 +433,7 @@ const sellerNewOrderTemplate = ({ order, user }) => {
 const orderStatusUpdateTemplate = ({ order, user, newStatus, note, trackingNumber }) => {
   const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
   const orderUrl = `${clientUrl}/dashboard/orders/${order._id}`;
-  const recipientName = order.shippingAddress?.fullName || user?.name || "Gentleman";
+  const recipientName = order.shippingAddress?.fullName || user?.name || "Store";
 
   const statusLabels = {
     processing: "Processing & Quality Inspection",
@@ -499,7 +499,7 @@ const orderStatusUpdateTemplate = ({ order, user, newStatus, note, trackingNumbe
 // 8. Order Cancellation & Refund Notice
 const orderCancelledTemplate = ({ order, user, reason }) => {
   const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
-  const recipientName = order.shippingAddress?.fullName || user?.name || "Gentleman";
+  const recipientName = order.shippingAddress?.fullName || user?.name || "Store";
 
   const content = `
     <h2 style="margin: 0 0 12px; font-size: 22px; color: #DC2626; font-weight: 700;">
