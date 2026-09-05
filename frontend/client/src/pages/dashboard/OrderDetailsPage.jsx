@@ -91,7 +91,9 @@ const OrderDetailsPage = () => {
           <div className="flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between text-stone">
               <span>Payment</span>
-              <span className="capitalize">{order.paymentMethod} · {order.paymentResult?.currency?.toUpperCase() || "INR"}</span>
+              <span className="font-semibold" style={{ color: order.paymentMethod === "cod" ? "var(--green)" : "var(--accent)" }}>
+                {order.paymentMethod === "cod" ? "Cash on Delivery (COD)" : `Online Payment (${order.paymentResult?.currency?.toUpperCase() || "INR"})`}
+              </span>
             </div>
             <div className="flex justify-between text-stone">
               <span>Items</span>
