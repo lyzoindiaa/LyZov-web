@@ -5,6 +5,40 @@
 /* ── Page transition ── */
 .page-enter { animation: fadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* ── Development mode banner ── */
+.development-banner {
+  position: relative;
+  overflow: hidden;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  background: var(--brand);
+  color: var(--ink-inverted);
+  white-space: nowrap;
+}
+.development-banner__track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  animation: developmentMarquee 18s linear infinite;
+}
+.development-banner__track span {
+  display: block;
+  padding-right: 4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@keyframes developmentMarquee {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .development-banner__track { animation: none; justify-content: center; width: 100%; }
+  .development-banner__track span:last-child { display: none; }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
