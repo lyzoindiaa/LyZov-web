@@ -4,6 +4,7 @@ import Footer from "./Footer";
 import MiniCart from "./MiniCart";
 import CollectionHero from "./CollectionHero";
 import AboutLyZov from "./About";
+import DevelopmentBanner from "./DevelopmentBanner";
 import { hasSeenCollectionHero, markCollectionHeroSeen } from "../../utils/collectionHero";
 
 const isCatalogPath = (pathname) => pathname === "/shop" || pathname.startsWith("/product/");
@@ -14,6 +15,7 @@ const PublicLayout = () => {
 
   return (
     <div className="page-shell flex min-h-screen flex-col">
+      <DevelopmentBanner />
       <Navbar />
       <MiniCart />
       {showCollectionHero && <CollectionHero />}
