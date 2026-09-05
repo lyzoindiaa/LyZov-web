@@ -39,6 +39,10 @@ export const userService = {
     api
       .put("/users/profile", formData, { headers: { "Content-Type": "multipart/form-data" } })
       .then((res) => res.data),
+  updateSellerProfile: (formData) =>
+    api
+      .put("/users/seller/profile", formData, { headers: { "Content-Type": "multipart/form-data" } })
+      .then((res) => res.data),
   changePassword: (payload) => api.put("/users/change-password", payload).then((res) => res.data),
   getUsers: (params) => api.get("/users", { params }).then((res) => res.data),
   updateUser: (id, payload) => api.put(`/users/${id}`, payload).then((res) => res.data),

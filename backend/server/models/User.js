@@ -45,6 +45,68 @@ const userSchema = new mongoose.Schema(
     },
     emailVerificationToken: String,
     emailVerificationExpires: Date,
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
+    },
+    phoneVerificationToken: String,
+    phoneVerificationExpires: Date,
+    sellerProfile: {
+      businessName: { type: String, trim: true, default: "" },
+      businessType: {
+        type: String,
+        enum: ["individual", "proprietorship", "partnership", "llp", "private_limited", ""],
+        default: "",
+      },
+      storeBio: { type: String, trim: true, default: "" },
+      panNumber: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: "",
+      },
+      panDocument: {
+        url: { type: String, default: "" },
+        publicId: { type: String, default: "" },
+      },
+      aadhaarNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      aadhaarDocument: {
+        url: { type: String, default: "" },
+        publicId: { type: String, default: "" },
+      },
+      gstNumber: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: "",
+      },
+      businessAddress: {
+        addressLine1: { type: String, default: "" },
+        addressLine2: { type: String, default: "" },
+        city: { type: String, default: "" },
+        state: { type: String, default: "" },
+        postalCode: { type: String, default: "" },
+        country: { type: String, default: "India" },
+      },
+      bankDetails: {
+        accountHolderName: { type: String, default: "" },
+        accountNumber: { type: String, default: "" },
+        ifscCode: { type: String, uppercase: true, default: "" },
+        bankName: { type: String, default: "" },
+      },
+      kycStatus: {
+        type: String,
+        enum: ["pending", "submitted", "verified", "rejected"],
+        default: "pending",
+      },
+      kycSubmittedAt: Date,
+      kycVerifiedAt: Date,
+      kycRejectionReason: { type: String, default: "" },
+    },
     emailPreferences: {
       orderUpdates: { type: Boolean, default: true },
       promotions: { type: Boolean, default: false },

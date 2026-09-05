@@ -41,6 +41,7 @@ import AdminBrandsPage from "./pages/admin/AdminBrandsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
 import AdminEmailsPage from "./pages/admin/AdminEmailsPage";
+import AdminProfilePage from "./pages/admin/AdminProfilePage";
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
@@ -157,6 +158,7 @@ function App() {
           <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
           <Route path="emails" element={<AdminEmailsPage />} />
         </Route>
 
