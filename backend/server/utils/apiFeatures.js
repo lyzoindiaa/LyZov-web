@@ -18,7 +18,10 @@ class ApiFeatures {
     const excludedFields = ["page", "sort", "limit", "fields", "search"];
     excludedFields.forEach((field) => delete queryObj[field]);
 
-    if (queryObj.category) queryObj.category = queryObj.category;
+    if (queryObj.category) {
+      queryObj.categoryPath = queryObj.category;
+      delete queryObj.category;
+    }
     if (queryObj.brand) queryObj.brand = queryObj.brand;
 
     if (queryObj.minPrice || queryObj.maxPrice) {

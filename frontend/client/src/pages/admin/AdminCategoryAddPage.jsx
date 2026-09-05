@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { categoryService } from "../../services/categoryService";
 import CategoryForm from "../../components/admin/CategoryForm";
 
 const AdminCategoryAddPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialParent = searchParams.get("parent") || "";
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (payload) => {
@@ -30,6 +32,7 @@ const AdminCategoryAddPage = () => {
     <div className="container-page py-8">
       <CategoryForm
         category={null}
+        initialParent={initialParent}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isLoading={isLoading}

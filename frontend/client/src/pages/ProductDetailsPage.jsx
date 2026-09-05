@@ -210,8 +210,34 @@ const ProductDetailsPage = () => {
               <Link to="/shop" style={{ color: "var(--ink-muted)", textDecoration: "none", fontWeight: 500 }} onMouseEnter={(e) => e.target.style.color = "var(--ink)"} onMouseLeave={(e) => e.target.style.color = "var(--ink-muted)"}>
                 Shop
               </Link>
+              {product.category?.ancestors?.map((anc) => (
+                <span key={anc._id} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                  <ChevronRight size={12} style={{ color: "var(--ink-subtle)" }} />
+                  <Link
+                    to={`/shop?category=${encodeURIComponent(anc.slug || anc._id)}`}
+                    style={{ color: "var(--ink-muted)", textDecoration: "none", fontWeight: 500 }}
+                    onMouseEnter={(e) => (e.target.style.color = "var(--ink)")}
+                    onMouseLeave={(e) => (e.target.style.color = "var(--ink-muted)")}
+                  >
+                    {anc.name}
+                  </Link>
+                </span>
+              ))}
+              {product.category && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                  <ChevronRight size={12} style={{ color: "var(--ink-subtle)" }} />
+                  <Link
+                    to={`/shop?category=${encodeURIComponent(product.category.slug || product.category._id)}`}
+                    style={{ color: "var(--ink-muted)", textDecoration: "none", fontWeight: 500 }}
+                    onMouseEnter={(e) => (e.target.style.color = "var(--ink)")}
+                    onMouseLeave={(e) => (e.target.style.color = "var(--ink-muted)")}
+                  >
+                    {product.category.name}
+                  </Link>
+                </span>
+              )}
               <ChevronRight size={12} style={{ color: "var(--ink-subtle)" }} />
-              <span style={{ color: "var(--ink)", fontWeight: 700 }}>{product.title || product.name}</span>
+              <span style={{ color: "var(--ink)", fontWeight: 700 }} className="max-w-[200px] sm:max-w-xs truncate">{product.title || product.name}</span>
             </nav>
           </div>
 

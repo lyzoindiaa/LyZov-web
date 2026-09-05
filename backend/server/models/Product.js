@@ -45,6 +45,12 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: [true, "Category is required"],
     },
+    categoryPath: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+      },
+    ],
     images: [
       {
         url: { type: String, required: true },
@@ -141,6 +147,7 @@ productSchema.set("toObject", { virtuals: true });
 
 productSchema.index({ title: "text", description: "text", tags: "text" });
 productSchema.index({ category: 1 });
+productSchema.index({ categoryPath: 1 });
 productSchema.index({ brand: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ isFeatured: 1, isNewArrival: 1, isTrending: 1 });

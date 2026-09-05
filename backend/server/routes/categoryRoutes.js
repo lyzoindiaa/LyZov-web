@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getCategories,
+  getCategoryTree,
   getCategoryBySlug,
   createCategory,
   updateCategory,
@@ -14,6 +15,7 @@ const validate = require("../middleware/validateMiddleware");
 const router = express.Router();
 
 router.get("/", getCategories);
+router.get("/tree", getCategoryTree);
 router.get("/:slug", getCategoryBySlug);
 
 router.post(

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -64,6 +64,26 @@ const Navbar = () => {
 
   const catRef = useRef(null);
   const userRef = useRef(null);
+
+  const categoryTree = useMemo(() => {
+    const l1 = categories.filter((c) => (c.level || 1) === 1);
+    const getChildren = (parentId) =>
+      categories.filter((c) => {
+        const p = c.parent?._id ? c.parent._id.toString() : c.parent ? c.parent.toString() : "";
+        return p === parentId.toString();
+      });
+
+    return l1.map((root) => {
+      const subcats = getChildren(root._id);
+      return {
+        ...root,
+        children: subcats.map((sub) => ({
+          ...sub,
+          children: getChildren(sub._id),
+        })),
+      };
+    });
+  }, [categories]);
 
   const { isMobileMenuOpen, theme } = useSelector((s) => s.ui);
   const { totalItems } = useSelector((s) => s.cart);
@@ -197,7 +217,7 @@ const Navbar = () => {
                 <Link to="/" className="nav-link-animated">Home</Link>
                 <Link to="/?sort=popular" className="nav-link-animated">Featured</Link>
 
-                {/* Categories Dropdown */}
+                {/* Categories Dropdown & Mega-Menu */}
                 <div style={{ position: "relative" }} ref={catRef}>
                   <button
                     onClick={() => setCatMenuOpen((v) => !v)}
@@ -208,27 +228,130 @@ const Navbar = () => {
                   </button>
 
                   {catMenuOpen && (
-                    <div style={{ position: "absolute", top: "calc(100% + 0.75rem)", left: 0, width: "min(14rem, calc(100vw - 2rem))", borderRadius: "1rem", backgroundColor: "var(--surface)", border: "1px solid var(--border)", padding: "0.5rem", boxShadow: "var(--shadow-lg)", zIndex: 50, animation: "fadeIn 0.18s ease" }}>
-                      <Link to="/shop" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", textDecoration: "none", transition: "background 0.15s" }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-raised)"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
-                      >
-                        <span>All Categories</span>
-                        <Tag size={12} style={{ color: "var(--accent)" }} />
-                      </Link>
-                      <div style={{ borderTop: "1px solid var(--border)", margin: "0.25rem 0" }} />
-                      {categories.length > 0 ? (
-                        categories.map((c) => (
-                          <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.slug || c._id)}`}
-                            style={{ display: "block", padding: "0.5rem 0.75rem", borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--ink-muted)", textDecoration: "none", transition: "all 0.15s" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-raised)"; e.currentTarget.style.color = "var(--ink)"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ""; e.currentTarget.style.color = "var(--ink-muted)"; }}
-                          >
-                            {c.name}
-                          </Link>
-                        ))
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "calc(100% + 0.75rem)",
+                        left: "-6rem",
+                        width: "min(46rem, calc(100vw - 2rem))",
+                        borderRadius: "1.25rem",
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        padding: "1.25rem",
+                        boxShadow: "var(--shadow-xl)",
+                        zIndex: 50,
+                        animation: "fadeIn 0.18s ease",
+                      }}
+                    >
+                      {/* Mega Menu Top Header */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.75rem", borderBottom: "1px solid var(--border)", marginBottom: "1rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <Tag size={15} style={{ color: "var(--accent)" }} />
+                          <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            Store Departments
+                          </span>
+                        </div>
+                        <Link
+                          to="/shop"
+                          onClick={() => setCatMenuOpen(false)}
+                          style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}
+                        >
+                          All Products →
+                        </Link>
+                      </div>
+
+                      {/* Mega Menu Columns */}
+                      {categoryTree.length > 0 ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: `repeat(${Math.min(Math.max(categoryTree.length, 1), 4)}, minmax(0, 1fr))`,
+                            gap: "1.25rem",
+                          }}
+                        >
+                          {categoryTree.map((root) => (
+                            <div key={root._id} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                              {/* Level 1 Category Header */}
+                              <Link
+                                to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                                onClick={() => setCatMenuOpen(false)}
+                                style={{
+                                  fontSize: "0.875rem",
+                                  fontWeight: 700,
+                                  color: "var(--ink)",
+                                  textDecoration: "none",
+                                  paddingBottom: "0.35rem",
+                                  borderBottom: "1.5px solid var(--border)",
+                                  transition: "color 0.15s",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink)")}
+                              >
+                                {root.name}
+                              </Link>
+
+                              {/* Subcategories (L2) and Items (L3) */}
+                              {root.children && root.children.length > 0 ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                                  {root.children.map((sub) => (
+                                    <div key={sub._id} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                      <Link
+                                        to={`/shop?category=${encodeURIComponent(sub.slug || sub._id)}`}
+                                        onClick={() => setCatMenuOpen(false)}
+                                        style={{
+                                          fontSize: "0.75rem",
+                                          fontWeight: 600,
+                                          color: "var(--ink-muted)",
+                                          textDecoration: "none",
+                                          transition: "color 0.15s",
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-muted)")}
+                                      >
+                                        {sub.name}
+                                      </Link>
+
+                                      {/* Level 3 Items */}
+                                      {sub.children && sub.children.length > 0 && (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", paddingLeft: "0.5rem" }}>
+                                          {sub.children.slice(0, 4).map((item) => (
+                                            <Link
+                                              key={item._id}
+                                              to={`/shop?category=${encodeURIComponent(item.slug || item._id)}`}
+                                              onClick={() => setCatMenuOpen(false)}
+                                              style={{
+                                                fontSize: "0.6875rem",
+                                                color: "var(--ink-subtle)",
+                                                textDecoration: "none",
+                                                transition: "color 0.15s",
+                                              }}
+                                              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
+                                              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-subtle)")}
+                                            >
+                                              • {item.name}
+                                            </Link>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <Link
+                                  to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                                  onClick={() => setCatMenuOpen(false)}
+                                  style={{ fontSize: "0.6875rem", color: "var(--ink-subtle)", textDecoration: "none" }}
+                                >
+                                  Browse collection
+                                </Link>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       ) : (
-                        <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.75rem", color: "var(--ink-subtle)" }}>No categories yet</div>
+                        <div style={{ padding: "1rem", textAlign: "center", fontSize: "0.75rem", color: "var(--ink-subtle)" }}>
+                          No categories found
+                        </div>
                       )}
                     </div>
                   )}
@@ -462,26 +585,70 @@ const Navbar = () => {
                 <MobileNavLink to="/shop" accent>All Products Catalog</MobileNavLink>
 
                 {/* Mobile Categories Accordion/Links */}
-                {categories.length > 0 && (
-                  <div style={{ margin: "0.5rem 0", padding: "0.5rem 0.75rem", backgroundColor: "var(--bg-subtle)", borderRadius: "0.75rem", border: "1px solid var(--border)" }}>
-                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-subtle)", marginBottom: "0.35rem" }}>
-                      Shop by Category
+                {categoryTree.length > 0 && (
+                  <div style={{ margin: "0.5rem 0", padding: "0.75rem", backgroundColor: "var(--bg-subtle)", borderRadius: "0.875rem", border: "1px solid var(--border)" }}>
+                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-subtle)", marginBottom: "0.5rem" }}>
+                      Departments & Categories
                     </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                      {categories.map((c) => (
-                        <Link
-                          key={c._id}
-                          to={`/shop?category=${c._id}`}
-                          style={{
-                            fontSize: "0.8125rem",
-                            fontWeight: 500,
-                            color: "var(--ink-muted)",
-                            padding: "0.35rem 0.25rem",
-                            textDecoration: "none",
-                          }}
-                        >
-                          • {c.name}
-                        </Link>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      {categoryTree.map((root) => (
+                        <div key={root._id} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                          <Link
+                            to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                            onClick={() => dispatch(closeMobileMenu())}
+                            style={{
+                              fontSize: "0.8125rem",
+                              fontWeight: 700,
+                              color: "var(--ink)",
+                              padding: "0.2rem 0",
+                              textDecoration: "none",
+                            }}
+                          >
+                            📁 {root.name}
+                          </Link>
+
+                          {root.children && root.children.length > 0 && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", paddingLeft: "0.75rem", borderLeft: "1.5px solid var(--border)", marginLeft: "0.25rem" }}>
+                              {root.children.map((sub) => (
+                                <div key={sub._id} style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+                                  <Link
+                                    to={`/shop?category=${encodeURIComponent(sub.slug || sub._id)}`}
+                                    onClick={() => dispatch(closeMobileMenu())}
+                                    style={{
+                                      fontSize: "0.75rem",
+                                      fontWeight: 600,
+                                      color: "var(--ink-muted)",
+                                      textDecoration: "none",
+                                      padding: "0.15rem 0",
+                                    }}
+                                  >
+                                    ↳ {sub.name}
+                                  </Link>
+
+                                  {sub.children && sub.children.length > 0 && (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem", paddingLeft: "0.5rem" }}>
+                                      {sub.children.map((item) => (
+                                        <Link
+                                          key={item._id}
+                                          to={`/shop?category=${encodeURIComponent(item.slug || item._id)}`}
+                                          onClick={() => dispatch(closeMobileMenu())}
+                                          style={{
+                                            fontSize: "0.6875rem",
+                                            color: "var(--ink-subtle)",
+                                            textDecoration: "none",
+                                            padding: "0.1rem 0",
+                                          }}
+                                        >
+                                          • {item.name}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

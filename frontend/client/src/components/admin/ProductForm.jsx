@@ -19,6 +19,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   const [showCropper, setShowCropper] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Multi-level category hierarchy states
+  const [selectedL1, setSelectedL1] = useState("");
+  const [selectedL2, setSelectedL2] = useState("");
+  const [selectedL3, setSelectedL3] = useState("");
+
   // Quick Add Brand Inline State
   const [showQuickBrand, setShowQuickBrand] = useState(false);
   const [newBrandName, setNewBrandName] = useState("");
@@ -33,13 +38,79 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   } = useForm();
 
   const loadDropdowns = () => {
-    categoryService.getCategories().then((res) => setCategories(res.data || [])).catch(() => { });
+    categoryService.getCategories({ includeInactive: true }).then((res) => setCategories(res.data || [])).catch(() => { });
     brandService.getBrands().then((res) => setBrands(res.data || [])).catch(() => { });
   };
 
   useEffect(() => {
     loadDropdowns();
   }, []);
+
+  // Sync category cascading levels when editing or categories loaded
+  useEffect(() => {
+    if (!product || categories.length === 0) return;
+    const catId = product.category?._id || product.category;
+    if (!catId) return;
+
+    const catDoc = categories.find((c) => c._id === catId);
+    if (!catDoc) {
+      setSelectedL1(catId);
+      return;
+    }
+
+    if (catDoc.level === 3) {
+      setSelectedL3(catDoc._id);
+      const parentId = catDoc.parent?._id || catDoc.parent;
+      setSelectedL2(parentId || "");
+      const rootId = catDoc.ancestors?.[0]?._id;
+      setSelectedL1(rootId || "");
+    } else if (catDoc.level === 2) {
+      setSelectedL3("");
+      setSelectedL2(catDoc._id);
+      const rootId = catDoc.parent?._id || catDoc.parent || catDoc.ancestors?.[0]?._id;
+      setSelectedL1(rootId || "");
+    } else {
+      setSelectedL3("");
+      setSelectedL2("");
+      setSelectedL1(catDoc._id);
+    }
+  }, [product, categories]);
+
+  const handleL1Change = (e) => {
+    const val = e.target.value;
+    setSelectedL1(val);
+    setSelectedL2("");
+    setSelectedL3("");
+    setValue("category", val, { shouldValidate: true });
+  };
+
+  const handleL2Change = (e) => {
+    const val = e.target.value;
+    setSelectedL2(val);
+    setSelectedL3("");
+    setValue("category", val || selectedL1, { shouldValidate: true });
+  };
+
+  const handleL3Change = (e) => {
+    const val = e.target.value;
+    setSelectedL3(val);
+    setValue("category", val || selectedL2 || selectedL1, { shouldValidate: true });
+  };
+
+  const l1Categories = categories.filter((c) => (c.level || 1) === 1);
+  const l2Categories = categories.filter((c) => {
+    const pId = c.parent?._id ? c.parent._id.toString() : c.parent ? c.parent.toString() : "";
+    return (c.level || 1) === 2 && pId === selectedL1;
+  });
+  const l3Categories = categories.filter((c) => {
+    const pId = c.parent?._id ? c.parent._id.toString() : c.parent ? c.parent.toString() : "";
+    return (c.level || 1) === 3 && pId === selectedL2;
+  });
+
+  const selectedCategoryDoc = categories.find((c) => {
+    const currentId = selectedL3 || selectedL2 || selectedL1;
+    return c._id === currentId;
+  });
 
   useEffect(() => {
     if (product) {
@@ -290,27 +361,113 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
         <Input label="Short Description" className="sm:col-span-2" {...register("shortDescription")} />
 
-        {/* Category */}
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-            Category <span className="text-[var(--red)]">*</span>
-          </label>
-          <select
-            className={`input-field ${errors.category
-                ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
-                : ""
-              }`}
-            {...register("category", { required: "Category is required" })}
-          >
-            <option value="">Select category</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+        {/* Multi-Level Category Selection */}
+        <div className="sm:col-span-2 rounded-xl border border-hairline bg-cream/10 p-4 dark:border-hairline-dark dark:bg-charcoal/30">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1.5">
+              Category Hierarchy <span className="text-[var(--red)]">*</span>
+            </label>
+            {selectedCategoryDoc && (
+              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20">
+                Level {selectedCategoryDoc.level || 1}: {selectedCategoryDoc.name}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Step 1: Main Category */}
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-stone">
+                1. Main Category (L1)
+              </label>
+              <select
+                value={selectedL1}
+                onChange={handleL1Change}
+                className={`input-field text-xs ${
+                  errors.category && !selectedL1 ? "!border-[var(--red)] !bg-[var(--red-bg)]" : ""
+                }`}
+              >
+                <option value="">Select Main Category</option>
+                {l1Categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    📁 {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Step 2: Subcategory */}
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-stone">
+                2. Subcategory (L2)
+              </label>
+              <select
+                value={selectedL2}
+                onChange={handleL2Change}
+                disabled={!selectedL1 || l2Categories.length === 0}
+                className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {!selectedL1
+                    ? "Select Category (L1) first"
+                    : l2Categories.length === 0
+                    ? "No Subcategories"
+                    : "Select Subcategory"}
+                </option>
+                {l2Categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    ↳ {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Step 3: Item Type */}
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-stone">
+                3. Item Type (L3)
+              </label>
+              <select
+                value={selectedL3}
+                onChange={handleL3Change}
+                disabled={!selectedL2 || l3Categories.length === 0}
+                className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {!selectedL2
+                    ? "Select Subcategory (L2) first"
+                    : l3Categories.length === 0
+                    ? "No Item Types"
+                    : "Select Item Type"}
+                </option>
+                {l3Categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    • {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <input type="hidden" {...register("category", { required: "Category is required" })} />
+
+          {/* Active Breadcrumb Path */}
+          {selectedCategoryDoc && (
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
+              <span className="font-semibold text-ink dark:text-cream">Assigned Hierarchy:</span>
+              <span>
+                {(selectedCategoryDoc.ancestors || []).map((a) => (
+                  <span key={a._id} className="text-stone font-normal">
+                    {a.name} &gt;{" "}
+                  </span>
+                ))}
+                <span className="font-semibold text-[var(--accent)]">{selectedCategoryDoc.name}</span>
+              </span>
+            </div>
+          )}
+
           {errors.category && (
-            <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-1">
+            <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-2">
               <AlertCircle size={12} className="shrink-0" />
               <span>{errors.category.message}</span>
             </p>
