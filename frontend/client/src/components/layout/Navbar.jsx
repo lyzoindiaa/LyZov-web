@@ -98,18 +98,10 @@ const Navbar = () => {
     dispatch(closeMobileMenu());
   }, [location.pathname]);
 
+  // Live-draft sync — no auto-navigate; submit is handled explicitly
   useEffect(() => {
-    const trimmedSearch = searchTerm.trim();
-    if (!trimmedSearch) return undefined;
-
-    const timer = window.setTimeout(() => {
-      navigate(`/?search=${encodeURIComponent(trimmedSearch)}`);
-      dispatch(setSearchDraft(""));
-      setSearchOpen(false);
-    }, 2000);
-
-    return () => window.clearTimeout(timer);
-  }, [searchTerm, navigate, dispatch]);
+    dispatch(setSearchDraft(searchTerm.trim()));
+  }, [searchTerm, dispatch]);
 
   useEffect(() => {
     const h = (e) => {
@@ -122,8 +114,9 @@ const Navbar = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchTerm.trim())}`);
+    const q = searchTerm.trim();
+    if (q) {
+      navigate(`/shop?search=${encodeURIComponent(q)}`);
       dispatch(setSearchDraft(""));
       setSearchOpen(false);
       setSearchTerm("");
@@ -138,7 +131,13 @@ const Navbar = () => {
   const clearSearch = () => {
     setSearchTerm("");
     dispatch(setSearchDraft(""));
-    if (location.search.includes("search=")) navigate("/", { replace: true });
+    // If on shop page with an active search param, strip it
+    if (location.search.includes("search=")) {
+      const next = new URLSearchParams(location.search);
+      next.delete("search");
+      const qs = next.toString();
+      navigate(location.pathname + (qs ? `?${qs}` : ""), { replace: true });
+    }
   };
 
   const handleCartClick = () => {

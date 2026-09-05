@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { SlidersHorizontal, X, ArrowUpDown, Sparkles } from "lucide-react";
 import { useSelector } from "react-redux";
 import Hero from "../components/layout/Hero";
@@ -18,6 +18,7 @@ const sortOptions = [
 
 const LandingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -36,6 +37,15 @@ const LandingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filtersKey, inStockOnly]
   );
+
+  // Redirect legacy /?search=... links to /shop so the Hero is never hidden on the home page
+  useEffect(() => {
+    if (filters.search) {
+      const shopParams = new URLSearchParams(searchParams);
+      navigate(`/shop?${shopParams.toString()}`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search]);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -118,7 +128,8 @@ const LandingPage = () => {
   };
 
   const hasActiveFilters = filters.category || filters.search || filters.minPrice || inStockOnly;
-  const showHero = !filters.search && !searchDraft;
+  // Hide hero whenever there's an active search, category, or searchDraft in progress
+  const showHero = !filters.search && !filters.category && !searchDraft;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
