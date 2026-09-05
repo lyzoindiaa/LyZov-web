@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   ClipboardList, HeartHandshake, UserCircle2, MapPinned,
   LogOut, ShoppingBag, ArrowRight, Package, Heart, Star,
+  Mail,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -12,6 +13,7 @@ const navItems = [
   { label: "Wishlist", to: "/dashboard/wishlist", icon: HeartHandshake },
   { label: "Profile", to: "/dashboard/profile", icon: UserCircle2 },
   { label: "Addresses", to: "/dashboard/addresses", icon: MapPinned },
+  { label: "Help & Support", to: "/dashboard/support", icon: Mail },
 ];
 
 /* ── Avatar placeholder from initials ── */
@@ -165,6 +167,7 @@ const DashboardLayout = () => {
             { label: "My Orders", sub: "Track your deliveries", icon: Package, to: "/dashboard/orders", color: "var(--blue)" },
             { label: "Wishlist", sub: `${wishlist.length} saved items`, icon: Heart, to: "/dashboard/wishlist", color: "var(--red)" },
             { label: "Profile", sub: "Update your details", icon: UserCircle2, to: "/dashboard/profile", color: "var(--green)" },
+            { label: "Send Email / Help", sub: "Contact concierge support", icon: Mail, to: "/dashboard/support", color: "#D4AF37" },
           ].map(({ label, sub, icon: Icon, to, color }) => (
             <Link
               key={to}

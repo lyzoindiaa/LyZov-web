@@ -5,6 +5,7 @@ import { orderService } from "../../services/cartService";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
+import { Mail } from "lucide-react";
 
 const statusTones = {
   pending: "warning",
@@ -126,9 +127,30 @@ const OrderDetailsPage = () => {
         </Button>
       )}
 
-      <Link to="/dashboard/orders" className="text-sm text-stone underline-offset-2 hover:underline">
-        &larr; Back to Orders
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+        <Link to="/dashboard/orders" className="text-sm text-stone underline-offset-2 hover:underline">
+          &larr; Back to Orders
+        </Link>
+        <Link
+          to={`/dashboard/support?subject=${encodeURIComponent(`Inquiry regarding Order #${order.orderNumber}`)}&category=Order Tracking & Delivery`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.5rem 1rem",
+            borderRadius: "0.75rem",
+            backgroundColor: "var(--accent-bg)",
+            color: "var(--accent)",
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            textDecoration: "none",
+            transition: "all 0.2s",
+          }}
+        >
+          <Mail size={15} />
+          <span>Need Help? Email Support</span>
+        </Link>
+      </div>
     </div>
   );
 };

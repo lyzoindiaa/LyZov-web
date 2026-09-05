@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const User = require("../models/User");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
@@ -7,6 +8,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const stripe = require("../config/stripe");
+const emailService = require("../services/emailService");
 
 const TAX_RATE = 0.08;
 const FREE_SHIPPING_THRESHOLD = 100;
@@ -160,6 +162,14 @@ const createOrder = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   });
 
+  // Non-blocking luxury email dispatches
+  emailService.sendOrderConfirmation({ order, user: req.user }).catch((err) =>
+    console.error("[EmailService] Order confirmation email error:", err.message)
+  );
+  emailService.sendSellerNewOrder({ order, user: req.user }).catch((err) =>
+    console.error("[EmailService] Seller order alert error:", err.message)
+  );
+
   return sendSuccess(res, 201, "Order placed successfully", order);
 });
 
@@ -237,6 +247,15 @@ const cancelOrder = asyncHandler(async (req, res) => {
   order.cancelReason = req.body.reason || "Cancelled by customer";
   await order.save();
 
+  // Non-blocking cancellation email to customer
+  User.findById(order.user).then((customer) => {
+    if (customer) {
+      emailService.sendOrderCancelled({ order, user: customer, reason: order.cancelReason }).catch((err) =>
+        console.error("[EmailService] Order cancellation email error:", err.message)
+      );
+    }
+  }).catch(() => {});
+
   return sendSuccess(res, 200, "Order cancelled successfully", order);
 });
 
@@ -312,6 +331,23 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     type: "order",
     link: `/dashboard/orders/${order._id}`,
   });
+
+  // Non-blocking status update email to customer
+  if (status) {
+    User.findById(order.user).then((customer) => {
+      if (customer) {
+        emailService.sendOrderStatusUpdate({
+          order,
+          user: customer,
+          newStatus: status,
+          note,
+          trackingNumber,
+        }).catch((err) =>
+          console.error("[EmailService] Order status update email error:", err.message)
+        );
+      }
+    }).catch(() => {});
+  }
 
   return sendSuccess(res, 200, "Order status updated successfully", order);
 });

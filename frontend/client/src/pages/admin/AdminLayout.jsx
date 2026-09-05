@@ -13,7 +13,8 @@ import {
   ShieldAlert,
   ChevronRight,
   Menu,
-  X
+  X,
+  Mail
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Award },
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },
+  { label: "Email Logs", to: "/seller/emails", icon: Mail },
 ];
 
 const AdminLayout = () => {
@@ -43,6 +45,7 @@ const AdminLayout = () => {
   else if (currentPath.includes("/categories")) activeTitle = "Categories Management";
   else if (currentPath.includes("/brands")) activeTitle = "Brands Management";
   else if (currentPath.includes("/orders")) activeTitle = "Orders Management";
+  else if (currentPath.includes("/emails")) activeTitle = "Email Communications";
 
   // Keyboard navigation: Alt + Left Arrow to go back
   useEffect(() => {

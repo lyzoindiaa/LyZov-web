@@ -22,9 +22,9 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const userRoutes = require("./routes/userRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoute");
-
 const emailRoutes = require("./routes/emailSenderRoute");
-
+const supportRoutes = require("./routes/supportRoutes");
+const sellerEmailRoutes = require("./routes/sellerEmailRoutes");
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -84,6 +84,9 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/email", emailRoutes);
+app.use("/api/support", supportRoutes);
+app.use("/api/seller/emails", sellerEmailRoutes);
+app.use("/api/admin/emails", sellerEmailRoutes);
 
 // ── Serve Frontend ──
 const frontendDist = path.join(__dirname, "../../frontend/client/dist");

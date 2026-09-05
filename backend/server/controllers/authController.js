@@ -1,11 +1,11 @@
-﻿const crypto = require("crypto");
+const crypto = require("crypto");
 const User = require("../models/User");
 const Cart = require("../models/Cart");
 const Wishlist = require("../models/Wishlist");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
-const sendEmail = require("../utils/sendEmail");
+const emailService = require("../services/emailService");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -33,22 +33,11 @@ const register = asyncHandler(async (req, res) => {
   const verificationToken = user.generateEmailVerificationToken();
   await user.save({ validateBeforeSave: false });
 
-  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const verifyUrl = `${clientUrl}/verify-email/${verificationToken}`;
 
-  try {
-    await sendEmail({
-      to: user.email,
-      subject: "Welcome to LyZov â€” Verify your email",
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;">
-        <h2>Welcome to LyZov, ${user.name}!</h2>
-        <p>Please verify your email address to activate your account.</p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">Verify Email</a>
-        <p>This link expires in 24 hours.</p>
-      </div>`,
-    });
-  } catch (err) {
-    console.error("Failed to send verification email:", err.message);
-  }
+  // Dispatch branded luxury welcome & verification email
+  await emailService.sendWelcomeVerification({ user, verifyUrl });
 
   const accessToken = generateAccessToken(user._id, user.role);
   const refreshToken = generateRefreshToken(user._id);
@@ -181,7 +170,39 @@ const verifyEmail = asyncHandler(async (req, res) => {
   user.emailVerificationExpires = undefined;
   await user.save({ validateBeforeSave: false });
 
+  // Dispatch confirmation email
+  await emailService.sendVerificationSuccess({ user });
+
   return sendSuccess(res, 200, "Email verified successfully");
+});
+
+// @desc    Resend verification email
+// @route   POST /api/auth/resend-verification
+// @access  Public / Private
+const resendVerification = asyncHandler(async (req, res) => {
+  const email = req.body.email || req.user?.email;
+  if (!email) {
+    throw ApiError.badRequest("Email is required to resend verification");
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return sendSuccess(res, 200, "If an account with that email exists, a verification link has been sent.");
+  }
+
+  if (user.isEmailVerified) {
+    return sendSuccess(res, 200, "Your email is already verified.");
+  }
+
+  const verificationToken = user.generateEmailVerificationToken();
+  await user.save({ validateBeforeSave: false });
+
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const verifyUrl = `${clientUrl}/verify-email/${verificationToken}`;
+
+  await emailService.sendWelcomeVerification({ user, verifyUrl });
+
+  return sendSuccess(res, 200, "Verification email has been sent. Please check your inbox.");
 });
 
 // @desc    Forgot password - send reset link
@@ -198,18 +219,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const resetToken = user.generatePasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
   try {
-    await sendEmail({
-      to: user.email,
-      subject: "LyZov â€” Password Reset Request",
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;">
-        <h2>Reset your password</h2>
-        <p>Click the link below to reset your password. This link expires in 15 minutes.</p>
-        <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">Reset Password</a>
-      </div>`,
-    });
+    await emailService.sendPasswordReset({ user, resetUrl });
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
@@ -241,6 +255,9 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.refreshTokens = [];
   await user.save();
 
+  // Send confirmation notice
+  await emailService.sendPasswordResetSuccess({ user });
+
   return sendSuccess(res, 200, "Password reset successful. Please log in.");
 });
 
@@ -257,6 +274,7 @@ module.exports = {
   refresh,
   logout,
   verifyEmail,
+  resendVerification,
   forgotPassword,
   resetPassword,
   getMe,

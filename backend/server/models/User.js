@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
     },
     emailVerificationToken: String,
     emailVerificationExpires: Date,
+    emailPreferences: {
+      orderUpdates: { type: Boolean, default: true },
+      promotions: { type: Boolean, default: false },
+    },
     passwordResetToken: String,
     passwordResetExpires: Date,
     refreshTokens: [
