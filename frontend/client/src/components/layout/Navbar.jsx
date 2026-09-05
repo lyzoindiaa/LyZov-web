@@ -13,6 +13,7 @@ import { categoryService } from "../../services/categoryService";
 import ThemeToggle from "../ui/ThemeToggle";
 import Logo from "../ui/Logo";
 import { toast } from "react-toastify";
+import { markCollectionHeroSeen } from "../../utils/collectionHero";
 
 /* ── Helper sub-components ─────────────────────────────────── */
 const DropItem = ({ to, icon: Icon, children, accent }) => (
@@ -136,6 +137,7 @@ const Navbar = () => {
     e.preventDefault();
     const q = searchTerm.trim();
     if (q) {
+      markCollectionHeroSeen();
       navigate(`/shop?search=${encodeURIComponent(q)}`);
       dispatch(setSearchDraft(""));
       setSearchOpen(false);
