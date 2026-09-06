@@ -4,9 +4,9 @@
   "description": "LyZov Gentlemen Fullstack E-Commerce Platform",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix backend/server && npm install --prefix frontend/client",
+    "install:all": "npm install --prefix backend/server && npm install --include=dev --prefix frontend/client",
     "build:client": "npm run build --prefix frontend/client",
-    "build": "npm install --prefix backend/server && npm install --prefix frontend/client && npm run build --prefix frontend/client",
+    "build": "npm install --prefix backend/server && npm install --include=dev --prefix frontend/client && npm run build --prefix frontend/client",
     "start": "node backend/server/server.js"
   }
 }
