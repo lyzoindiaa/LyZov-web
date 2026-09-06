@@ -6,9 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 const app = require("./app");
 const connectDB = require("./config/db");
 
-
-
-
+// Render provides PORT at runtime; local development falls back to 5000.
 const PORT = process.env.PORT || 5000;
 
 process.on("uncaughtException", (err) => {
