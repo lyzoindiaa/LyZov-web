@@ -275,6 +275,13 @@ const RegisterPage = () => {
               Account creation will happen through Google sign-in.
             </p>
           </div>
+
+          <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
+            Already have an account?{" "}
+            <Link to="/login" style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </div>

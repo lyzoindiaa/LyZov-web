@@ -26,6 +26,34 @@ const getGoogleRedirectUri = () =>
 
 const getFrontendUrl = () => process.env.CLIENT_URL || "http://localhost:5173";
 
+const createGoogleOAuthState = () => {
+  const payload = Buffer.from(JSON.stringify({
+    nonce: crypto.randomBytes(24).toString("hex"),
+    createdAt: Date.now(),
+  })).toString("base64url");
+  const signature = crypto.createHmac("sha256", process.env.COOKIE_SECRET).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+};
+
+const isValidGoogleOAuthState = (state) => {
+  try {
+    const [payload, signature] = state.split(".");
+    if (!payload || !signature) return false;
+
+    const expectedSignature = crypto.createHmac("sha256", process.env.COOKIE_SECRET).update(payload).digest("base64url");
+    const signaturesMatch = crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    );
+    if (!signaturesMatch) return false;
+
+    const { createdAt } = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return Date.now() - createdAt <= 10 * 60 * 1000;
+  } catch {
+    return false;
+  }
+};
+
 const createSession = async (res, user) => {
   const accessToken = generateAccessToken(user._id, user.role);
   const refreshToken = generateRefreshToken(user._id);
@@ -45,13 +73,7 @@ const googleLogin = asyncHandler(async (req, res) => {
     throw ApiError.internal("Google authentication is not configured");
   }
 
-  const state = crypto.randomBytes(32).toString("hex");
-  res.cookie("googleOAuthState", state, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 10 * 60 * 1000,
-  });
+  const state = createGoogleOAuthState();
 
   const authorizationUrl = googleClient.generateAuthUrl({
     access_type: "offline",
@@ -76,11 +98,9 @@ const googleCallback = async (req, res) => {
 
   try {
     if (req.query.error) return redirectToLogin("consent_denied");
-    if (!req.query.code || !req.query.state || req.query.state !== req.cookies?.googleOAuthState) {
+    if (!req.query.code || !req.query.state || !isValidGoogleOAuthState(req.query.state)) {
       return redirectToLogin("invalid_oauth_state");
     }
-
-    res.clearCookie("googleOAuthState");
 
     const { tokens } = await googleClient.getToken({
       code: req.query.code,
