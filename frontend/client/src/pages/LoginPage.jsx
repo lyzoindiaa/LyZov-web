@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthError } from "../features/auth/authSlice";
@@ -18,6 +18,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const [googleError, setGoogleError] = useState("");
   // Capture location once on mount — never re-read it so navigate() doesn't
   // re-trigger this effect and cause a redirect loop.
   const fromRef = useRef(location.state?.from?.pathname || null);
@@ -33,6 +34,23 @@ const LoginPage = () => {
   useEffect(() => {
     return () => dispatch(clearAuthError());
   }, [dispatch]);
+
+  useEffect(() => {
+    const error = new URLSearchParams(location.search).get("google_error");
+    if (!error) return;
+
+    const messages = {
+      invalid_oauth_state: "Your Google sign-in session expired. Please try again.",
+      consent_denied: "Google sign-in was cancelled. Please try again when you are ready.",
+      unverified_google_account: "Google could not verify this account. Please use a verified Google account.",
+      account_conflict: "This Google account is linked to a different user account. Please contact support.",
+      account_deactivated: "This account is deactivated. Please contact support.",
+      google_auth_failed: "Google sign-in could not be completed. Please try again.",
+    };
+
+    setGoogleError(messages[error] || "Google sign-in could not be completed. Please try again.");
+    navigate("/login", { replace: true });
+  }, [location.search, navigate]);
 
   const startGoogleLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -280,6 +298,24 @@ const LoginPage = () => {
               textAlign: "center",
             }}
           >
+            {googleError && (
+              <div
+                role="alert"
+                style={{
+                  marginBottom: "1rem",
+                  padding: "0.75rem 0.875rem",
+                  borderRadius: "0.625rem",
+                  backgroundColor: "var(--red-bg)",
+                  border: "1px solid var(--red)",
+                  color: "var(--red)",
+                  fontSize: "0.8125rem",
+                  lineHeight: 1.5,
+                  textAlign: "left",
+                }}
+              >
+                {googleError}
+              </div>
+            )}
             <div style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
               <button
                 type="button"
