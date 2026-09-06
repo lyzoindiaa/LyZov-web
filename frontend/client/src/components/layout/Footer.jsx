@@ -37,7 +37,7 @@ const footerColumns = [
       { label: "My Orders", to: "/dashboard/orders" },
       { label: "Wishlist", to: "/dashboard/wishlist" },
       { label: "Saved Addresses", to: "/dashboard/addresses" },
-      { label: "Sign In", to: "/login" },
+      // Sign-in link is temporarily hidden while Google-only authentication is integrated.
     ],
   },
 ];

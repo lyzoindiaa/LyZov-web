@@ -514,6 +514,8 @@ const Navbar = () => {
                 )}
               </>
             ) : (
+              /* Temporarily hidden while Google-only authentication is integrated. */
+              /*
               <Link
                 to="/login"
                 style={{
@@ -536,6 +538,8 @@ const Navbar = () => {
               >
                 <User size={14} style={{ color: "var(--accent)" }} /> Login
               </Link>
+              */
+              null
             )}
           </div>
         </div>

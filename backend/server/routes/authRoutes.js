@@ -3,6 +3,8 @@ const rateLimit = require("express-rate-limit");
 const {
   register,
   login,
+  googleLogin,
+  googleCallback,
   refresh,
   logout,
   verifyEmail,
@@ -32,6 +34,8 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, registerValidator, validate, register);
 router.post("/login", authLimiter, loginValidator, validate, login);
+router.get("/google", googleLogin);
+router.get("/google/callback", googleCallback);
 router.post("/refresh", refresh);
 router.post("/logout", protect, logout);
 router.get("/verify-email/:token", verifyEmail);

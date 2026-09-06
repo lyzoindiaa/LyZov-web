@@ -1,11 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useForm } from "react-hook-form";
-import { loginUser, clearAuthError } from "../features/auth/authSlice";
-import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, Mail, Lock } from "lucide-react";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import { clearAuthError } from "../features/auth/authSlice";
+import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft } from "lucide-react";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
 
@@ -19,13 +16,7 @@ const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { status, error, isAuthenticated, user } = useSelector((state) => state.auth);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({ mode: "onTouched" });
-
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   // Capture location once on mount — never re-read it so navigate() doesn't
   // re-trigger this effect and cause a redirect loop.
   const fromRef = useRef(location.state?.from?.pathname || null);
@@ -42,7 +33,10 @@ const LoginPage = () => {
     return () => dispatch(clearAuthError());
   }, [dispatch]);
 
-  const onSubmit = (data) => dispatch(loginUser(data));
+  const startGoogleLogin = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    window.location.assign(`${apiUrl}/auth/google`);
+  };
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
@@ -183,7 +177,9 @@ const LoginPage = () => {
             </p>
           </div>
 
-          {/* Form container */}
+          {/* Email/password login is temporarily disabled while Google-only authentication is integrated.
+              The previous form is intentionally kept in this comment for the upcoming auth migration. */}
+          {/*
           <div
             style={{
               backgroundColor: "var(--surface)",
@@ -271,6 +267,38 @@ const LoginPage = () => {
               Create one
             </Link>
           </p>
+          */}
+
+          <div
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "1.25rem",
+              padding: "1.75rem",
+              boxShadow: "var(--shadow-md)",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
+              <button
+                type="button"
+                onClick={startGoogleLogin}
+                style={{
+                  width: "100%",
+                  border: "1px solid var(--border)",
+                  borderRadius: "0.75rem",
+                  backgroundColor: "var(--surface)",
+                  color: "var(--ink)",
+                  padding: "0.8rem 1rem",
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Continue with Google
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

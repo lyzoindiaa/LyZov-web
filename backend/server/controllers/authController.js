@@ -6,6 +6,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const emailService = require("../services/emailService");
+const { OAuth2Client } = require("google-auth-library");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -13,6 +14,121 @@ const {
   setAuthCookies,
   clearAuthCookies,
 } = require("../utils/generateTokens");
+
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+
+const getGoogleRedirectUri = () =>
+  process.env.GOOGLE_REDIRECT_URI || `${process.env.API_URL || "http://localhost:5000"}/api/auth/google/callback`;
+
+const getFrontendUrl = () => process.env.CLIENT_URL || "http://localhost:5173";
+
+const createSession = async (res, user) => {
+  const accessToken = generateAccessToken(user._id, user.role);
+  const refreshToken = generateRefreshToken(user._id);
+
+  user.refreshTokens.push({ token: refreshToken });
+  user.refreshTokens = user.refreshTokens.slice(-5);
+  user.lastLoginAt = new Date();
+  await user.save({ validateBeforeSave: false });
+  setAuthCookies(res, accessToken, refreshToken);
+};
+
+// @desc    Start Google OAuth authorization-code flow
+// @route   GET /api/auth/google
+// @access  Public
+const googleLogin = asyncHandler(async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    throw ApiError.internal("Google authentication is not configured");
+  }
+
+  const state = crypto.randomBytes(32).toString("hex");
+  res.cookie("googleOAuthState", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 10 * 60 * 1000,
+  });
+
+  const authorizationUrl = googleClient.generateAuthUrl({
+    access_type: "offline",
+    scope: ["openid", "email", "profile"],
+    prompt: "select_account",
+    state,
+    redirect_uri: getGoogleRedirectUri(),
+  });
+
+  return res.redirect(authorizationUrl);
+});
+
+// @desc    Complete Google OAuth authorization-code flow
+// @route   GET /api/auth/google/callback
+// @access  Public
+const googleCallback = async (req, res) => {
+  const redirectToLogin = (error) => {
+    const url = new URL(`${getFrontendUrl()}/login`);
+    if (error) url.searchParams.set("google_error", error);
+    return res.redirect(url.toString());
+  };
+
+  try {
+    if (req.query.error) return redirectToLogin("consent_denied");
+    if (!req.query.code || !req.query.state || req.query.state !== req.cookies?.googleOAuthState) {
+      return redirectToLogin("invalid_oauth_state");
+    }
+
+    res.clearCookie("googleOAuthState");
+
+    const { tokens } = await googleClient.getToken({
+      code: req.query.code,
+      redirect_uri: getGoogleRedirectUri(),
+    });
+    const ticket = await googleClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      return redirectToLogin("unverified_google_account");
+    }
+
+    let user = await User.findOne({
+      $or: [{ googleId: payload.sub }, { email: payload.email.toLowerCase() }],
+    }).select("+password");
+
+    if (user) {
+      if (user.googleId && user.googleId !== payload.sub) return redirectToLogin("account_conflict");
+      user.googleId = payload.sub;
+      user.authProvider = "google";
+      user.isEmailVerified = true;
+      if (payload.picture && !user.avatar?.url) user.avatar = { url: payload.picture, publicId: "" };
+    } else {
+      user = new User({
+        name: payload.name || payload.email.split("@")[0],
+        email: payload.email.toLowerCase(),
+        password: crypto.randomBytes(32).toString("hex"),
+        authProvider: "google",
+        googleId: payload.sub,
+        isEmailVerified: true,
+        avatar: { url: payload.picture || "", publicId: "" },
+      });
+      await user.save();
+      await Cart.create({ user: user._id, items: [] });
+      await Wishlist.create({ user: user._id, products: [] });
+    }
+
+    if (!user.isActive) return redirectToLogin("account_deactivated");
+    await createSession(res, user);
+    return res.redirect(`${getFrontendUrl()}/login`);
+  } catch (error) {
+    console.error("Google OAuth callback failed:", error.message);
+    return redirectToLogin("google_auth_failed");
+  }
+};
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -271,6 +387,8 @@ const getMe = asyncHandler(async (req, res) => {
 module.exports = {
   register,
   login,
+  googleLogin,
+  googleCallback,
   refresh,
   logout,
   verifyEmail,
