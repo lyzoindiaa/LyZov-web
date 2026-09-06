@@ -21,19 +21,21 @@ const verifyRefreshToken = (token) => {
 };
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
-  const isProd = process.env.NODE_ENV === "production";
+  const isCrossOrigin = Boolean(process.env.CLIENT_URL && process.env.CLIENT_URL !== "http://localhost:5173");
+  const isSecure = process.env.NODE_ENV === "production" || isCrossOrigin;
+  const sameSite = isSecure ? "none" : "lax";
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
+    secure: isSecure,
+    sameSite,
     maxAge: 7*24*60 * 60 * 1000,
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
+    secure: isSecure,
+    sameSite,
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: "/api/auth/refresh",
   });
