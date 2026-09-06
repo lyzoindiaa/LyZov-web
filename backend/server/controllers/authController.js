@@ -26,7 +26,7 @@ const getGoogleRedirectUri = () =>
 
 const getFrontendUrl = () =>
   process.env.CLIENT_URL ||
-  (process.env.NODE_ENV === "production" ? "https://lyzov.com" : "http://localhost:5173");
+  (process.env.NODE_ENV === "production" ? "https://lyzovindia.com" : "http://localhost:5173");
 
 const createGoogleOAuthState = () => {
   const payload = Buffer.from(JSON.stringify({
