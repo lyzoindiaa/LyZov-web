@@ -1,11 +1,8 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useForm } from "react-hook-form";
-import { registerUser, clearAuthError } from "../features/auth/authSlice";
-import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, User, Mail, Lock } from "lucide-react";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import { clearAuthError } from "../features/auth/authSlice";
+import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft } from "lucide-react";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
 
@@ -18,14 +15,7 @@ const trustBullets = [
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error, isAuthenticated, user } = useSelector((state) => state.auth);
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm({ mode: "onTouched" });
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,12 +24,6 @@ const RegisterPage = () => {
     }
     return () => dispatch(clearAuthError());
   }, [isAuthenticated, user?.role, navigate, dispatch]);
-
-  const onSubmit = (data) => {
-    dispatch(registerUser({ name: data.name, email: data.email, password: data.password }));
-  };
-
-  const passwordVal = watch("password");
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
@@ -180,7 +164,9 @@ const RegisterPage = () => {
             </p>
           </div>
 
-          {/* Form container */}
+          {/* Email/password registration is temporarily disabled because the app is moving to Google-only authentication.
+              The previous form is intentionally kept in this comment for the upcoming auth migration. */}
+          {/*
           <div
             style={{
               backgroundColor: "var(--surface)",
@@ -273,6 +259,22 @@ const RegisterPage = () => {
               Sign In
             </Link>
           </p>
+          */}
+
+          <div
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "1.25rem",
+              padding: "1.75rem",
+              boxShadow: "var(--shadow-md)",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
+              Account creation will happen through Google sign-in.
+            </p>
+          </div>
         </div>
       </div>
     </div>
