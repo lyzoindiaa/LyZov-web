@@ -24,7 +24,9 @@ const googleClient = new OAuth2Client(
 const getGoogleRedirectUri = () =>
   process.env.GOOGLE_REDIRECT_URI || `${process.env.API_URL || "http://localhost:5000"}/api/auth/google/callback`;
 
-const getFrontendUrl = () => process.env.CLIENT_URL || "http://localhost:5173";
+const getFrontendUrl = () =>
+  process.env.CLIENT_URL ||
+  (process.env.NODE_ENV === "production" ? "https://lyzov.com" : "http://localhost:5173");
 
 const createGoogleOAuthState = () => {
   const payload = Buffer.from(JSON.stringify({

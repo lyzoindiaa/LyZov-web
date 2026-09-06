@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthError } from "../features/auth/authSlice";
 import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
 
@@ -24,6 +25,12 @@ const RegisterPage = () => {
     }
     return () => dispatch(clearAuthError());
   }, [isAuthenticated, user?.role, navigate, dispatch]);
+
+  const startGoogleLogin = () => {
+    const apiUrl = import.meta.env.VITE_API_URL ||
+      (import.meta.env.MODE === "production" ? "https://lyzov.onrender.com/api" : "http://localhost:5000/api");
+    window.location.assign(`${apiUrl}/auth/google`);
+  };
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
@@ -271,9 +278,28 @@ const RegisterPage = () => {
               textAlign: "center",
             }}
           >
-            <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
-              Account creation will happen through Google sign-in.
-            </p>
+            <button
+              type="button"
+              onClick={startGoogleLogin}
+              style={{
+                width: "100%",
+                border: "1px solid var(--border)",
+                borderRadius: "0.75rem",
+                backgroundColor: "var(--surface)",
+                color: "var(--ink)",
+                padding: "0.8rem 1rem",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.625rem",
+              }}
+            >
+              <FaGoogle size={16} aria-hidden="true" />
+              Continue with Google
+            </button>
           </div>
 
           <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
