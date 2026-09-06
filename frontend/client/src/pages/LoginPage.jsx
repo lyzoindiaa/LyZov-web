@@ -305,6 +305,13 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
+
+          <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
+            New to LyZov?{" "}
+            <Link to="/register" style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>
