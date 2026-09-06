@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthError } from "../features/auth/authSlice";
 import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
 
@@ -279,7 +280,7 @@ const LoginPage = () => {
               textAlign: "center",
             }}
           >
-            <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
+            <div style={{ fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
               <button
                 type="button"
                 onClick={startGoogleLogin}
@@ -293,11 +294,16 @@ const LoginPage = () => {
                   fontSize: "0.875rem",
                   fontWeight: 700,
                   cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.625rem",
                 }}
               >
+                <FaGoogle size={16} aria-hidden="true" />
                 Continue with Google
               </button>
-            </p>
+            </div>
           </div>
         </div>
       </div>
