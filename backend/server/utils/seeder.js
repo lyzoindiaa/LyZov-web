@@ -17,7 +17,7 @@ const seed = async () => {
     User.deleteMany({
       $or: [
         { role: { $in: ["admin", "seller"] } },
-        { email: { $in: ["admin@lyzov.com", "seller@lyzov.com"] } },
+        { email: { $in: ["admin@lyzov.com", "lyzovindia@gmail.com"] } },
       ],
     }),
     Category.deleteMany(),
@@ -28,7 +28,7 @@ const seed = async () => {
   console.log("Creating seller user...");
   await User.create({
     name: "LyZov Seller",
-    email: "seller@lyzov.com",
+    email: "lyzovindia@gmail.com",
     password: "Admin@1234",
     role: "seller",
     isEmailVerified: true,
@@ -437,7 +437,7 @@ const seed = async () => {
   }
 
   console.log("Seeding complete!");
-  console.log("Seller login -> email: seller@lyzov.com | password: Admin@1234");
+  console.log("Seller login -> email: lyzovindia@gmail.com | password: Admin@1234");
   process.exit(0);
 };
 

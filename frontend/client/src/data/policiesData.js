@@ -111,7 +111,7 @@ export const policiesData = [
         ],
         callout: {
           title: "LyZov Privacy & Grievance Cell",
-          email: "support@lyzov.com",
+          email: "lyzovindia@gmail.com",
           address: "LyZov Store Headquarters, India",
           sla: "Responses are provided within 48 business hours.",
         },
@@ -158,7 +158,7 @@ export const policiesData = [
         heading: "2. User Eligibility & Account Responsibilities",
         paragraphs: [
           "To purchase items on LyZov, you must be at least 18 years of age or possess legal parental/guardian consent. When registering an account, you agree to provide truthful, accurate, and complete information.",
-          "You are solely responsible for maintaining the confidentiality of your account credentials and password. Any actions executed through your account remain your responsibility. If you suspect unauthorized access, notify us immediately at support@lyzov.com.",
+          "You are solely responsible for maintaining the confidentiality of your account credentials and password. Any actions executed through your account remain your responsibility. If you suspect unauthorized access, notify us immediately at lyzovindia@gmail.comlyzov.com.",
         ],
       },
       {
@@ -368,7 +368,7 @@ export const policiesData = [
         ],
         callout: {
           title: "Bank Processing Cycles",
-          email: "support@lyzov.com",
+          email: "lyzovindia@gmail.com",
           address: "LyZov Billing Operations",
           sla: "While LyZov initiates refunds within 24 hours of approval, bank clearance timelines may vary depending on national holidays and issuing bank policies.",
         },
@@ -377,7 +377,7 @@ export const policiesData = [
         id: "failed-transactions",
         heading: "4. Failed or Deducted Transactions",
         paragraphs: [
-          "If money was debited from your account but your order was not successfully placed due to a connection disruption or payment timeout, your bank will automatically reverse the amount back to your account within 3 to 5 business days. If not received after 5 business days, please email us your transaction ID at support@lyzov.com.",
+          "If money was debited from your account but your order was not successfully placed due to a connection disruption or payment timeout, your bank will automatically reverse the amount back to your account within 3 to 5 business days. If not received after 5 business days, please email us your transaction ID at lyzovindia@gmail.com.",
         ],
       },
       {
@@ -478,7 +478,7 @@ export const policiesData = [
         heading: "7. Undelivered Shipments & Address Changes",
         paragraphs: [
           "Our logistics partners will attempt delivery up to 3 times before marking a package as Return to Origin (RTO). Please ensure your contact phone number and landmark are accurately entered at checkout.",
-          "If you notice an error in your shipping address, please contact support@lyzov.com immediately before dispatch. Once dispatched, address rerouting is subject to courier feasibility.",
+          "If you notice an error in your shipping address, please contact lyzovindia@gmail.com immediately before dispatch. Once dispatched, address rerouting is subject to courier feasibility.",
         ],
       },
     ],

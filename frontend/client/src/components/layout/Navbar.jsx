@@ -163,12 +163,8 @@ const Navbar = () => {
   };
 
   const handleCartClick = () => {
-    if (!isAuthenticated) {
-      toast.info("Please sign in to access your shopping bag");
-      navigate("/login", { state: { from: { pathname: "/cart" } } });
-      return;
-    }
-    dispatch(openMiniCart());
+    if (isAuthenticated) dispatch(openMiniCart());
+    navigate("/cart");
   };
 
   return (
