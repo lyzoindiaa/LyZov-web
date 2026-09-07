@@ -145,7 +145,7 @@ const googleCallback = async (req, res) => {
 
     if (!user.isActive) return redirectToLogin("account_deactivated");
     await createSession(res, user);
-    return res.redirect(`${getFrontendUrl()}/login`);
+    return res.redirect(`${getFrontendUrl()}/dashboard`);
   } catch (error) {
     console.error("Google OAuth callback failed:", error.message);
     return redirectToLogin("google_auth_failed");
