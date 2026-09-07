@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { orderService } from "../../services/cartService";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDateTime } from "../../utils/formatters";
 
 const statusOptions = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
 
@@ -51,7 +51,7 @@ const AdminOrderDetailsPage = () => {
                         <ArrowLeft size={15} /> Back to Orders
                     </button>
                     <h1 className="font-display text-3xl tracking-tightest">{order.orderNumber}</h1>
-                    <p className="mt-1 text-sm text-stone">Placed on {formatDate(order.createdAt)}</p>
+                    <p className="mt-1 text-sm text-stone">Placed on {formatDateTime(order.createdAt)}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <select value={order.orderStatus} onChange={(event) => updateOrder({ status: event.target.value }, "Order status updated")} className="rounded-lg border border-ink/12 bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] outline-none dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">

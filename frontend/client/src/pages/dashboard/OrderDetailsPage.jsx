@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { orderService } from "../../services/cartService";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import { Mail } from "lucide-react";
@@ -50,7 +50,7 @@ const OrderDetailsPage = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-display text-xl">{order.orderNumber}</p>
-          <p className="text-xs text-stone">Placed on {formatDate(order.createdAt)}</p>
+          <p className="text-xs text-stone">Placed on {formatDateTime(order.createdAt)}</p>
         </div>
         <Badge tone={statusTones[order.orderStatus]}>{order.orderStatus}</Badge>
       </div>

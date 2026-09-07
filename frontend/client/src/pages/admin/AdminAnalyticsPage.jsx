@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 import { IndianRupee, ShoppingBag, Package, Users } from "lucide-react";
 import { adminService } from "../../services/cartService";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
@@ -154,11 +154,24 @@ const AdminAnalyticsPage = () => {
           ) : (
             stats.recentOrders.map((order) => (
               <div key={order._id} className="flex items-center justify-between py-3 text-sm">
-                <div>
-                  <p className="font-medium">{order.orderNumber || `Order #${String(order._id || "").slice(-6)}`}</p>
-                  <p className="text-xs text-stone">
-                    {order.user?.name || "Customer"} · {formatDate(order.createdAt)}
-                  </p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)] text-[var(--accent)]">
+                    {order.items?.find((item) => item.image)?.image ? (
+                      <img
+                        src={order.items.find((item) => item.image).image}
+                        alt={order.items.find((item) => item.image).name || "Ordered product"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Package size={18} />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{order.orderNumber || `Order #${String(order._id || "").slice(-6)}`}</p>
+                    <p className="text-xs text-stone">
+                      {order.user?.name || "Customer"} · {formatDateTime(order.createdAt)}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <Badge tone={statusTones[order.orderStatus] || "neutral"}>{order.orderStatus || "pending"}</Badge>

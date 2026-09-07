@@ -14,6 +14,20 @@ export const formatDate = (date) => {
   }).format(new Date(date));
 };
 
+export const formatDateTime = (date) => {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+    .format(new Date(date))
+    .replace(", ", " - ")
+    .toLowerCase();
+};
+
 export const truncate = (text = "", length = 100) => {
   if (text.length <= length) return text;
   return text.slice(0, length).trim() + "...";

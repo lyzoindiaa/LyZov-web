@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Package } from "lucide-react";
 import { orderService } from "../../services/cartService";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDateTime } from "../../utils/formatters";
 
 const statusOptions = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
 
@@ -85,12 +86,23 @@ const AdminOrdersPage = () => {
               orders.map((order) => (
                 <tr key={order._id} className="border-b border-hairline last:border-0 dark:border-hairline-dark">
                   <td className="px-5 py-4 font-medium">
-                    <button type="button" onClick={() => navigate(`/seller/orders/${order._id}`)} className="text-left hover:text-[var(--accent)] hover:underline">
+                    <button type="button" onClick={() => navigate(`/seller/orders/${order._id}`)} className="flex items-center gap-3 text-left hover:text-[var(--accent)] hover:underline">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)] text-[var(--accent)]">
+                        {order.items?.find((item) => item.image)?.image ? (
+                          <img
+                            src={order.items.find((item) => item.image).image}
+                            alt={order.items.find((item) => item.image).name || "Ordered product"}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Package size={18} />
+                        )}
+                      </span>
                       {order.orderNumber}
                     </button>
                   </td>
                   <td className="px-5 py-4 text-stone">{order.user?.name}</td>
-                  <td className="px-5 py-4 text-stone">{formatDate(order.createdAt)}</td>
+                  <td className="px-5 py-4 text-stone">{formatDateTime(order.createdAt)}</td>
                   <td className="px-5 py-4 tabular-nums">{formatCurrency(order.totalPrice)}</td>
                   <td className="px-5 py-4">
                     <select
