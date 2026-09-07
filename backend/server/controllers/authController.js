@@ -256,9 +256,7 @@ const refresh = asyncHandler(async (req, res) => {
 
   const tokenExists = user.refreshTokens.some((rt) => rt.token === token);
   if (!tokenExists) {
-    // possible token reuse/theft â€” invalidate all sessions
-    user.refreshTokens = [];
-    await user.save({ validateBeforeSave: false });
+    // A stale token belongs to this device/session; do not invalidate other devices.
     throw ApiError.unauthorized("Refresh token invalid. Please log in again.");
   }
 
