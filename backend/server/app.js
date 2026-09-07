@@ -31,7 +31,7 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
 const clientOrigin = process.env.CLIENT_URL ||
-  (process.env.NODE_ENV === "production" ? "https://lyzovindia.com" : "http://localhost:5173");
+  (process.env.NODE_ENV === "production" ? "https://lyzov.com" : "http://localhost:5173");
 
 app.use(
   helmet({
