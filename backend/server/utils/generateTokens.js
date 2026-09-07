@@ -21,7 +21,8 @@ const verifyRefreshToken = (token) => {
 };
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
-  const isCrossOrigin = Boolean(process.env.CLIENT_URL && process.env.CLIENT_URL !== "http://localhost:5173");
+  const isCrossOrigin = process.env.NODE_ENV === "production" ||
+    Boolean(process.env.CLIENT_URL && process.env.CLIENT_URL !== "http://localhost:5173");
   const isSecure = process.env.NODE_ENV === "production" || isCrossOrigin;
   const sameSite = isSecure ? "none" : "lax";
 

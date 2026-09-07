@@ -30,6 +30,8 @@ const customerEmailRoutes = require("./routes/customerEmailRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
+const clientOrigin = process.env.CLIENT_URL ||
+  (process.env.NODE_ENV === "production" ? "https://lyzovindia.com" : "http://localhost:5173");
 
 app.use(
   helmet({
@@ -40,7 +42,7 @@ app.use(
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL || "http://localhost:5173"],
+    origin: [clientOrigin],
     credentials: true,
   })
 );
