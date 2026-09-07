@@ -178,7 +178,7 @@ const ContactPage = ({ isDashboard = false }) => {
                       Email Inquiries
                     </span>
                     <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", marginTop: "2px" }}>
-                      seller@lyzov.com
+                      lyzovindia.com
                     </p>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "2px" }}>
                       Average response time: &lt; 4 hours
