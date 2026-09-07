@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Package, ArrowRight, ChevronRight, Clock } from "lucide-react";
 import { orderService } from "../../services/cartService";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
 
 const statusTones = {
@@ -88,16 +88,25 @@ const OrdersPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                overflow: "hidden",
               }}
             >
-              <Package size={18} />
+              {order.items?.find((item) => item.image)?.image ? (
+                <img
+                  src={order.items.find((item) => item.image).image}
+                  alt={order.items.find((item) => item.image).name || "Ordered product"}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <Package size={18} />
+              )}
             </div>
             <div>
               <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>
                 {order.orderNumber || `Order #${order._id.slice(-6).toUpperCase()}`}
               </p>
               <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.15rem" }}>
-                Placed on {formatDate(order.createdAt)} · {order.items?.length || 1} item(s)
+                Placed on {formatDateTime(order.createdAt)} · {order.items?.length || 1} item(s)
               </p>
             </div>
           </div>
