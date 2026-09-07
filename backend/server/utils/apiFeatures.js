@@ -6,8 +6,14 @@ class ApiFeatures {
 
   search() {
     if (this.queryString.search) {
+      const searchPattern = this.queryString.search.trim();
       this.query = this.query.find({
-        $text: { $search: this.queryString.search },
+        $or: [
+          { $text: { $search: searchPattern } },
+          { lyId: { $regex: searchPattern, $options: "i" } },
+          { hsnNumber: { $regex: searchPattern, $options: "i" } },
+          { gstRate: { $regex: searchPattern, $options: "i" } },
+        ],
       });
     }
     return this;

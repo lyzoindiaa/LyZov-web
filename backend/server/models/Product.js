@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const GST_RATES = require("../config/gstRates");
 
 const variantSchema = new mongoose.Schema(
   {
@@ -15,6 +16,24 @@ const variantSchema = new mongoose.Schema(
 
 const productSchema = new mongoose.Schema(
   {
+    lyId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+      match: [/^LYZOV-[A-Z0-9-]+$/, "LY ID must start with LYZOV-"],
+    },
+    hsnNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    gstRate: {
+      type: String,
+      enum: GST_RATES,
+      default: null,
+    },
     title: {
       type: String,
       required: [true, "Product title is required"],
@@ -145,7 +164,7 @@ productSchema.virtual("discountPercent").get(function () {
 productSchema.set("toJSON", { virtuals: true });
 productSchema.set("toObject", { virtuals: true });
 
-productSchema.index({ title: "text", description: "text", tags: "text" });
+productSchema.index({ title: "text", description: "text", tags: "text", lyId: "text", hsnNumber: "text", gstRate: "text" });
 productSchema.index({ category: 1 });
 productSchema.index({ categoryPath: 1 });
 productSchema.index({ brand: 1 });

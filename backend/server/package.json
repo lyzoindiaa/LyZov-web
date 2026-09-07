@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "build": "npm install --prefix ../../frontend/client && npm run build --prefix ../../frontend/client",
     "seed": "node utils/seeder.js",
-    "seed:add": "node utils/addProducts.js"
+    "seed:add": "node utils/addProducts.js",
+    "migrate:product-indexes": "node utils/migrateProductIndexes.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
