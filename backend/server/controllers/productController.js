@@ -9,6 +9,15 @@ const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudina
 
 const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
 
+const generateNextLyId = async () => {
+  const latestProduct = await Product.findOne({ lyId: /^LYZOV-\d+$/ })
+    .sort({ lyId: -1 })
+    .select("lyId")
+    .lean();
+  const latestNumber = latestProduct ? Number(latestProduct.lyId.replace("LYZOV-", "")) : 0;
+  return `LYZOV-${String(latestNumber + 1).padStart(6, "0")}`;
+};
+
 // Allows the "category"/"brand" query params to be either a real Mongo ObjectId
 // (used by the Shop page filters) or a human-readable slug (used by Navbar links
 // like /shop?category=men) — resolves slugs to their ObjectId before filtering.
@@ -134,7 +143,25 @@ const createProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  const product = await Product.create({ ...req.body, categoryPath, images: uploadedImages });
+  const requestedLyId = req.body.lyId?.trim();
+  const productData = {
+    ...req.body,
+    lyId: requestedLyId || await generateNextLyId(),
+    categoryPath,
+    images: uploadedImages,
+  };
+  let product;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      product = await Product.create(productData);
+      break;
+    } catch (error) {
+      if (error.code !== 11000 || requestedLyId) throw error;
+      productData.lyId = await generateNextLyId();
+    }
+  }
+
+  if (!product) throw ApiError.conflict("Could not generate a unique LY ID. Please try again.");
 
   return sendSuccess(res, 201, "Product created successfully", product);
 });

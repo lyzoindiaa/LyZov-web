@@ -9,6 +9,9 @@ import { categoryService } from "../../services/categoryService";
 import { brandService } from "../../services/productService";
 import { adminProductService } from "../../services/adminProductService";
 import { adminBrandService } from "../../services/adminBrandService";
+import { GST_RATES } from "../../data/gstRates";
+
+const createDraftLyId = () => `LYZOV-${String(Date.now()).slice(-6)}`;
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   const [categories, setCategories] = useState([]);
@@ -115,6 +118,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   useEffect(() => {
     if (product) {
       reset({
+        lyId: product.lyId || createDraftLyId(),
+        hsnNumber: product.hsnNumber || "",
+        gstRate: product.gstRate || "",
         title: product.title,
         description: product.description,
         shortDescription: product.shortDescription,
@@ -140,6 +146,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
       }
     } else {
       reset({
+        lyId: createDraftLyId(),
+        hsnNumber: "",
+        gstRate: "",
         title: "",
         description: "",
         shortDescription: "",
@@ -333,6 +342,31 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
+          label="LY ID"
+          {...register("lyId", {
+            required: "LY ID is required",
+            pattern: { value: /^LYZOV-[A-Z0-9-]+$/i, message: "LY ID must start with LYZOV-" },
+          })}
+          error={errors.lyId?.message}
+        />
+
+        <Input label="HSN Number" {...register("hsnNumber")} />
+
+        <div>
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
+            GST Rate
+          </label>
+          <select className="input-field" {...register("gstRate")}>
+            <option value="">Select GST rate</option>
+            {GST_RATES.map((gstRate) => (
+              <option key={gstRate} value={gstRate}>
+                {gstRate}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <Input
           label="Title"
           className="sm:col-span-2"
           {...register("title", { required: "Title is required" })}
@@ -346,8 +380,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           <textarea
             rows={3}
             className={`input-field ${errors.description
-                ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
-                : ""
+              ? "!border-[var(--red)] !bg-[var(--red-bg)] focus:!ring-2 focus:!ring-[var(--red)]/20 input-error"
+              : ""
               }`}
             {...register("description", { required: "Description is required" })}
           />
@@ -383,9 +417,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               <select
                 value={selectedL1}
                 onChange={handleL1Change}
-                className={`input-field text-xs ${
-                  errors.category && !selectedL1 ? "!border-[var(--red)] !bg-[var(--red-bg)]" : ""
-                }`}
+                className={`input-field text-xs ${errors.category && !selectedL1 ? "!border-[var(--red)] !bg-[var(--red-bg)]" : ""
+                  }`}
               >
                 <option value="">Select Main Category</option>
                 {l1Categories.map((c) => (
@@ -411,8 +444,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                   {!selectedL1
                     ? "Select Category (L1) first"
                     : l2Categories.length === 0
-                    ? "No Subcategories"
-                    : "Select Subcategory"}
+                      ? "No Subcategories"
+                      : "Select Subcategory"}
                 </option>
                 {l2Categories.map((c) => (
                   <option key={c._id} value={c._id}>
@@ -437,8 +470,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                   {!selectedL2
                     ? "Select Subcategory (L2) first"
                     : l3Categories.length === 0
-                    ? "No Item Types"
-                    : "Select Item Type"}
+                      ? "No Item Types"
+                      : "Select Item Type"}
                 </option>
                 {l3Categories.map((c) => (
                   <option key={c._id} value={c._id}>
@@ -543,8 +576,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           {/* Image Upload Area */}
           <div
             className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${isDragging
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
               }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
