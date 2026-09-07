@@ -405,13 +405,12 @@ const AdminProfilePage = () => {
         <button
           type="button"
           onClick={() => handleTabClick("store")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === "store"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "store"
               ? "bg-[var(--accent)] text-white shadow-sm"
               : isStep1Complete
                 ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
                 : "text-[var(--accent)] bg-[var(--accent-bg)]"
-          }`}
+            }`}
         >
           <Store size={16} />
           <span>1. Store & Contact</span>
@@ -426,15 +425,14 @@ const AdminProfilePage = () => {
         <button
           type="button"
           onClick={() => handleTabClick("kyc")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === "kyc"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "kyc"
               ? "bg-[var(--accent)] text-white shadow-sm"
               : isStep1Complete
                 ? isStep2Complete
                   ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
                   : "text-[var(--accent)] bg-[var(--accent-bg)]"
                 : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
-          }`}
+            }`}
         >
           <FileText size={16} />
           <span>2. PAN & KYC</span>
@@ -451,15 +449,14 @@ const AdminProfilePage = () => {
         <button
           type="button"
           onClick={() => handleTabClick("bank")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === "bank"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "bank"
               ? "bg-[var(--accent)] text-white shadow-sm"
               : isStep2Complete
                 ? isStep3Complete
                   ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
                   : "text-[var(--accent)] bg-[var(--accent-bg)]"
                 : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
-          }`}
+            }`}
         >
           <Landmark size={16} />
           <span>3. Address & Bank Payouts</span>
@@ -476,11 +473,10 @@ const AdminProfilePage = () => {
         <button
           type="button"
           onClick={() => setActiveTab("security")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === "security"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "security"
               ? "bg-[var(--accent)] text-white shadow-sm"
               : "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-          }`}
+            }`}
         >
           <Lock size={16} />
           <span>Security</span>

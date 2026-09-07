@@ -26,12 +26,12 @@ const clearExceptAdmin = async () => {
     // Keep ONLY seller/admin user
     await User.deleteMany({ role: { $nin: ["seller", "admin"] } });
 
-    let seller = await User.findOne({ email: "seller@lyzov.com" });
+    let seller = await User.findOne({ email: "lyzovindia@gmail.com" });
     if (!seller) {
       console.log("Creating default seller account...");
       seller = await User.create({
         name: "LyZov Seller",
-        email: "seller@lyzov.com",
+        email: "lyzovindia@gmail.com",
         password: "Admin@1234",
         role: "seller",
         isEmailVerified: true,
