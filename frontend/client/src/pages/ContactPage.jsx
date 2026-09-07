@@ -207,7 +207,7 @@ const ContactPage = ({ isDashboard = false }) => {
                       Direct Phone & WhatsApp
                     </span>
                     <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", marginTop: "2px" }}>
-                      +91 98765 43210
+                      +91 xxxxxxxxxx
                     </p>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "2px" }}>
                       Mon - Sat: 9:30 AM – 7:00 PM IST
@@ -357,7 +357,7 @@ const ContactPage = ({ isDashboard = false }) => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label="Phone Number (Optional)"
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 xxxxxxxxxx"
                         leftIcon={Phone}
                         {...register("phone")}
                       />

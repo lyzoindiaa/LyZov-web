@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Instagram, Twitter, Linkedin, Youtube, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Facebook, Instagram, Twitter, Youtube, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import Logo from "../ui/Logo";
 
 const footerColumns = [
@@ -130,10 +130,10 @@ const Footer = () => {
             </p>
             <div style={{ display: "flex", gap: "0.625rem", paddingTop: "0.5rem" }}>
               {[
-                { Icon: Instagram, url: "https://instagram.com/lyzov_store", label: "Instagram" },
-                { Icon: Twitter, url: "https://twitter.com/lyzov_store", label: "Twitter" },
-                { Icon: Linkedin, url: "https://linkedin.com/company/lyzov-store", label: "LinkedIn" },
-                { Icon: Youtube, url: "https://youtube.com/@lyzov_store", label: "YouTube" },
+                { Icon: Facebook, url: "https://www.facebook.com/LyZov/", label: "Facebook" },
+                { Icon: Instagram, url: "https://www.instagram.com/lyzovindia/", label: "Instagram" },
+                { Icon: Youtube, url: "https://www.youtube.com/@lyzovindia", label: "YouTube" },
+                { Icon: Twitter, url: "https://x.com/LyZovIndia", label: "X" },
               ].map(({ Icon, url, label }) => (
                 <a
                   key={label}
