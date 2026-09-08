@@ -15,6 +15,7 @@ const AddressesPage = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -30,6 +31,24 @@ const AddressesPage = () => {
       isDefault: false,
     },
   });
+
+  // Watch form values for step completion
+  const formValues = watch();
+
+  // Step completion calculations
+  const isStep1Complete = Boolean(
+    formValues?.fullName?.trim() &&
+    formValues?.phone?.trim()
+  );
+
+  const isStep2Complete = Boolean(
+    isStep1Complete &&
+    formValues?.addressLine1?.trim() &&
+    formValues?.city?.trim() &&
+    formValues?.state?.trim() &&
+    formValues?.postalCode?.trim() &&
+    formValues?.country?.trim()
+  );
 
   const loadAddresses = () => {
     addressService
