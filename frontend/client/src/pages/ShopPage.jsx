@@ -4,6 +4,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
+import SEO from "../components/common/SEO";
 
 const sortOptions = [
   { label: "Recommended", value: "popular" },
@@ -98,8 +99,28 @@ const ShopPage = () => {
 
   const clearFilters = () => setSearchParams({});
 
+  const categoryParam = searchParams.get("category");
+  const brandParam = searchParams.get("brand");
+  const searchParam = searchParams.get("search");
+
+  let pageTitle = "Shop All Products";
+  if (categoryParam) {
+    pageTitle = `${categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1)} - Shop`;
+  } else if (brandParam) {
+    pageTitle = `${brandParam.charAt(0).toUpperCase() + brandParam.slice(1)} Collection - Shop`;
+  } else if (searchParam) {
+    pageTitle = `Results for "${searchParam}" - Shop`;
+  }
+
+  const pageDescription = `Explore ${pageTitle} at LyZov Store. Premium fitness equipment, handcrafted idols, and lifestyle apparel with Pan-India delivery.`;
+
   return (
     <div className="container-page py-8 lg:py-12">
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        canonicalUrl={`${window.location.origin}/shop`}
+      />
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div id="shop-products-grid">

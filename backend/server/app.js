@@ -26,6 +26,8 @@ const emailRoutes = require("./routes/emailSenderRoute");
 const supportRoutes = require("./routes/supportRoutes");
 const sellerEmailRoutes = require("./routes/sellerEmailRoutes");
 const customerEmailRoutes = require("./routes/customerEmailRoutes");
+const seoRoutes = require("./routes/seoRoutes");
+const { prerenderProductPage } = require("./services/prerenderService");
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -92,6 +94,9 @@ app.use("/api/seller/emails", sellerEmailRoutes);
 app.use("/api/admin/emails", sellerEmailRoutes);
 app.use("/api/customer/emails", customerEmailRoutes);
 
+// ── SEO Endpoints (Sitemap & Robots) ──
+app.use("/", seoRoutes);
+
 // ── Serve Frontend ──
 const frontendDist = path.join(__dirname, "../../frontend/client/dist");
 const indexHtmlPath = path.join(frontendDist, "index.html");
@@ -99,10 +104,27 @@ const indexHtmlPath = path.join(frontendDist, "index.html");
 if (fs.existsSync(indexHtmlPath)) {
   app.use(express.static(frontendDist));
 
-  app.get("*", (req, res, next) => {
+  app.get("*", async (req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
+
+    // Universal prerender for product pages
+    if (req.path.startsWith("/product/")) {
+      try {
+        const slug = req.path.replace(/^\/product\//, "").split("/")[0].split("?")[0];
+        const result = await prerenderProductPage(slug, indexHtmlPath);
+        if (result?.redirect) {
+          return res.redirect(result.statusCode || 301, result.redirect);
+        }
+        if (result?.html) {
+          return res.status(200).send(result.html);
+        }
+      } catch (err) {
+        console.error("Prerender error for path", req.path, err);
+      }
+    }
+
     res.sendFile(indexHtmlPath);
   });
 } else {

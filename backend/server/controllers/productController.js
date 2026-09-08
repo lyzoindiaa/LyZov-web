@@ -6,6 +6,7 @@ const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const ApiFeatures = require("../utils/apiFeatures");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
+const slugify = require("slugify");
 
 const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
 
@@ -72,12 +73,39 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     ? { $or: [{ slug: productIdentifier }, { _id: productIdentifier }] }
     : { slug: productIdentifier };
 
-  const product = await Product.findOne({ ...identifierQuery, isActive: true })
+  let product = await Product.findOne({ ...identifierQuery, isActive: true })
     .populate("brand", "name slug logo")
     .populate("category", "name slug level ancestors parent")
     .populate("categoryPath", "name slug level");
 
   if (!product) {
+    // Check slugHistory for permanent 301 relocation
+    const historicalProduct = await Product.findOne({
+      slugHistory: productIdentifier.toLowerCase(),
+      isActive: true,
+    })
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug level ancestors parent")
+      .populate("categoryPath", "name slug level");
+
+    if (historicalProduct) {
+      const relatedProducts = await Product.find({
+        categoryPath: historicalProduct.category,
+        _id: { $ne: historicalProduct._id },
+        isActive: true,
+      })
+        .limit(8)
+        .select("title slug price discountPrice images ratingsAverage");
+
+      return sendSuccess(res, 200, "Product relocated (301)", {
+        product: historicalProduct,
+        relatedProducts,
+        isRedirect: true,
+        canonicalSlug: historicalProduct.slug,
+        redirectUrl: `/product/${historicalProduct.slug}`,
+      });
+    }
+
     throw ApiError.notFound("Product not found");
   }
 
@@ -143,13 +171,42 @@ const createProduct = asyncHandler(async (req, res) => {
     }
   }
 
+  const cleanTitle = (req.body.title || "").trim();
+  const cleanDesc = (req.body.description || "").replace(/<[^>]*>?/gm, "").trim();
+  const cleanShortDesc = (req.body.shortDescription || "").replace(/<[^>]*>?/gm, "").trim();
+
+  // Automatic SEO generation with optional seller override
+  const metaTitle = req.body.metaTitle?.trim() || (cleanTitle ? `${cleanTitle} | Buy Online at LyZov` : "");
+  const fallbackSnippet = cleanShortDesc || cleanDesc.slice(0, 150);
+  const metaDescription =
+    req.body.metaDescription?.trim() ||
+    (fallbackSnippet ? `${fallbackSnippet} — Shop genuine products with Pan-India delivery on LyZov.` : "");
+
   const requestedLyId = req.body.lyId?.trim();
   const productData = {
     ...req.body,
-    lyId: requestedLyId || await generateNextLyId(),
+    mpn: req.body.mpn?.trim() || "",
+    seo: {
+      metaTitle,
+      metaDescription,
+      canonicalUrl: req.body.canonicalUrl?.trim() || "",
+    },
+    lyId: requestedLyId || (await generateNextLyId()),
     categoryPath,
     images: uploadedImages,
   };
+
+  // If custom slug was provided by seller, format and check uniqueness
+  if (req.body.slug?.trim()) {
+    const customSlug = slugify(req.body.slug.trim(), { lower: true, strict: true, remove: /[*+~.()'"!:@]/g });
+    if (customSlug) {
+      const existingSlug = await Product.findOne({ slug: customSlug });
+      if (!existingSlug) {
+        productData.slug = customSlug;
+      }
+    }
+  }
+
   let product;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -216,8 +273,40 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
   }
 
+  // Safe slug update with 301 history logging
+  if (req.body.slug && req.body.slug.trim() && req.body.slug.trim() !== product.slug) {
+    const targetSlug = slugify(req.body.slug.trim(), { lower: true, strict: true, remove: /[*+~.()'"!:@]/g });
+    if (targetSlug && targetSlug !== product.slug) {
+      const existingWithSlug = await Product.findOne({ slug: targetSlug, _id: { $ne: product._id } });
+      if (existingWithSlug) {
+        throw ApiError.badRequest(`Slug '${targetSlug}' is already taken by another product.`);
+      }
+      if (product.slug && !product.slugHistory.includes(product.slug)) {
+        product.slugHistory.push(product.slug);
+      }
+      product.slug = targetSlug;
+    }
+  }
+
+  if (req.body.mpn !== undefined) {
+    product.mpn = req.body.mpn.trim();
+  }
+
+  // Handle SEO updates
+  if (!product.seo) product.seo = {};
+  if (req.body.metaTitle !== undefined) product.seo.metaTitle = req.body.metaTitle.trim();
+  if (req.body.metaDescription !== undefined) product.seo.metaDescription = req.body.metaDescription.trim();
+  if (req.body.canonicalUrl !== undefined) product.seo.canonicalUrl = req.body.canonicalUrl.trim();
+
+  // If title was updated but metaTitle is blank, refresh default metaTitle
+  if (req.body.title && !product.seo.metaTitle) {
+    product.seo.metaTitle = `${req.body.title.trim()} | Buy Online at LyZov`;
+  }
+
   Object.keys(req.body).forEach((key) => {
-    if (key !== "images") product[key] = req.body[key];
+    if (key !== "images" && key !== "slug" && key !== "mpn" && key !== "seo") {
+      product[key] = req.body[key];
+    }
   });
 
   await product.save();

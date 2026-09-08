@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { policiesData, getPolicyBySlug } from "../data/policiesData";
 import { toast } from "react-toastify";
+import SEO from "../components/common/SEO";
 
 // Icon mapping
 const iconMap = {
@@ -80,6 +81,11 @@ const PolicyPage = () => {
 
   return (
     <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", paddingBottom: "5rem" }}>
+      <SEO
+        title={`${activePolicy.title} — Official Store Policy | LyZov`}
+        description={`Read the official ${activePolicy.title} for LyZov Store. Learn about terms, conditions, timelines, and customer rights.`}
+        canonicalUrl={`${window.location.origin}/policies/${activePolicy.slug}`}
+      />
       {/* ── Policy Header Hero ── */}
       <section
         style={{

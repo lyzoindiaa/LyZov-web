@@ -15,11 +15,19 @@ const createProductValidator = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage("Discount price must be a positive number"),
+  body("metaTitle").optional().trim().isLength({ max: 120 }).withMessage("Meta title cannot exceed 120 characters"),
+  body("metaDescription").optional().trim().isLength({ max: 300 }).withMessage("Meta description cannot exceed 300 characters"),
+  body("mpn").optional().trim(),
+  body("slug").optional().trim(),
 ];
 
 const updateProductValidator = [
   body("price").optional().isFloat({ min: 0 }).withMessage("Price must be a positive number"),
   body("stock").optional().isInt({ min: 0 }).withMessage("Stock must be a non-negative integer"),
+  body("metaTitle").optional().trim().isLength({ max: 120 }).withMessage("Meta title cannot exceed 120 characters"),
+  body("metaDescription").optional().trim().isLength({ max: 300 }).withMessage("Meta description cannot exceed 300 characters"),
+  body("mpn").optional().trim(),
+  body("slug").optional().trim(),
 ];
 
 module.exports = { createProductValidator, updateProductValidator };
