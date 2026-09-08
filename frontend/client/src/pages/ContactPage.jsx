@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Mail, Phone, Clock, Send, CheckCircle2, ShieldAlert, Sparkles, MessageSquare } from "lucide-react";
+import { Mail, Phone, Clock, Send, CheckCircle2, ShieldAlert, Sparkles, MessageSquare, Lock, User, FileText } from "lucide-react";
 import { supportService } from "../services/supportService";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -20,6 +20,7 @@ const categories = [
 const ContactPage = ({ isDashboard = false }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ticketResult, setTicketResult] = useState(null);
+  const [activeTab, setActiveTab] = useState("contact"); // "contact" | "message"
   const { user } = useSelector((state) => state.auth);
   const [searchParams] = useSearchParams();
 
@@ -30,6 +31,7 @@ const ContactPage = ({ isDashboard = false }) => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     mode: "onTouched",
@@ -42,6 +44,21 @@ const ContactPage = ({ isDashboard = false }) => {
       message: "",
     },
   });
+
+  // Watch form values for step completion
+  const formValues = watch();
+
+  // Step completion calculations
+  const isStep1Complete = Boolean(
+    formValues?.name?.trim() &&
+    formValues?.email?.trim() &&
+    formValues?.subject?.trim()
+  );
+
+  const isStep2Complete = Boolean(
+    isStep1Complete &&
+    formValues?.message?.trim()
+  );
 
   useEffect(() => {
     if (user || defaultSubject || defaultCategory) {
@@ -68,6 +85,14 @@ const ContactPage = ({ isDashboard = false }) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleTabClick = (tabKey) => {
+    if (tabKey === "message" && !isStep1Complete) {
+      toast.warning("🔒 Step 1 (Contact Information) must be completed before accessing Message.");
+      return;
+    }
+    setActiveTab(tabKey);
   };
 
   return (
@@ -324,119 +349,224 @@ const ContactPage = ({ isDashboard = false }) => {
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input
-                        label="Your Full Name"
-                        placeholder="e.g. Vikram Sharma"
-                        required
-                        {...register("name", {
-                          required: "Please provide your name",
-                          minLength: { value: 2, message: "At least 2 characters" },
-                        })}
-                        error={errors.name?.message}
-                      />
-
-                      <Input
-                        label="Email Address"
-                        type="email"
-                        placeholder="vikram@example.com"
-                        leftIcon={Mail}
-                        required
-                        {...register("email", {
-                          required: "Email is required",
-                          pattern: {
-                            value: /^\S+@\S+\.\S+$/,
-                            message: "Please enter a valid email",
-                          },
-                        })}
-                        error={errors.email?.message}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input
-                        label="Phone Number (Optional)"
-                        placeholder="+91 xxxxxxxxxx"
-                        leftIcon={Phone}
-                        {...register("phone")}
-                      />
-
-                      <div className="flex flex-col gap-1.5">
-                        <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
-                          Inquiry Category
-                        </label>
-                        <select
-                          className="input-field"
-                          style={{
-                            height: "2.75rem",
-                            borderRadius: "0.75rem",
-                            backgroundColor: "var(--bg)",
-                            border: "1px solid var(--border)",
-                            padding: "0 0.85rem",
-                            fontSize: "0.875rem",
-                            color: "var(--ink)",
-                          }}
-                          {...register("category")}
-                        >
-                          {categories.map((c) => (
-                            <option key={c.value} value={c.value}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <Input
-                      label="Subject"
-                      placeholder="Brief topic of your inquiry (e.g., Delivery date for Order #NC-123)"
-                      required
-                      {...register("subject", {
-                        required: "Subject is required",
-                        minLength: { value: 4, message: "Subject must be at least 4 characters" },
-                      })}
-                      error={errors.subject?.message}
-                    />
-
-                    <div className="flex flex-col gap-1.5">
-                      <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
-                        Message <span style={{ color: "var(--accent)" }}>*</span>
-                      </label>
-                      <textarea
-                        rows={5}
-                        placeholder="Please describe your question or issue in detail..."
-                        className="input-field"
-                        style={{
-                          borderRadius: "0.75rem",
-                          backgroundColor: "var(--bg)",
-                          border: "1px solid var(--border)",
-                          padding: "0.85rem",
-                          fontSize: "0.875rem",
-                          color: "var(--ink)",
-                          resize: "vertical",
-                        }}
-                        {...register("message", {
-                          required: "Message is required",
-                          minLength: { value: 10, message: "Message must be at least 10 characters" },
-                        })}
-                      />
-                      {errors.message && (
-                        <span style={{ fontSize: "0.75rem", color: "#EF4444" }}>
-                          {errors.message.message}
-                        </span>
-                      )}
-                    </div>
-
-                    <Button
-                      type="submit"
-                      isLoading={isSubmitting}
-                      className="btn-ripple mt-2 flex items-center justify-center gap-2"
-                      style={{ height: "3rem" }}
+                  {/* Progressive Step Tabs Bar */}
+                  <div className="flex flex-wrap gap-2 border-b border-hairline pb-2 dark:border-hairline-dark mb-6">
+                    {/* Step 1 Tab */}
+                    <button
+                      type="button"
+                      onClick={() => handleTabClick("contact")}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "contact"
+                          ? "bg-[var(--accent)] text-white shadow-sm"
+                          : isStep1Complete
+                            ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                            : "text-[var(--accent)] bg-[var(--accent-bg)]"
+                        }`}
                     >
-                      <Send size={16} />
-                      <span>Transmit Message</span>
-                    </Button>
+                      <User size={16} />
+                      <span>1. Contact Info</span>
+                      {isStep1Complete ? (
+                        <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+                      ) : (
+                        <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+                      )}
+                    </button>
+
+                    {/* Step 2 Tab */}
+                    <button
+                      type="button"
+                      onClick={() => handleTabClick("message")}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "message"
+                          ? "bg-[var(--accent)] text-white shadow-sm"
+                          : isStep1Complete
+                            ? isStep2Complete
+                              ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                              : "text-[var(--accent)] bg-[var(--accent-bg)]"
+                            : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+                        }`}
+                    >
+                      <FileText size={16} />
+                      <span>2. Message</span>
+                      {!isStep1Complete ? (
+                        <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 1 first" />
+                      ) : isStep2Complete ? (
+                        <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+                      ) : (
+                        <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+                      )}
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+                    {/* Tab 1: Contact Information */}
+                    {activeTab === "contact" && (
+                      <div className="card-surface p-6 sm:p-8">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+                          <div>
+                            <h3 className="font-display text-lg font-bold">Step 1: Contact Information</h3>
+                            <p className="text-xs text-stone mt-0.5">
+                              All fields marked with <span className="text-rose-500 font-bold">*</span> are mandatory to unlock Step 2.
+                            </p>
+                          </div>
+                          {isStep1Complete && (
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                              <CheckCircle2 size={14} /> Step 1 Completed
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <Input
+                            label="Your Full Name *"
+                            placeholder="e.g. Vikram Sharma"
+                            required
+                            {...register("name", {
+                              required: "Please provide your name",
+                              minLength: { value: 2, message: "At least 2 characters" },
+                            })}
+                            error={errors.name?.message}
+                          />
+
+                          <Input
+                            label="Email Address *"
+                            type="email"
+                            placeholder="vikram@example.com"
+                            leftIcon={Mail}
+                            required
+                            {...register("email", {
+                              required: "Email is required",
+                              pattern: {
+                                value: /^\S+@\S+\.\S+$/,
+                                message: "Please enter a valid email",
+                              },
+                            })}
+                            error={errors.email?.message}
+                          />
+
+                          <Input
+                            label="Phone Number (Optional)"
+                            placeholder="+91 xxxxxxxxxx"
+                            leftIcon={Phone}
+                            {...register("phone")}
+                          />
+
+                          <div className="flex flex-col gap-1.5">
+                            <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
+                              Inquiry Category
+                            </label>
+                            <select
+                              className="input-field"
+                              style={{
+                                height: "2.75rem",
+                                borderRadius: "0.75rem",
+                                backgroundColor: "var(--bg)",
+                                border: "1px solid var(--border)",
+                                padding: "0 0.85rem",
+                                fontSize: "0.875rem",
+                                color: "var(--ink)",
+                              }}
+                              {...register("category")}
+                            >
+                              {categories.map((c) => (
+                                <option key={c.value} value={c.value}>
+                                  {c.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <Input
+                            label="Subject *"
+                            placeholder="Brief topic of your inquiry (e.g., Delivery date for Order #NC-123)"
+                            required
+                            className="sm:col-span-2"
+                            {...register("subject", {
+                              required: "Subject is required",
+                              minLength: { value: 4, message: "Subject must be at least 4 characters" },
+                            })}
+                            error={errors.subject?.message}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4">
+                          <span className="text-xs text-stone">Saving will automatically unlock Step 2 (Message)</span>
+                          <Button
+                            type="button"
+                            onClick={() => handleTabClick("message")}
+                            className="flex items-center gap-2"
+                          >
+                            <span>Continue to Step 2</span>
+                            <Send size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 2: Message */}
+                    {activeTab === "message" && (
+                      <div className="card-surface p-6 sm:p-8">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+                          <div>
+                            <h3 className="font-display text-lg font-bold">Step 2: Your Message</h3>
+                            <p className="text-xs text-stone mt-0.5">
+                              Describe your question or issue in detail <span className="text-rose-500 font-bold">*</span>.
+                            </p>
+                          </div>
+                          {isStep2Complete && (
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                              <CheckCircle2 size={14} /> Step 2 Completed
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
+                            Message <span style={{ color: "var(--accent)" }}>*</span>
+                          </label>
+                          <textarea
+                            rows={5}
+                            placeholder="Please describe your question or issue in detail..."
+                            className="input-field"
+                            style={{
+                              borderRadius: "0.75rem",
+                              backgroundColor: "var(--bg)",
+                              border: "1px solid var(--border)",
+                              padding: "0.85rem",
+                              fontSize: "0.875rem",
+                              color: "var(--ink)",
+                              resize: "vertical",
+                            }}
+                            {...register("message", {
+                              required: "Message is required",
+                              minLength: { value: 10, message: "Message must be at least 10 characters" },
+                            })}
+                          />
+                          {errors.message && (
+                            <span style={{ fontSize: "0.75rem", color: "#EF4444" }}>
+                              {errors.message.message}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("contact")}
+                            className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                          >
+                            ← Back to Step 1
+                          </button>
+                          <Button
+                            type="submit"
+                            isLoading={isSubmitting}
+                            className="btn-ripple flex items-center justify-center gap-2"
+                            style={{ height: "3rem" }}
+                          >
+                            <Send size={16} />
+                            <span>Transmit Message</span>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </>
               )}
