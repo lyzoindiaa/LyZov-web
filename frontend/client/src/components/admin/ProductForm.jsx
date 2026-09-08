@@ -531,7 +531,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="w-full"
+      >
         {/* Tab 1: Basic Information */}
         {activeTab === "basic" && (
           <div className="card-surface p-6 sm:p-8">
