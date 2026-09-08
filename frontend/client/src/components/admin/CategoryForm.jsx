@@ -28,7 +28,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
       .then((res) => {
         setCategories(res.data || []);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -167,7 +167,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -199,10 +199,10 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
           type="button"
           onClick={() => handleTabClick("basic")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "basic"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep1Complete
-                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep1Complete
+              ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : "text-[var(--accent)] bg-[var(--accent-bg)]"
             }`}
         >
           <TagIcon size={16} />
@@ -219,12 +219,12 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
           type="button"
           onClick={() => handleTabClick("image")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "image"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep1Complete
-                ? isStep2Complete
-                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
-                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep1Complete
+              ? isStep2Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
           <ImageIcon size={16} />
@@ -398,11 +398,10 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
 
               {/* Image Upload Area */}
               <div
-                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
-                  isDragging
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-                }`}
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${isDragging
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}

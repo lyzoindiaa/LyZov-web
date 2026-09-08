@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles } from "lucide-react";
+import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -395,7 +395,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -425,10 +425,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           type="button"
           onClick={() => handleTabClick("basic")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "basic"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep1Complete
-                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep1Complete
+              ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : "text-[var(--accent)] bg-[var(--accent-bg)]"
             }`}
         >
           <Package size={16} />
@@ -445,12 +445,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           type="button"
           onClick={() => handleTabClick("category")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "category"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep1Complete
-                ? isStep2Complete
-                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
-                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep1Complete
+              ? isStep2Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
           <Box size={16} />
@@ -469,12 +469,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           type="button"
           onClick={() => handleTabClick("pricing")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "pricing"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep2Complete
-                ? isStep3Complete
-                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
-                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep2Complete
+              ? isStep3Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
           <Tag size={16} />
@@ -493,12 +493,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           type="button"
           onClick={() => handleTabClick("images")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "images"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep3Complete
-                ? isStep4Complete
-                  ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                  : "text-[var(--accent)] bg-[var(--accent-bg)]"
-                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep3Complete
+              ? isStep4Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
           <ImageIcon size={16} />
@@ -516,13 +516,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         <button
           type="button"
           onClick={() => handleTabClick("seo")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === "seo"
-              ? "bg-[var(--accent)] text-white shadow-sm"
-              : isStep1Complete
-                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
-                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "seo"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep1Complete
+              ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            }`}
         >
           <Globe size={16} />
           <span>5. SEO (Optional)</span>
@@ -638,114 +637,114 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
             </div>
 
             <div className="sm:col-span-2 rounded-xl border border-hairline bg-cream/10 p-4 dark:border-hairline-dark dark:bg-charcoal/30">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1.5">
-              Category Hierarchy <span className="text-[var(--red)]">*</span>
-            </label>
-            {selectedCategoryDoc && (
-              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20">
-                Level {selectedCategoryDoc.level || 1}: {selectedCategoryDoc.name}
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Step 1: Main Category */}
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-stone">
-                1. Main Category (L1)
-              </label>
-              <select
-                value={selectedL1}
-                onChange={handleL1Change}
-                className={`input-field text-xs ${errors.category && !selectedL1 ? "!border-[var(--red)] !bg-[var(--red-bg)]" : ""
-                  }`}
-              >
-                <option value="">Select Main Category</option>
-                {l1Categories.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    📁 {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Step 2: Subcategory */}
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-stone">
-                2. Subcategory (L2)
-              </label>
-              <select
-                value={selectedL2}
-                onChange={handleL2Change}
-                disabled={!selectedL1 || l2Categories.length === 0}
-                className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">
-                  {!selectedL1
-                    ? "Select Category (L1) first"
-                    : l2Categories.length === 0
-                      ? "No Subcategories"
-                      : "Select Subcategory"}
-                </option>
-                {l2Categories.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    ↳ {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Step 3: Item Type */}
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-stone">
-                3. Item Type (L3)
-              </label>
-              <select
-                value={selectedL3}
-                onChange={handleL3Change}
-                disabled={!selectedL2 || l3Categories.length === 0}
-                className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">
-                  {!selectedL2
-                    ? "Select Subcategory (L2) first"
-                    : l3Categories.length === 0
-                      ? "No Item Types"
-                      : "Select Item Type"}
-                </option>
-                {l3Categories.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    • {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <input type="hidden" {...register("category", { required: "Category is required" })} />
-
-          {/* Active Breadcrumb Path */}
-          {selectedCategoryDoc && (
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
-              <span className="font-semibold text-ink dark:text-cream">Assigned Hierarchy:</span>
-              <span>
-                {(selectedCategoryDoc.ancestors || []).map((a) => (
-                  <span key={a._id} className="text-stone font-normal">
-                    {a.name} &gt;{" "}
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1.5">
+                  Category Hierarchy <span className="text-[var(--red)]">*</span>
+                </label>
+                {selectedCategoryDoc && (
+                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20">
+                    Level {selectedCategoryDoc.level || 1}: {selectedCategoryDoc.name}
                   </span>
-                ))}
-                <span className="font-semibold text-[var(--accent)]">{selectedCategoryDoc.name}</span>
-              </span>
-            </div>
-          )}
+                )}
+              </div>
 
-          {errors.category && (
-            <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-2">
-              <AlertCircle size={12} className="shrink-0" />
-              <span>{errors.category.message}</span>
-            </p>
-          )}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Step 1: Main Category */}
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-stone">
+                    1. Main Category (L1)
+                  </label>
+                  <select
+                    value={selectedL1}
+                    onChange={handleL1Change}
+                    className={`input-field text-xs ${errors.category && !selectedL1 ? "!border-[var(--red)] !bg-[var(--red-bg)]" : ""
+                      }`}
+                  >
+                    <option value="">Select Main Category</option>
+                    {l1Categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        📁 {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Step 2: Subcategory */}
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-stone">
+                    2. Subcategory (L2)
+                  </label>
+                  <select
+                    value={selectedL2}
+                    onChange={handleL2Change}
+                    disabled={!selectedL1 || l2Categories.length === 0}
+                    className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedL1
+                        ? "Select Category (L1) first"
+                        : l2Categories.length === 0
+                          ? "No Subcategories"
+                          : "Select Subcategory"}
+                    </option>
+                    {l2Categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        ↳ {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Step 3: Item Type */}
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium text-stone">
+                    3. Item Type (L3)
+                  </label>
+                  <select
+                    value={selectedL3}
+                    onChange={handleL3Change}
+                    disabled={!selectedL2 || l3Categories.length === 0}
+                    className="input-field text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedL2
+                        ? "Select Subcategory (L2) first"
+                        : l3Categories.length === 0
+                          ? "No Item Types"
+                          : "Select Item Type"}
+                    </option>
+                    {l3Categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        • {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <input type="hidden" {...register("category", { required: "Category is required" })} />
+
+              {/* Active Breadcrumb Path */}
+              {selectedCategoryDoc && (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
+                  <span className="font-semibold text-ink dark:text-cream">Assigned Hierarchy:</span>
+                  <span>
+                    {(selectedCategoryDoc.ancestors || []).map((a) => (
+                      <span key={a._id} className="text-stone font-normal">
+                        {a.name} &gt;{" "}
+                      </span>
+                    ))}
+                    <span className="font-semibold text-[var(--accent)]">{selectedCategoryDoc.name}</span>
+                  </span>
+                </div>
+              )}
+
+              {errors.category && (
+                <p className="flex items-center gap-1 text-xs font-medium text-[var(--red)] input-error mt-2">
+                  <AlertCircle size={12} className="shrink-0" />
+                  <span>{errors.category.message}</span>
+                </p>
+              )}
             </div>
 
             {/* Brand */}
@@ -760,37 +759,37 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                   className="text-[11px] font-semibold text-amber-600 hover:underline flex items-center gap-0.5"
                 >
                   <Plus size={12} /> Add New
-            </button>
-          </div>
+                </button>
+              </div>
 
-          {showQuickBrand ? (
-            <div className="flex gap-1.5">
-              <input
-                type="text"
-                value={newBrandName}
-                onChange={(e) => setNewBrandName(e.target.value)}
-                placeholder="Brand name..."
-                className="input-field !py-1.5 text-xs"
-              />
-              <button
-                type="button"
-                onClick={handleCreateBrandInline}
-                disabled={isCreatingBrand}
-                className="btn-primary !py-1.5 !px-3 text-xs shrink-0"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <select className="input-field" {...register("brand")}>
-              <option value="">Select brand (or leave blank)</option>
-              {brands.map((b) => (
-                <option key={b._id} value={b._id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          )}
+              {showQuickBrand ? (
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newBrandName}
+                    onChange={(e) => setNewBrandName(e.target.value)}
+                    placeholder="Brand name..."
+                    className="input-field !py-1.5 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateBrandInline}
+                    disabled={isCreatingBrand}
+                    className="btn-primary !py-1.5 !px-3 text-xs shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <select className="input-field" {...register("brand")}>
+                  <option value="">Select brand (or leave blank)</option>
+                  {brands.map((b) => (
+                    <option key={b._id} value={b._id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-4">
@@ -890,109 +889,109 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 Product Images
               </label>
 
-          {/* Image Upload Area */}
-          <div
-            className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${isDragging
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-              }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-            />
-            <label
-              htmlFor="image-upload"
-              className="cursor-pointer flex flex-col items-center gap-2"
-            >
-              <Plus size={24} className="text-gray-400" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Click to upload or drag and drop
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-500">
-                PNG, JPG, GIF up to 10MB each
-              </span>
-            </label>
-          </div>
-
-          {/* Image Previews */}
-          {imagePreviews.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:grid-cols-4">
-              {imagePreviews.map((img, index) => (
-                <div
-                  key={`${index}-${img.preview}`}
-                  className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+              {/* Image Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${isDragging
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                  }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer flex flex-col items-center gap-2"
                 >
-                  <img
-                    src={img.preview}
-                    alt={`Product image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Image failed to load:', img.preview);
-                      e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
-                    }}
-                  />
+                  <Plus size={24} className="text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Click to upload or drag and drop
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    PNG, JPG, GIF up to 10MB each
+                  </span>
+                </label>
+              </div>
 
-                  {/* Image Actions Overlay */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCropImage(index)}
-                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                      title="Crop image"
+              {/* Image Previews */}
+              {imagePreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:grid-cols-4">
+                  {imagePreviews.map((img, index) => (
+                    <div
+                      key={`${index}-${img.preview}`}
+                      className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
                     >
-                      <Scissors size={16} className="text-gray-800" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveImage(index, Math.max(0, index - 1))}
-                      disabled={index === 0}
-                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Move left"
-                    >
-                      <MoveUp size={16} className="text-gray-800 -rotate-90" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveImage(index, Math.min(imagePreviews.length - 1, index + 1))}
-                      disabled={index === imagePreviews.length - 1}
-                      className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Move right"
-                    >
-                      <MoveDown size={16} className="text-gray-800 -rotate-90" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="p-2 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                      title="Remove image"
-                    >
-                      <Trash2 size={16} className="text-white" />
-                    </button>
-                  </div>
+                      <img
+                        src={img.preview}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Image failed to load:', img.preview);
+                          e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                        }}
+                      />
 
-                  {/* Image Number Badge */}
-                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {index + 1}
-                  </div>
+                      {/* Image Actions Overlay */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCropImage(index)}
+                          className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                          title="Crop image"
+                        >
+                          <Scissors size={16} className="text-gray-800" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveImage(index, Math.max(0, index - 1))}
+                          disabled={index === 0}
+                          className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Move left"
+                        >
+                          <MoveUp size={16} className="text-gray-800 -rotate-90" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveImage(index, Math.min(imagePreviews.length - 1, index + 1))}
+                          disabled={index === imagePreviews.length - 1}
+                          className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Move right"
+                        >
+                          <MoveDown size={16} className="text-gray-800 -rotate-90" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="p-2 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove image"
+                        >
+                          <Trash2 size={16} className="text-white" />
+                        </button>
+                      </div>
 
-                  {/* Existing Image Indicator */}
-                  {!img.isNew && (
-                    <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded">
-                      Existing
+                      {/* Image Number Badge */}
+                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        {index + 1}
+                      </div>
+
+                      {/* Existing Image Indicator */}
+                      {!img.isNew && (
+                        <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded">
+                          Existing
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-4 sm:col-span-2">
