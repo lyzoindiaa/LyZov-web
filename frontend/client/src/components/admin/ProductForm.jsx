@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package } from "lucide-react";
+import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -344,6 +344,26 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
     }
   };
 
+  const onFormError = (formErrors) => {
+    if (!formErrors) return;
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length === 0) return;
+
+    const basicFields = ["lyId", "title", "description", "shortDescription", "hsnNumber", "gstRate"];
+    const categoryFields = ["category", "brand"];
+    const pricingFields = ["price", "discountPrice", "stock"];
+
+    if (errorKeys.some((k) => basicFields.includes(k))) {
+      setActiveTab("basic");
+    } else if (errorKeys.some((k) => categoryFields.includes(k))) {
+      setActiveTab("category");
+    } else if (errorKeys.some((k) => pricingFields.includes(k))) {
+      setActiveTab("pricing");
+    }
+    const firstError = Object.values(formErrors)[0]?.message || "Please check required fields across all tabs.";
+    toast.error(firstError);
+  };
+
   const handleTabClick = (tabKey) => {
     if (tabKey === "category" && !isStep1Complete) {
       toast.warning("🔒 Step 1 (Basic Information) must be completed before accessing Category.");
@@ -479,7 +499,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onFormSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Tab 1: Basic Information */}
         {activeTab === "basic" && (
           <div className="card-surface p-6 sm:p-8">

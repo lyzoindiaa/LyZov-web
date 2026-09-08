@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Scissors, Trash2, ArrowLeft, Layers, CornerDownRight, CheckCircle2, Lock, Tag as TagIcon, Image as ImageIcon } from "lucide-react";
+import { Plus, Scissors, Trash2, ArrowLeft, ArrowRight, Layers, CornerDownRight, CheckCircle2, Lock, Tag as TagIcon, Image as ImageIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
