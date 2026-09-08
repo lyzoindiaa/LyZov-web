@@ -7,6 +7,7 @@ import { Mail, Phone, Clock, Send, CheckCircle2, ShieldAlert, Sparkles, MessageS
 import { supportService } from "../services/supportService";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import SEO from "../components/common/SEO";
 
 const categories = [
   { value: "Order Tracking & Delivery", label: "Order Tracking & Delivery" },
@@ -97,6 +98,13 @@ const ContactPage = ({ isDashboard = false }) => {
 
   return (
     <div style={isDashboard ? { width: "100%", paddingBottom: "2rem" } : { backgroundColor: "var(--bg)", minHeight: "80vh", padding: "3.5rem 0 5rem" }}>
+      {!isDashboard && (
+        <SEO
+          title="Contact Us — LyZov Customer Support"
+          description="Get in touch with the LyZov Store team for order inquiries, support, or partnership opportunities. Fast response guaranteed."
+          canonicalUrl={`${window.location.origin}/contact`}
+        />
+      )}
       <div className={isDashboard ? "w-full" : "container-page"}>
         {/* ── Page Header ── */}
         {isDashboard ? (

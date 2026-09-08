@@ -7,6 +7,7 @@ import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
 import CategoryFilter from "../components/product/CategoryFilter";
 import { productService } from "../services/productService";
+import SEO from "../components/common/SEO";
 
 const sortOptions = [
   { label: "Recommended", value: "popular" },
@@ -133,6 +134,11 @@ const LandingPage = () => {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
+      <SEO
+        title="LyZov Store — Premium Fitness, Spiritual & Lifestyle Shopping"
+        description="Shop at LyZov Store for premium gym equipment, handcrafted God idols, and lifestyle essentials. Curated quality, Pan-India delivery, and hassle-free support."
+        canonicalUrl={window.location.origin}
+      />
       {/* ── Top Hero Banner (Shown on default home view) ── */}
       {showHero && <Hero />}
       {/* Category Filter */}

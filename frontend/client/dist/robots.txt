@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /product/
+Allow: /policies/
+Allow: /contact
+
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password/
+Disallow: /verify-email/
+Disallow: /forgot-password
+Disallow: /api/
+
+Sitemap: https://lyzov.com/sitemap.xml

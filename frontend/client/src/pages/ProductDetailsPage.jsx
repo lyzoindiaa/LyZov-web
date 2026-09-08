@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "../utils/formatters";
 import { ProductDetailsSkeleton } from "../components/skeletons/Skeletons";
 import ProductGrid from "../components/product/ProductGrid";
 import QuantityStepper from "../components/ui/QuantityStepper";
+import SEO from "../components/common/SEO";
 import { toast } from "react-toastify";
 
 const ProductDetailsPage = () => {
@@ -38,6 +39,10 @@ const ProductDetailsPage = () => {
       setLoadError(false);
       try {
         const res = await productService.getProductBySlug(slug);
+        if (res.data?.isRedirect && res.data?.canonicalSlug) {
+          navigate(`/product/${res.data.canonicalSlug}`, { replace: true });
+          return;
+        }
         const prod = res.data.product || res.data;
         setProduct(prod);
         setRelated(res.data.relatedProducts || []);
@@ -172,8 +177,96 @@ const ProductDetailsPage = () => {
       { id: "shipping", label: "Shipping & Returns" },
     ];
 
+  // Dynamic SEO and Schema.org generation
+  const pageTitle = product.seo?.metaTitle || `${product.title} | Buy Online at LyZov`;
+  const cleanDescription = (product.shortDescription || product.description || "")
+    .replace(/<[^>]*>?/gm, "")
+    .trim();
+  const pageDescription =
+    product.seo?.metaDescription ||
+    (cleanDescription
+      ? `${cleanDescription.slice(0, 150)} — Shop genuine products with Pan-India delivery on LyZov.`
+      : "Shop premium products online at LyZov.");
+  const canonicalUrl = product.seo?.canonicalUrl || `${window.location.origin}/product/${product.slug}`;
+  const ogImage = product.images?.[0]?.url || `${window.location.origin}/lyzov-logo.png`;
+
+  const breadcrumbItems = [
+    { name: "Home", url: `${window.location.origin}/` },
+    { name: "Shop", url: `${window.location.origin}/shop` },
+    ...(product.category?.ancestors || []).map((anc) => ({
+      name: anc.name,
+      url: `${window.location.origin}/shop?category=${encodeURIComponent(anc.slug || anc._id)}`,
+    })),
+    ...(product.category
+      ? [
+          {
+            name: product.category.name,
+            url: `${window.location.origin}/shop?category=${encodeURIComponent(product.category.slug || product.category._id)}`,
+          },
+        ]
+      : []),
+    { name: product.title, url: canonicalUrl },
+  ];
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "@id": `${canonicalUrl}#product`,
+        name: product.title,
+        description: pageDescription,
+        image: product.images?.map((img) => img.url).filter(Boolean) || [ogImage],
+        sku: product.lyId || product.sku || undefined,
+        ...(product.mpn ? { mpn: product.mpn } : {}),
+        ...(product.brand?.name ? { brand: { "@type": "Brand", name: product.brand.name } } : {}),
+        offers: {
+          "@type": "Offer",
+          url: canonicalUrl,
+          priceCurrency: "INR",
+          price: String(finalPrice || 0),
+          priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          availability: stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+          seller: {
+            "@type": "Organization",
+            name: "LyZov Store",
+          },
+        },
+        ...(product.ratingsCount > 0
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: String(product.ratingsAverage || 5),
+                reviewCount: String(product.ratingsCount),
+                bestRating: "5",
+                worstRating: "1",
+              },
+            }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbItems.map((crumb, idx) => ({
+          "@type": "ListItem",
+          position: idx + 1,
+          name: crumb.name,
+          item: crumb.url,
+        })),
+      },
+    ],
+  };
+
   return (
     <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh" }}>
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        canonicalUrl={canonicalUrl}
+        ogImage={ogImage}
+        ogType="product"
+        schema={productSchema}
+      />
       <div className="container-page py-8 lg:py-12">
         {/* Navigation & Breadcrumb */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
@@ -195,6 +288,7 @@ const ProductDetailsPage = () => {
             </button>
 
             <nav
+              aria-label="Breadcrumb"
               style={{
                 display: "flex",
                 gap: "0.5rem",
@@ -461,9 +555,13 @@ const ProductDetailsPage = () => {
           {/* Buy Box */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
-              <span className="badge badge-accent" style={{ marginBottom: "0.5rem" }}>
+              <Link
+                to={`/shop?brand=${encodeURIComponent(product.brand?.slug || product.brand?._id || "")}`}
+                className="badge badge-accent hover:opacity-80 transition-opacity"
+                style={{ marginBottom: "0.5rem", textDecoration: "none", display: "inline-block" }}
+              >
                 {product.brand?.name || "LyZov Store"}
-              </span>
+              </Link>
               <h1
                 style={{
                   fontSize: "clamp(1.5rem, 2.5vw, 2rem)",

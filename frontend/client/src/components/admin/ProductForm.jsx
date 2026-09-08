@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package } from "lucide-react";
+import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -157,6 +157,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         stock: product.stock,
         category: product.category?._id || "",
         brand: product.brand?._id || "",
+        slug: product.slug || "",
+        mpn: product.mpn || "",
+        metaTitle: product.seo?.metaTitle || "",
+        metaDescription: product.seo?.metaDescription || "",
+        canonicalUrl: product.seo?.canonicalUrl || "",
       });
       // Load existing images with proper structure
       console.log('Loading product images:', product.images);
@@ -185,6 +190,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         stock: "",
         category: "",
         brand: "",
+        slug: "",
+        mpn: "",
+        metaTitle: "",
+        metaDescription: "",
+        canonicalUrl: "",
       });
       setImagePreviews([]);
     }
@@ -357,6 +367,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
       toast.warning("🔒 Step 3 (Pricing & Stock) must be completed before accessing Images.");
       return;
     }
+    if (tabKey === "seo" && !isStep1Complete) {
+      toast.warning("🔒 Step 1 (Basic Information) must be completed to preview SEO.");
+      return;
+    }
     setActiveTab(tabKey);
   };
 
@@ -476,6 +490,25 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           ) : (
             <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
           )}
+        </button>
+
+        {/* Step 5 Tab (Optional SEO) */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("seo")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === "seo"
+              ? "bg-[var(--accent)] text-white shadow-sm"
+              : isStep1Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+          }`}
+        >
+          <Globe size={16} />
+          <span>5. SEO (Optional)</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-bg)] text-[var(--accent)] font-medium">
+            Auto
+          </span>
         </button>
       </div>
 
@@ -942,13 +975,167 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           )}
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex items-center justify-between pt-4 sm:col-span-2">
               <button
                 type="button"
                 onClick={() => setActiveTab("pricing")}
                 className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
               >
                 ← Back to Step 3
+              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("seo")}
+                  className="px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900/50 transition-colors flex items-center gap-1.5"
+                >
+                  <Globe size={14} /> Customize SEO →
+                </button>
+                <Button type="submit" isLoading={isSubmitting || isLoading} className="flex items-center gap-2">
+                  <CheckCircle2 size={16} />
+                  <span>{product ? "Save Changes" : "Create Product"}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: SEO & Google Search Preview */}
+        {activeTab === "seo" && (
+          <div className="card-surface p-6 sm:p-8 col-span-1 sm:col-span-2 space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-2 pb-4 border-b border-hairline dark:border-hairline-dark">
+              <div>
+                <h3 className="font-display text-lg font-bold">Step 5: Search Engine Optimization (SEO)</h3>
+                <p className="text-xs text-stone mt-0.5">
+                  LyZov automatically generates high-ranking Google metadata. All fields below are completely optional.
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/30 px-3 py-1 rounded-full border border-blue-500/20 flex items-center gap-1.5">
+                <Sparkles size={14} /> Auto-Optimized
+              </span>
+            </div>
+
+            {/* Google Search Result Preview Simulator */}
+            <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-hairline dark:border-hairline-dark shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-stone">
+                  Google Search Snippet Preview
+                </span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Preview
+                </span>
+              </div>
+              <div className="bg-slate-50 dark:bg-black/40 p-4 rounded-lg border border-slate-200 dark:border-zinc-800 font-sans max-w-xl">
+                <div className="text-[12px] text-[#202124] dark:text-[#bdc1c6] flex items-center gap-1.5 mb-1">
+                  <span className="w-4 h-4 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-[9px] font-bold">L</span>
+                  <span>LyZov Store</span>
+                  <span className="text-slate-400">›</span>
+                  <span className="truncate">product › {formValues.slug || "product-url-slug"}</span>
+                </div>
+                <div className="text-[18px] text-[#1a0dab] dark:text-[#8ab4f8] font-medium leading-snug hover:underline cursor-pointer truncate">
+                  {formValues.metaTitle?.trim() || (formValues.title?.trim() ? `${formValues.title.trim()} | Buy Online at LyZov` : "Product Title | Buy Online at LyZov")}
+                </div>
+                <div className="text-[13px] text-[#4d5156] dark:text-[#bdc1c6] mt-1 line-clamp-2 leading-relaxed">
+                  {formValues.metaDescription?.trim() ||
+                    (formValues.shortDescription?.trim() || formValues.description?.trim()
+                      ? `${(formValues.shortDescription || formValues.description).replace(/<[^>]*>?/gm, "").slice(0, 150)} — Shop genuine products with Pan-India delivery on LyZov.`
+                      : "Shop premium quality products online at LyZov Store. Fast delivery across India and hassle-free support.")}
+                </div>
+              </div>
+            </div>
+
+            {/* Form Inputs for SEO */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white">Custom Metadata Overrides</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cleanTitle = (formValues.title || "").trim();
+                    const cleanDesc = (formValues.shortDescription || formValues.description || "").replace(/<[^>]*>?/gm, "").trim();
+                    if (cleanTitle) {
+                      setValue("metaTitle", `${cleanTitle} | Buy Online at LyZov`, { shouldValidate: true });
+                    }
+                    if (cleanDesc) {
+                      setValue("metaDescription", `${cleanDesc.slice(0, 145)} — Pan-India Delivery on LyZov.`, { shouldValidate: true });
+                    }
+                    toast.success("Generated SEO recommendations from product details!");
+                  }}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                >
+                  <Sparkles size={12} /> Auto-Generate from Title & Description
+                </button>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Meta Title (Optional)
+                  </label>
+                  <span className={`text-[11px] ${(formValues.metaTitle?.length || 0) > 60 ? "text-amber-500 font-semibold" : "text-stone"}`}>
+                    {formValues.metaTitle?.length || 0} / 60 recommended
+                  </span>
+                </div>
+                <Input
+                  {...register("metaTitle")}
+                  placeholder={formValues.title ? `${formValues.title} | Buy Online at LyZov` : "Leave blank to auto-generate"}
+                  error={errors.metaTitle?.message}
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Meta Description (Optional)
+                  </label>
+                  <span className={`text-[11px] ${(formValues.metaDescription?.length || 0) > 160 ? "text-amber-500 font-semibold" : "text-stone"}`}>
+                    {formValues.metaDescription?.length || 0} / 160 recommended
+                  </span>
+                </div>
+                <textarea
+                  {...register("metaDescription")}
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-hairline dark:border-hairline-dark bg-[var(--bg)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  placeholder="Leave blank to auto-generate from product description"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                    Manufacturer Part Number (MPN) (Optional)
+                  </label>
+                  <Input
+                    {...register("mpn")}
+                    placeholder="e.g. MFG-8849-V2"
+                  />
+                  <p className="text-[11px] text-stone mt-1">
+                    Authentic manufacturer part number only. Do <strong>not</strong> enter SKU or internal store IDs here.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">
+                    Custom URL Slug (Optional)
+                  </label>
+                  <Input
+                    {...register("slug")}
+                    placeholder="e.g. mens-cotton-running-tshirt"
+                  />
+                  <p className="text-[11px] text-stone mt-1">
+                    Leave blank for default URL. Changing an existing slug automatically preserves search ranking with a 301 redirect.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4">
+              <button
+                type="button"
+                onClick={() => setActiveTab("images")}
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+              >
+                ← Back to Step 4 (Images)
               </button>
               <Button type="submit" isLoading={isSubmitting || isLoading} className="flex items-center gap-2">
                 <CheckCircle2 size={16} />

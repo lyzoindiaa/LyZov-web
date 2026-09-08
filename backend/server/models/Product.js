@@ -135,17 +135,32 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    mpn: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    slugHistory: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
     seo: {
-      metaTitle: { type: String, default: "" },
-      metaDescription: { type: String, default: "" },
+      metaTitle: { type: String, trim: true, default: "" },
+      metaDescription: { type: String, trim: true, default: "" },
+      canonicalUrl: { type: String, trim: true, default: "" },
     },
   },
   { timestamps: true }
 );
 
 productSchema.pre("validate", function (next) {
-  if (this.title) {
-    this.slug = slugify(this.title, { lower: true, strict: true }) + "-" + Date.now().toString(36);
+  if (!this.slug && this.title) {
+    const baseSlug = slugify(this.title, { lower: true, strict: true, remove: /[*+~.()'"!:@]/g });
+    const shortHash = Math.random().toString(36).substring(2, 7);
+    this.slug = `${baseSlug}-${shortHash}`;
   }
   next();
 });
@@ -170,5 +185,6 @@ productSchema.index({ categoryPath: 1 });
 productSchema.index({ brand: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ isFeatured: 1, isNewArrival: 1, isTrending: 1 });
+productSchema.index({ slugHistory: 1 });
 
 module.exports = mongoose.model("Product", productSchema);
