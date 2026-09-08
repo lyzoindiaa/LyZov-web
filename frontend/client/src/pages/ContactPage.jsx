@@ -88,6 +88,17 @@ const ContactPage = ({ isDashboard = false }) => {
     }
   };
 
+  const onFormError = (formErrors) => {
+    if (!formErrors) return;
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length === 0) return;
+    if (errorKeys.some((k) => ["name", "email", "phone", "subject", "category"].includes(k))) {
+      setActiveTab("contact");
+    }
+    const firstError = Object.values(formErrors)[0]?.message || "Please fill in all required fields.";
+    toast.error(firstError);
+  };
+
   const handleTabClick = (tabKey) => {
     if (tabKey === "message" && !isStep1Complete) {
       toast.warning("🔒 Step 1 (Contact Information) must be completed before accessing Message.");
@@ -404,7 +415,7 @@ const ContactPage = ({ isDashboard = false }) => {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+                  <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex flex-col gap-5">
                     {/* Tab 1: Contact Information */}
                     {activeTab === "contact" && (
                       <div className="card-surface p-6 sm:p-8">
