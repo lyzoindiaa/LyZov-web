@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles } from "lucide-react";
+import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles, Ruler } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -14,7 +14,7 @@ import { GST_RATES } from "../../data/gstRates";
 const createDraftLyId = () => `LYZOV-${String(Date.now()).slice(-6)}`;
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
-  const [activeTab, setActiveTab] = useState("basic"); // "basic" | "category" | "pricing" | "images"
+  const [activeTab, setActiveTab] = useState("basic"); // "basic" | "specs" | "category" | "pricing" | "images" | "seo"
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState([]);
@@ -54,17 +54,26 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
   const isStep2Complete = Boolean(
     isStep1Complete &&
-    (formValues?.category || selectedL1 || selectedL2 || selectedL3)
+    formValues?.productSizeHeight?.toString().trim() &&
+    formValues?.productSizeLength?.toString().trim() &&
+    formValues?.productSizeWidth?.toString().trim() &&
+    formValues?.weight?.toString().trim() &&
+    formValues?.packOf?.toString().trim()
   );
 
   const isStep3Complete = Boolean(
     isStep2Complete &&
-    formValues?.price &&
-    formValues?.stock !== undefined && formValues?.stock !== ""
+    (formValues?.category || selectedL1 || selectedL2 || selectedL3)
   );
 
   const isStep4Complete = Boolean(
     isStep3Complete &&
+    formValues?.price &&
+    formValues?.stock !== undefined && formValues?.stock !== ""
+  );
+
+  const isStep5Complete = Boolean(
+    isStep4Complete &&
     imagePreviews.length > 0
   );
 
@@ -390,31 +399,41 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
     if (errorKeys.length === 0) return;
 
     const basicFields = ["lyId", "title", "description", "shortDescription", "hsnNumber", "gstRate"];
+    const specsFields = ["productSizeHeight", "productSizeLength", "productSizeWidth", "weight", "packOf"];
     const categoryFields = ["category", "brand"];
     const pricingFields = ["price", "discountPrice", "stock"];
+    const seoFields = ["searchKeyword", "metaTitle", "metaDescription", "mpn", "slug"];
 
     if (errorKeys.some((k) => basicFields.includes(k))) {
       setActiveTab("basic");
+    } else if (errorKeys.some((k) => specsFields.includes(k))) {
+      setActiveTab("specs");
     } else if (errorKeys.some((k) => categoryFields.includes(k))) {
       setActiveTab("category");
     } else if (errorKeys.some((k) => pricingFields.includes(k))) {
       setActiveTab("pricing");
+    } else if (errorKeys.some((k) => seoFields.includes(k))) {
+      setActiveTab("seo");
     }
     const firstError = Object.values(formErrors)[0]?.message || "Please check required fields across all tabs.";
     toast.error(firstError);
   };
 
   const handleTabClick = (tabKey) => {
-    if (tabKey === "category" && !isStep1Complete) {
-      toast.warning("🔒 Step 1 (Basic Information) must be completed before accessing Category.");
+    if (tabKey === "specs" && !isStep1Complete) {
+      toast.warning("🔒 Step 1 (Basic Information) must be completed before accessing Product Specs.");
       return;
     }
-    if (tabKey === "pricing" && !isStep2Complete) {
-      toast.warning("🔒 Step 2 (Category Selection) must be completed before accessing Pricing.");
+    if (tabKey === "category" && !isStep2Complete) {
+      toast.warning("🔒 Step 2 (Product Specs) must be completed before accessing Category.");
       return;
     }
-    if (tabKey === "images" && !isStep3Complete) {
-      toast.warning("🔒 Step 3 (Pricing & Stock) must be completed before accessing Images.");
+    if (tabKey === "pricing" && !isStep3Complete) {
+      toast.warning("🔒 Step 3 (Category Selection) must be completed before accessing Pricing.");
+      return;
+    }
+    if (tabKey === "images" && !isStep4Complete) {
+      toast.warning("🔒 Step 4 (Pricing & Stock) must be completed before accessing Images.");
       return;
     }
     if (tabKey === "seo" && !isStep1Complete) {
@@ -473,8 +492,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         {/* Step 2 Tab */}
         <button
           type="button"
-          onClick={() => handleTabClick("category")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "category"
+          onClick={() => handleTabClick("specs")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "specs"
             ? "bg-[var(--accent)] text-white shadow-sm"
             : isStep1Complete
               ? isStep2Complete
@@ -483,8 +502,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
-          <Box size={16} />
-          <span>2. Category</span>
+          <Ruler size={16} />
+          <span>2. Product Specs</span>
           {!isStep1Complete ? (
             <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 1 first" />
           ) : isStep2Complete ? (
@@ -497,8 +516,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         {/* Step 3 Tab */}
         <button
           type="button"
-          onClick={() => handleTabClick("pricing")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "pricing"
+          onClick={() => handleTabClick("category")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "category"
             ? "bg-[var(--accent)] text-white shadow-sm"
             : isStep2Complete
               ? isStep3Complete
@@ -507,8 +526,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
-          <Tag size={16} />
-          <span>3. Pricing & Stock</span>
+          <Box size={16} />
+          <span>3. Category</span>
           {!isStep2Complete ? (
             <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 2 first" />
           ) : isStep3Complete ? (
@@ -521,8 +540,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         {/* Step 4 Tab */}
         <button
           type="button"
-          onClick={() => handleTabClick("images")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "images"
+          onClick={() => handleTabClick("pricing")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "pricing"
             ? "bg-[var(--accent)] text-white shadow-sm"
             : isStep3Complete
               ? isStep4Complete
@@ -531,8 +550,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
             }`}
         >
-          <ImageIcon size={16} />
-          <span>4. Images</span>
+          <Tag size={16} />
+          <span>4. Pricing & Stock</span>
           {!isStep3Complete ? (
             <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 3 first" />
           ) : isStep4Complete ? (
@@ -542,7 +561,31 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           )}
         </button>
 
-        {/* Step 5 Tab (Optional SEO) */}
+        {/* Step 5 Tab */}
+        <button
+          type="button"
+          onClick={() => handleTabClick("images")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "images"
+            ? "bg-[var(--accent)] text-white shadow-sm"
+            : isStep4Complete
+              ? isStep5Complete
+                ? "text-stone hover:text-[var(--ink)] hover:bg-[var(--bg-raised)]"
+                : "text-[var(--accent)] bg-[var(--accent-bg)]"
+              : "opacity-50 cursor-not-allowed text-stone bg-[var(--bg-subtle)]"
+            }`}
+        >
+          <ImageIcon size={16} />
+          <span>5. Images</span>
+          {!isStep4Complete ? (
+            <Lock size={14} className="text-stone ml-1" title="Locked: Complete Step 4 first" />
+          ) : isStep5Complete ? (
+            <CheckCircle2 size={15} className="text-emerald-500 ml-1" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
+          )}
+        </button>
+
+        {/* Step 6 Tab (Optional SEO) */}
         <button
           type="button"
           onClick={() => handleTabClick("seo")}
@@ -554,7 +597,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
             }`}
         >
           <Globe size={16} />
-          <span>5. SEO (Optional)</span>
+          <span>6. SEO (Optional)</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-bg)] text-[var(--accent)] font-medium">
             Auto
           </span>
@@ -637,31 +680,13 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
               <Input label="Special Feature (Optional)" {...register("specialFeature")} />
               <Input label="Color (Optional)" {...register("color")} />
-
-              <div className="sm:col-span-2 pt-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Product Size (Optional)</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                  <Input label="Height" {...register("productSizeHeight")} />
-                  <Input label="Length" {...register("productSizeLength")} />
-                  <Input label="Width" {...register("productSizeWidth")} />
-                  <Input label="Weight" {...register("weight")} />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
-              <Input label="Pack Of (Optional)" {...register("packOf")} />
-              <Input label="Warranty (Optional)" {...register("warranty")} />
-              <Input label="Country (Optional)" {...register("country")} />
-              <Input label="Manufacturer (Optional)" {...register("manufacturer")} />
-              <Input label="Packer (Optional)" {...register("packer")} />
             </div>
 
             <div className="flex items-center justify-between pt-4">
-              <span className="text-xs text-stone">Saving will automatically unlock Step 2 (Category)</span>
+              <span className="text-xs text-stone">Complete this step to unlock Product Specs</span>
               <Button
                 type="button"
-                onClick={() => handleTabClick("category")}
+                onClick={() => handleTabClick("specs")}
                 className="flex items-center gap-2"
               >
                 <span>Continue to Step 2</span>
@@ -671,19 +696,116 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           </div>
         )}
 
-        {/* Tab 2: Category Selection */}
-        {activeTab === "category" && (
+        {/* Tab 2: Product Specifications */}
+        {activeTab === "specs" && (
           <div className="card-surface p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
-                <h3 className="font-display text-lg font-bold">Step 2: Category Selection</h3>
+                <h3 className="font-display text-lg font-bold">Step 2: Product Specifications</h3>
                 <p className="text-xs text-stone mt-0.5">
-                  Select the appropriate category hierarchy for your product <span className="text-rose-500 font-bold">*</span>.
+                  Enter product dimensions, weight, and pack details. Fields marked with <span className="text-rose-500 font-bold">*</span> are required.
                 </p>
               </div>
               {isStep2Complete && (
                 <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> Step 2 Completed
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Product Size *</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <Input
+                    label="Height (cm) *"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 25"
+                    {...register("productSizeHeight", { required: "Height is required", min: { value: 0, message: "Height cannot be negative" } })}
+                    error={errors.productSizeHeight?.message}
+                  />
+                  <Input
+                    label="Length (cm) *"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 30"
+                    {...register("productSizeLength", { required: "Length is required", min: { value: 0, message: "Length cannot be negative" } })}
+                    error={errors.productSizeLength?.message}
+                  />
+                  <Input
+                    label="Width (cm) *"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 15"
+                    {...register("productSizeWidth", { required: "Width is required", min: { value: 0, message: "Width cannot be negative" } })}
+                    error={errors.productSizeWidth?.message}
+                  />
+                </div>
+              </div>
+
+              <Input
+                label="Weight (kg) *"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 0.5"
+                {...register("weight", { required: "Weight is required", min: { value: 0, message: "Weight cannot be negative" } })}
+                error={errors.weight?.message}
+              />
+
+              <Input
+                label="Pack Of *"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="e.g. 1"
+                {...register("packOf", { required: "Pack of is required", min: { value: 1, message: "Pack of must be at least 1" } })}
+                error={errors.packOf?.message}
+              />
+
+              <Input label="Warranty (Optional)" {...register("warranty")} />
+              <Input label="Country (Optional)" {...register("country")} />
+              <Input label="Manufacturer (Optional)" {...register("manufacturer")} />
+              <Input label="Packer (Optional)" {...register("packer")} />
+            </div>
+
+            <div className="flex items-center justify-between pt-4">
+              <button
+                type="button"
+                onClick={() => setActiveTab("basic")}
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+              >
+                ← Back to Step 1
+              </button>
+              <Button
+                type="button"
+                onClick={() => handleTabClick("category")}
+                className="flex items-center gap-2"
+              >
+                <span>Continue to Step 3</span>
+                <ArrowRight size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Category Selection */}
+        {activeTab === "category" && (
+          <div className="card-surface p-6 sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+              <div>
+                <h3 className="font-display text-lg font-bold">Step 3: Category Selection</h3>
+                <p className="text-xs text-stone mt-0.5">
+                  Select the appropriate category hierarchy for your product <span className="text-rose-500 font-bold">*</span>.
+                </p>
+              </div>
+              {isStep3Complete && (
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                  <CheckCircle2 size={14} /> Step 3 Completed
                 </span>
               )}
             </div>
@@ -847,36 +969,36 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
             <div className="flex items-center justify-between pt-4">
               <button
                 type="button"
-                onClick={() => setActiveTab("basic")}
+                onClick={() => setActiveTab("specs")}
                 className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
               >
-                ← Back to Step 1
+                ← Back to Step 2
               </button>
               <Button
                 type="button"
                 onClick={() => handleTabClick("pricing")}
                 className="flex items-center gap-2"
               >
-                <span>Continue to Step 3</span>
+                <span>Continue to Step 4</span>
                 <ArrowRight size={16} />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Tab 3: Pricing & Stock */}
+        {/* Tab 4: Pricing & Stock */}
         {activeTab === "pricing" && (
           <div className="card-surface p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
-                <h3 className="font-display text-lg font-bold">Step 3: Pricing & Stock</h3>
+                <h3 className="font-display text-lg font-bold">Step 4: Pricing & Stock</h3>
                 <p className="text-xs text-stone mt-0.5">
                   Set pricing and inventory details <span className="text-rose-500 font-bold">*</span>.
                 </p>
               </div>
-              {isStep3Complete && (
+              {isStep4Complete && (
                 <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
-                  <CheckCircle2 size={14} /> Step 3 Completed
+                  <CheckCircle2 size={14} /> Step 4 Completed
                 </span>
               )}
             </div>
@@ -886,26 +1008,27 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 label="Price (₹) *"
                 type="number"
                 step="0.01"
+                min="0"
                 {...register("price", { required: "Price is required", min: 0 })}
                 error={errors.price?.message}
               />
-              <Input label="Discount Price (₹)" type="number" step="0.01" {...register("discountPrice")} />
+              <Input label="Discount Price (₹)" type="number" step="0.01" min="0" {...register("discountPrice")} />
 
               <Input
                 label="Stock Quantity *"
                 type="number"
+                min="0"
+                step="1"
                 {...register("stock", { required: "Stock is required", min: 0 })}
                 error={errors.stock?.message}
               />
 
-              <Input label="Search Keyword (Optional)" {...register("searchKeyword")} />
-
               <div className="sm:col-span-2 pt-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Packaging Size (Optional)</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <Input label="Height" {...register("packagingSizeHeight")} />
-                  <Input label="Length" {...register("packagingSizeLength")} />
-                  <Input label="Width" {...register("packagingSizeWidth")} />
+                  <Input label="Height (cm)" type="number" step="0.01" min="0" {...register("packagingSizeHeight")} />
+                  <Input label="Length (cm)" type="number" step="0.01" min="0" {...register("packagingSizeLength")} />
+                  <Input label="Width (cm)" type="number" step="0.01" min="0" {...register("packagingSizeWidth")} />
                 </div>
               </div>
             </div>
@@ -916,31 +1039,31 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 onClick={() => setActiveTab("category")}
                 className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
               >
-                ← Back to Step 2
+                ← Back to Step 3
               </button>
               <Button
                 type="button"
                 onClick={() => handleTabClick("images")}
                 className="flex items-center gap-2"
               >
-                <span>Continue to Step 4</span>
+                <span>Continue to Step 5</span>
                 <ArrowRight size={16} />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Tab 4: Images */}
+        {/* Tab 5: Images */}
         {activeTab === "images" && (
           <div className="card-surface p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
-                <h3 className="font-display text-lg font-bold">Step 4: Product Images</h3>
+                <h3 className="font-display text-lg font-bold">Step 5: Product Images</h3>
                 <p className="text-xs text-stone mt-0.5">
                   Upload product images <span className="text-rose-500 font-bold">*</span>.
                 </p>
               </div>
-              {isStep4Complete && (
+              {isStep5Complete && (
                 <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> Images Added
                 </span>
@@ -1063,7 +1186,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 onClick={() => setActiveTab("pricing")}
                 className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
               >
-                ← Back to Step 3
+                ← Back to Step 4
               </button>
               <div className="flex items-center gap-3">
                 <button
@@ -1082,12 +1205,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
           </div>
         )}
 
-        {/* Step 5: SEO & Google Search Preview */}
+        {/* Step 6: SEO & Google Search Preview */}
         {activeTab === "seo" && (
           <div className="card-surface p-6 sm:p-8 col-span-1 sm:col-span-2 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
-                <h3 className="font-display text-lg font-bold">Step 5: Search Engine Optimization (SEO)</h3>
+                <h3 className="font-display text-lg font-bold">Step 6: Search Engine Optimization (SEO)</h3>
                 <p className="text-xs text-stone mt-0.5">
                   LyZov automatically generates high-ranking Google metadata. All fields below are completely optional.
                 </p>
@@ -1128,6 +1251,31 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
             {/* Form Inputs for SEO */}
             <div className="space-y-4 pt-2">
+              <div>
+                <Input
+                  label="Search Keywords (Optional)"
+                  placeholder="e.g. cotton shirt, summer wear, casual"
+                  hint="Separate multiple keywords with commas. These power store search and SEO."
+                  {...register("searchKeyword")}
+                />
+                {formValues.searchKeyword?.trim() && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {formValues.searchKeyword
+                      .split(",")
+                      .map((keyword) => keyword.trim())
+                      .filter(Boolean)
+                      .map((keyword) => (
+                        <span
+                          key={keyword}
+                          className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-gray-900 dark:text-white">Custom Metadata Overrides</h4>
                 <button
@@ -1217,7 +1365,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 onClick={() => setActiveTab("images")}
                 className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
               >
-                ← Back to Step 4 (Images)
+                ← Back to Step 5 (Images)
               </button>
               <Button type="submit" isLoading={isSubmitting || isLoading} className="flex items-center gap-2">
                 <CheckCircle2 size={16} />

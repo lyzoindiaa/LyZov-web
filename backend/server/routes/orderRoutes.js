@@ -10,16 +10,18 @@ const {
   updateOrderStatus,
 } = require("../controllers/orderController");
 const { protect, authorize } = require("../middleware/authMiddleware");
+const { requireProfileComplete } = require("../middleware/profileMiddleware");
 const validate = require("../middleware/validateMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/create-payment-intent", createPaymentIntent);
+router.post("/create-payment-intent", requireProfileComplete, createPaymentIntent);
 
 router.post(
   "/",
+  requireProfileComplete,
   [
     body("shippingAddress").isObject().withMessage("Shipping address is required"),
     body("paymentMethod").isIn(["stripe", "cod"]).withMessage("Invalid payment method"),

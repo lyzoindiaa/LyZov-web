@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { clearAuthError } from "../features/auth/authSlice";
-import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft } from "lucide-react";
+import { registerUser, clearAuthError } from "../features/auth/authSlice";
+import { ShieldCheck, Truck, Award, Sparkles, ArrowLeft, Mail, User } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 const trustBullets = [
   { icon: ShieldCheck, text: "Fast & easy sign up in under 30s" },
@@ -16,12 +18,13 @@ const trustBullets = [
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, status, error } = useSelector((state) => state.auth);
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
   useEffect(() => {
     if (isAuthenticated) {
       const isSeller = user?.role === "seller" || user?.role === "admin";
-      navigate(isSeller ? "/seller" : "/dashboard", { replace: true });
+      navigate(isSeller ? "/seller" : "/complete-profile", { replace: true });
     }
     return () => dispatch(clearAuthError());
   }, [isAuthenticated, user?.role, navigate, dispatch]);
@@ -30,6 +33,19 @@ const RegisterPage = () => {
     const apiUrl = import.meta.env.VITE_API_URL ||
       (import.meta.env.MODE === "production" ? "https://lyzov.onrender.com/api" : "http://localhost:5000/api");
     window.location.assign(`${apiUrl}/auth/google`);
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      // Only send name and email (no password)
+      const result = await dispatch(registerUser({ name: data.name, email: data.email }));
+      if (result.payload) {
+        toast.success("Account created! Redirecting to complete your profile...");
+        navigate("/complete-profile", { replace: true });
+      }
+    } catch (err) {
+      toast.error(error || "Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -171,9 +187,7 @@ const RegisterPage = () => {
             </p>
           </div>
 
-          {/* Email/password registration is temporarily disabled because the app is moving to Google-only authentication.
-              The previous form is intentionally kept in this comment for the upcoming auth migration. */}
-          {/*
+          {/* Email/password registration - Quick signup with name + email only */}
           <div
             style={{
               backgroundColor: "var(--surface)",
@@ -183,64 +197,77 @@ const RegisterPage = () => {
               boxShadow: "var(--shadow-md)",
             }}
           >
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
-              <Input
-                label="Full Name"
-                placeholder="John Doe"
-                leftIcon={User}
-                required
-                {...register("name", {
-                  required: "Name is required",
-                  minLength: { value: 2, message: "Name must be at least 2 characters" },
-                })}
-                error={errors.name?.message}
-              />
+            <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
+                  Full Name
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem" }}>
+                  <User size={16} style={{ color: "var(--ink-muted)" }} />
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    style={{
+                      flex: 1,
+                      border: "none",
+                      outline: "none",
+                      backgroundColor: "transparent",
+                      color: "var(--ink)",
+                      fontSize: "0.875rem",
+                    }}
+                    {...register("name", {
+                      required: "Name is required",
+                      minLength: { value: 2, message: "Name must be at least 2 characters" },
+                      maxLength: { value: 60, message: "Name cannot exceed 60 characters" },
+                    })}
+                  />
+                </div>
+                {errors.name && (
+                  <span style={{ fontSize: "0.75rem", color: "var(--red)", marginTop: "0.25rem", display: "block" }}>
+                    {errors.name.message}
+                  </span>
+                )}
+              </div>
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="you@example.com"
-                leftIcon={Mail}
-                required
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address format",
-                  },
-                })}
-                error={errors.email?.message}
-              />
+              <div>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)" }}>
+                  Email Address
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem" }}>
+                  <Mail size={16} style={{ color: "var(--ink-muted)" }} />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    style={{
+                      flex: 1,
+                      border: "none",
+                      outline: "none",
+                      backgroundColor: "transparent",
+                      color: "var(--ink)",
+                      fontSize: "0.875rem",
+                    }}
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address format",
+                      },
+                    })}
+                  />
+                </div>
+                {errors.email && (
+                  <span style={{ fontSize: "0.75rem", color: "var(--red)", marginTop: "0.25rem", display: "block" }}>
+                    {errors.email.message}
+                  </span>
+                )}
+              </div>
 
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                leftIcon={Lock}
-                required
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: { value: 6, message: "Password must be at least 6 characters" },
-                })}
-                error={errors.password?.message}
-              />
-
-              <Input
-                label="Confirm Password"
-                type="password"
-                placeholder="••••••••"
-                leftIcon={Lock}
-                required
-                {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                  validate: (val) => val === passwordVal || "Passwords do not match",
-                })}
-                error={errors.confirmPassword?.message}
-              />
+              <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", textAlign: "center" }}>
+                You'll complete your profile after signing up
+              </p>
 
               {error && (
                 <div
-                  className="input-error"
                   style={{
                     fontSize: "0.75rem",
                     color: "var(--red)",
@@ -248,32 +275,46 @@ const RegisterPage = () => {
                     border: "1px solid var(--red)/20",
                     padding: "0.625rem 0.875rem",
                     borderRadius: "0.625rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
                   }}
                 >
                   {error}
                 </div>
               )}
 
-              <Button type="submit" variant="primary" size="lg" isLoading={status === "loading"} className="mt-1 w-full btn-ripple">
-                Create Account
-              </Button>
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                style={{
+                  width: "100%",
+                  padding: "0.8rem 1rem",
+                  backgroundColor: status === "loading" ? "var(--ink)/40" : "var(--accent)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.75rem",
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  cursor: status === "loading" ? "not-allowed" : "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {status === "loading" ? "Creating account..." : "Create Account"}
+              </button>
             </form>
           </div>
 
-          <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-            Already have an account?{" "}
-            <Link to="/login" style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
-              Sign In
-            </Link>
+          <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.8125rem", color: "var(--ink-muted)" }}>
+            or continue with
           </p>
-          */}
 
           <div
             style={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--border)",
               borderRadius: "1.25rem",
-              padding: "1.75rem",
+              padding: "1.25rem",
               boxShadow: "var(--shadow-md)",
               textAlign: "center",
             }}
@@ -287,7 +328,7 @@ const RegisterPage = () => {
                 borderRadius: "0.75rem",
                 backgroundColor: "var(--surface)",
                 color: "var(--ink)",
-                padding: "0.8rem 1rem",
+                padding: "0.75rem 1rem",
                 fontSize: "0.875rem",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -298,19 +339,24 @@ const RegisterPage = () => {
               }}
             >
               <FaGoogle size={16} aria-hidden="true" />
-              Continue with Google
+              Google
             </button>
           </div>
 
           <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
             Already have an account?{" "}
             <Link to="/login" style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
-              Sign in
+              Sign In
             </Link>
           </p>
-        </div>
-      </div>
+
+
+          Sign in
+        </Link>
+      </p>
     </div>
+      </div >
+    </div >
   );
 };
 

@@ -7,6 +7,7 @@ const { sendSuccess } = require("../utils/apiResponse");
 const ApiFeatures = require("../utils/apiFeatures");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
 const slugify = require("slugify");
+const { parseSearchKeywords } = require("../utils/searchKeywords");
 
 const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
 
@@ -184,9 +185,13 @@ const createProduct = asyncHandler(async (req, res) => {
     (fallbackSnippet ? `${fallbackSnippet} — Shop genuine products with Pan-India delivery on LyZov.` : "");
 
   const requestedLyId = req.body.lyId?.trim();
+  const { searchKeyword: normalizedKeywords, tags: keywordTags } = parseSearchKeywords(req.body.searchKeyword);
+
   const productData = {
     ...req.body,
     mpn: req.body.mpn?.trim() || "",
+    searchKeyword: normalizedKeywords,
+    tags: keywordTags,
     seo: {
       metaTitle,
       metaDescription,
@@ -293,6 +298,12 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.mpn = req.body.mpn.trim();
   }
 
+  if (req.body.searchKeyword !== undefined) {
+    const { searchKeyword: normalizedKeywords, tags: keywordTags } = parseSearchKeywords(req.body.searchKeyword);
+    product.searchKeyword = normalizedKeywords;
+    product.tags = keywordTags;
+  }
+
   // Handle SEO updates
   if (!product.seo) product.seo = {};
   if (req.body.metaTitle !== undefined) product.seo.metaTitle = req.body.metaTitle.trim();
@@ -305,7 +316,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   Object.keys(req.body).forEach((key) => {
-    if (key !== "images" && key !== "slug" && key !== "mpn" && key !== "seo") {
+    if (key !== "images" && key !== "slug" && key !== "mpn" && key !== "seo" && key !== "searchKeyword" && key !== "tags") {
       product[key] = req.body[key];
     }
   });

@@ -137,6 +137,7 @@ const googleCallback = async (req, res) => {
         authProvider: "google",
         googleId: payload.sub,
         isEmailVerified: true,
+        profileComplete: false,
         avatar: { url: payload.picture || "", publicId: "" },
       });
       await user.save();
@@ -146,38 +147,53 @@ const googleCallback = async (req, res) => {
 
     if (!user.isActive) return redirectToLogin("account_deactivated");
     await createSession(res, user);
-    return res.redirect(`${getFrontendUrl()}/dashboard`);
+    
+    // Redirect to profile completion if not yet completed
+    const redirectPath = user.profileComplete 
+      ? "/dashboard"
+      : "/complete-profile";
+    return res.redirect(`${getFrontendUrl()}${redirectPath}`);
   } catch (error) {
     console.error("Google OAuth callback failed:", error.message);
     return redirectToLogin("google_auth_failed");
   }
 };
 
-// @desc    Register a new user
+// @desc    Register a new user (name + email only, quick signup)
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw ApiError.conflict("An account with this email already exists");
   }
 
-  const user = await User.create({ name, email, password });
+  // Create user with random password (like Google signup)
+  // User will set password later in profile settings if desired
+  const user = await User.create({
+    name,
+    email,
+    password: crypto.randomBytes(32).toString("hex"),
+    authProvider: "local",
+    profileComplete: false,
+    isEmailVerified: false,
+  });
 
   await Cart.create({ user: user._id, items: [] });
   await Wishlist.create({ user: user._id, products: [] });
 
+  // Send welcome email
   const verificationToken = user.generateEmailVerificationToken();
   await user.save({ validateBeforeSave: false });
 
   const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
   const verifyUrl = `${clientUrl}/verify-email/${verificationToken}`;
 
-  // Dispatch branded luxury welcome & verification email
   await emailService.sendWelcomeVerification({ user, verifyUrl });
 
+  // Create session
   const accessToken = generateAccessToken(user._id, user.role);
   const refreshToken = generateRefreshToken(user._id);
 
@@ -186,9 +202,12 @@ const register = asyncHandler(async (req, res) => {
 
   setAuthCookies(res, accessToken, refreshToken);
 
+  // Return user info + signal frontend to redirect to complete-profile
   return sendSuccess(res, 201, "Account created successfully", {
     user: user.toSafeObject(),
     accessToken,
+    profileComplete: false,
+    redirectTo: "/complete-profile",
   });
 });
 

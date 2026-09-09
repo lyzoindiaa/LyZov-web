@@ -19,6 +19,12 @@ const createProductValidator = [
   body("metaDescription").optional().trim().isLength({ max: 300 }).withMessage("Meta description cannot exceed 300 characters"),
   body("mpn").optional().trim(),
   body("slug").optional().trim(),
+  body("productSizeHeight").trim().notEmpty().withMessage("Product height is required"),
+  body("productSizeLength").trim().notEmpty().withMessage("Product length is required"),
+  body("productSizeWidth").trim().notEmpty().withMessage("Product width is required"),
+  body("weight").trim().notEmpty().withMessage("Product weight is required"),
+  body("packOf").trim().notEmpty().withMessage("Pack of is required"),
+  body("searchKeyword").optional().trim(),
 ];
 
 const updateProductValidator = [
