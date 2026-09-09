@@ -188,7 +188,7 @@ const RegisterPage = () => {
           </div>
 
           {/* Email/password registration - Quick signup with name + email only */}
-          <div
+          {/* <div
             style={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--border)",
@@ -307,7 +307,7 @@ const RegisterPage = () => {
 
           <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.8125rem", color: "var(--ink-muted)" }}>
             or continue with
-          </p>
+          </p> */}
 
           <div
             style={{
