@@ -426,8 +426,9 @@ const CompleteProfilePage = () => {
                                         />
                                     </div>
                                     {errors.phone && (
-                    <span style={{ fontSize: "0.75rem", color: "var(--red)", marginTop: "0.25rem", display: "block" }}>
-                      {errors.phone.message}
+                                        <span style={{ fontSize: "0.75rem", color: "var(--red)", marginTop: "0.25rem", display: "block" }}>
+                                            {errors.phone.message}
+                                        </span>
                                     )}
                                 </div>
 
