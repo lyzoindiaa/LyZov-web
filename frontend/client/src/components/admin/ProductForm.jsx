@@ -152,6 +152,21 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         title: product.title,
         description: product.description,
         shortDescription: product.shortDescription,
+        specialFeature: product.specialFeature || "",
+        color: product.color || "",
+        productSizeHeight: product.productSizeHeight || "",
+        productSizeLength: product.productSizeLength || "",
+        productSizeWidth: product.productSizeWidth || "",
+        weight: product.weight || "",
+        searchKeyword: product.searchKeyword || "",
+        packagingSizeHeight: product.packagingSizeHeight || "",
+        packagingSizeLength: product.packagingSizeLength || "",
+        packagingSizeWidth: product.packagingSizeWidth || "",
+        packOf: product.packOf || "",
+        warranty: product.warranty || "",
+        country: product.country || "",
+        manufacturer: product.manufacturer || "",
+        packer: product.packer || "",
         price: product.price,
         discountPrice: product.discountPrice,
         stock: product.stock,
@@ -185,6 +200,21 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         title: "",
         description: "",
         shortDescription: "",
+        specialFeature: "",
+        color: "",
+        productSizeHeight: "",
+        productSizeLength: "",
+        productSizeWidth: "",
+        weight: "",
+        searchKeyword: "",
+        packagingSizeHeight: "",
+        packagingSizeLength: "",
+        packagingSizeWidth: "",
+        packOf: "",
+        warranty: "",
+        country: "",
+        manufacturer: "",
+        packer: "",
         price: "",
         discountPrice: "",
         stock: "",
@@ -604,6 +634,27 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               </div>
 
               <Input label="Short Description" className="sm:col-span-2" {...register("shortDescription")} />
+
+              <Input label="Special Feature (Optional)" {...register("specialFeature")} />
+              <Input label="Color (Optional)" {...register("color")} />
+
+              <div className="sm:col-span-2 pt-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Product Size (Optional)</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                  <Input label="Height" {...register("productSizeHeight")} />
+                  <Input label="Length" {...register("productSizeLength")} />
+                  <Input label="Width" {...register("productSizeWidth")} />
+                  <Input label="Weight" {...register("weight")} />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+              <Input label="Pack Of (Optional)" {...register("packOf")} />
+              <Input label="Warranty (Optional)" {...register("warranty")} />
+              <Input label="Country (Optional)" {...register("country")} />
+              <Input label="Manufacturer (Optional)" {...register("manufacturer")} />
+              <Input label="Packer (Optional)" {...register("packer")} />
             </div>
 
             <div className="flex items-center justify-between pt-4">
@@ -846,6 +897,17 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
                 {...register("stock", { required: "Stock is required", min: 0 })}
                 error={errors.stock?.message}
               />
+
+              <Input label="Search Keyword (Optional)" {...register("searchKeyword")} />
+
+              <div className="sm:col-span-2 pt-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Packaging Size (Optional)</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <Input label="Height" {...register("packagingSizeHeight")} />
+                  <Input label="Length" {...register("packagingSizeLength")} />
+                  <Input label="Width" {...register("packagingSizeWidth")} />
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-4">

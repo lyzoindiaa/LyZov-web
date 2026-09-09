@@ -189,6 +189,24 @@ const ProductDetailsPage = () => {
       : "Shop premium products online at LyZov.");
   const canonicalUrl = product.seo?.canonicalUrl || `${window.location.origin}/product/${product.slug}`;
   const ogImage = product.images?.[0]?.url || `${window.location.origin}/lyzov-logo.png`;
+  const validFrom = product.createdAt
+    ? new Date(product.createdAt).toISOString().split("T")[0]
+    : new Date().toISOString().split("T")[0];
+  const reviewSchema = reviews.map((review) => ({
+    "@type": "Review",
+    author: {
+      "@type": "Person",
+      name: review.user?.name || "LyZov customer",
+    },
+    datePublished: review.createdAt ? new Date(review.createdAt).toISOString().split("T")[0] : undefined,
+    reviewBody: review.comment,
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: String(review.rating),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  }));
 
   const breadcrumbItems = [
     { name: "Home", url: `${window.location.origin}/` },
@@ -199,11 +217,11 @@ const ProductDetailsPage = () => {
     })),
     ...(product.category
       ? [
-          {
-            name: product.category.name,
-            url: `${window.location.origin}/shop?category=${encodeURIComponent(product.category.slug || product.category._id)}`,
-          },
-        ]
+        {
+          name: product.category.name,
+          url: `${window.location.origin}/shop?category=${encodeURIComponent(product.category.slug || product.category._id)}`,
+        },
+      ]
       : []),
     { name: product.title, url: canonicalUrl },
   ];
@@ -225,9 +243,45 @@ const ProductDetailsPage = () => {
           url: canonicalUrl,
           priceCurrency: "INR",
           price: String(finalPrice || 0),
+          validFrom,
           priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           availability: stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
           itemCondition: "https://schema.org/NewCondition",
+          shippingDetails: {
+            "@type": "OfferShippingDetails",
+            shippingRate: {
+              "@type": "MonetaryAmount",
+              value: "9.99",
+              currency: "INR",
+            },
+            shippingDestination: {
+              "@type": "DefinedRegion",
+              addressCountry: "IN",
+            },
+            deliveryTime: {
+              "@type": "ShippingDeliveryTime",
+              handlingTime: {
+                "@type": "QuantitativeValue",
+                minValue: 0,
+                maxValue: 1,
+                unitCode: "DAY",
+              },
+              transitTime: {
+                "@type": "QuantitativeValue",
+                minValue: 3,
+                maxValue: 7,
+                unitCode: "DAY",
+              },
+            },
+          },
+          hasMerchantReturnPolicy: {
+            "@type": "MerchantReturnPolicy",
+            applicableCountry: "IN",
+            returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+            merchantReturnDays: 7,
+            returnMethod: "https://schema.org/ReturnByMail",
+            returnFees: "https://schema.org/FreeReturn",
+          },
           seller: {
             "@type": "Organization",
             name: "LyZov Store",
@@ -235,15 +289,16 @@ const ProductDetailsPage = () => {
         },
         ...(product.ratingsCount > 0
           ? {
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: String(product.ratingsAverage || 5),
-                reviewCount: String(product.ratingsCount),
-                bestRating: "5",
-                worstRating: "1",
-              },
-            }
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: String(product.ratingsAverage || 5),
+              reviewCount: String(product.ratingsCount),
+              bestRating: "5",
+              worstRating: "1",
+            },
+          }
           : {}),
+        ...(reviewSchema.length > 0 ? { review: reviewSchema } : {}),
       },
       {
         "@type": "BreadcrumbList",

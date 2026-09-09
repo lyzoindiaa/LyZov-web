@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const Product = require("../models/Product");
+const Review = require("../models/Review");
 
 let cachedHtml = null;
 let lastMtime = 0;
@@ -59,6 +60,12 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
     return null;
   }
 
+  const reviews = await Review.find({ product: product._id, isApproved: true })
+    .populate("user", "name")
+    .sort("-createdAt")
+    .limit(10)
+    .lean();
+
   const pageTitle = product.seo?.metaTitle || `${product.title} | Buy Online at LyZov`;
   const plainDesc = (product.shortDescription || product.description || "")
     .replace(/<[^>]*>?/gm, "")
@@ -73,6 +80,22 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
 
   const price = product.discountPrice > 0 ? product.discountPrice : product.price;
   const inStock = (product.stock || 0) > 0;
+  const validFrom = product.createdAt ? new Date(product.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+  const reviewSchema = reviews.map((review) => ({
+    "@type": "Review",
+    author: {
+      "@type": "Person",
+      name: review.user?.name || "LyZov customer",
+    },
+    datePublished: review.createdAt ? new Date(review.createdAt).toISOString().split("T")[0] : undefined,
+    reviewBody: review.comment,
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: String(review.rating),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  }));
 
   // Build Google Schema.org JSON-LD
   const schemaGraph = [
@@ -91,9 +114,45 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
         url: canonicalUrl,
         priceCurrency: "INR",
         price: price ? String(price) : "0",
+        validFrom,
         priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
         itemCondition: "https://schema.org/NewCondition",
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: "9.99",
+            currency: "INR",
+          },
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: "IN",
+          },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            handlingTime: {
+              "@type": "QuantitativeValue",
+              minValue: 0,
+              maxValue: 1,
+              unitCode: "DAY",
+            },
+            transitTime: {
+              "@type": "QuantitativeValue",
+              minValue: 3,
+              maxValue: 7,
+              unitCode: "DAY",
+            },
+          },
+        },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "IN",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 7,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+        },
         seller: {
           "@type": "Organization",
           name: "LyZov Store",
@@ -110,6 +169,7 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
             },
           }
         : {}),
+      ...(reviewSchema.length > 0 ? { review: reviewSchema } : {}),
     },
     {
       "@type": "BreadcrumbList",
