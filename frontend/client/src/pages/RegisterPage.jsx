@@ -349,9 +349,14 @@ const RegisterPage = () => {
               Sign In
             </Link>
           </p>
-        </div>
-      </div>
+
+
+          Sign in
+        </Link>
+      </p>
     </div>
+      </div >
+    </div >
   );
 };
 
