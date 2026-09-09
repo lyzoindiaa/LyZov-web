@@ -29,6 +29,7 @@ import WishlistPage from "./pages/dashboard/WishlistPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
 import AddressesPage from "./pages/dashboard/AddressesPage";
 import EmailHistoryPage from "./pages/dashboard/EmailHistoryPage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
@@ -87,6 +88,14 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+        <Route
+          path="/complete-profile"
+          element={
+            <ProtectedRoute>
+              <CompleteProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ── Public & Storefront Routes with Navbar & Footer ── */}
         <Route element={<PublicLayout />}>

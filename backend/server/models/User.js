@@ -143,6 +143,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    profileComplete: {
+      type: Boolean,
+      default: false,
+      comment: "true when user has added phone + at least one address",
+    },
     lastLoginAt: Date,
   },
   { timestamps: true }

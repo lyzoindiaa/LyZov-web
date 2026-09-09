@@ -75,6 +75,7 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
     (plainDesc ? `${plainDesc.slice(0, 150)} — Pan-India Delivery on LyZov.` : "Shop authentic lifestyle and fitness products at LyZov.");
 
   const canonicalUrl = product.seo?.canonicalUrl || `${baseUrl}/product/${product.slug}`;
+  const metaKeywords = product.searchKeyword || (Array.isArray(product.tags) ? product.tags.join(", ") : "");
   const imageUrl = product.images?.[0]?.url || `${baseUrl}/lyzov-logo.png`;
   const allImages = Array.isArray(product.images) ? product.images.map((img) => img.url).filter(Boolean) : [];
 
@@ -233,6 +234,7 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
     <meta name="twitter:title" content="${escapeHtml(pageTitle)}" />
     <meta name="twitter:description" content="${escapeHtml(metaDesc)}" />
     <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+    ${metaKeywords ? `<meta name="keywords" content="${escapeHtml(metaKeywords)}" />` : ""}
     ${jsonLdScript}
   `;
 

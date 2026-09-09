@@ -1,4 +1,5 @@
 const Address = require("../models/Address");
+const User = require("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -10,7 +11,18 @@ const getAddresses = asyncHandler(async (req, res) => {
 
 const createAddress = asyncHandler(async (req, res) => {
   const address = await Address.create({ ...req.body, user: req.user._id });
-  return sendSuccess(res, 201, "Address added successfully", address);
+  
+  // Mark profile as complete if user has phone + now has an address
+  const user = await User.findById(req.user._id);
+  if (user && user.phone && user.phone.trim()) {
+    user.profileComplete = true;
+    await user.save({ validateBeforeSave: false });
+  }
+  
+  return sendSuccess(res, 201, "Address added successfully", { 
+    address,
+    profileComplete: user?.profileComplete || false,
+  });
 });
 
 const updateAddress = asyncHandler(async (req, res) => {

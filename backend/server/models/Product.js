@@ -194,7 +194,15 @@ productSchema.virtual("discountPercent").get(function () {
 productSchema.set("toJSON", { virtuals: true });
 productSchema.set("toObject", { virtuals: true });
 
-productSchema.index({ title: "text", description: "text", tags: "text", lyId: "text", hsnNumber: "text", gstRate: "text" });
+productSchema.index({
+  title: "text",
+  description: "text",
+  tags: "text",
+  searchKeyword: "text",
+  lyId: "text",
+  hsnNumber: "text",
+  gstRate: "text",
+});
 productSchema.index({ category: 1 });
 productSchema.index({ categoryPath: 1 });
 productSchema.index({ brand: 1 });

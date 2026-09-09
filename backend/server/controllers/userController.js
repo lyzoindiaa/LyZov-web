@@ -10,7 +10,7 @@ const { encrypt, decrypt } = require("../utils/encryption");
 // @access  Private
 const updateProfile = asyncHandler(async (req, res) => {
   const { name, email, phone } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).populate("addresses");
   if (!user) throw ApiError.notFound("User not found");
 
   if (name && name.trim()) {
@@ -45,9 +45,17 @@ const updateProfile = asyncHandler(async (req, res) => {
     user.avatar = { url: result.secure_url, publicId: result.public_id };
   }
 
+  // Check if profile is now complete (phone + at least one address)
+  if (user.phone && user.phone.trim() && user.addresses && user.addresses.length > 0) {
+    user.profileComplete = true;
+  }
+
   await user.save({ validateBeforeSave: false });
 
-  return sendSuccess(res, 200, "Profile updated successfully", { user: user.toSafeObject() });
+  return sendSuccess(res, 200, "Profile updated successfully", { 
+    user: user.toSafeObject(),
+    profileComplete: user.profileComplete,
+  });
 });
 
 // @desc    Update seller business & KYC profile

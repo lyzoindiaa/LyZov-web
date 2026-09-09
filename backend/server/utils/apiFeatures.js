@@ -7,14 +7,27 @@ class ApiFeatures {
   search() {
     if (this.queryString.search) {
       const searchPattern = this.queryString.search.trim();
-      this.query = this.query.find({
-        $or: [
-          { $text: { $search: searchPattern } },
-          { lyId: { $regex: searchPattern, $options: "i" } },
-          { hsnNumber: { $regex: searchPattern, $options: "i" } },
-          { gstRate: { $regex: searchPattern, $options: "i" } },
-        ],
+      const escapedPattern = searchPattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const keywordParts = searchPattern
+        .split(/[\s,]+/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      const orConditions = [
+        { $text: { $search: searchPattern } },
+        { lyId: { $regex: escapedPattern, $options: "i" } },
+        { hsnNumber: { $regex: escapedPattern, $options: "i" } },
+        { gstRate: { $regex: escapedPattern, $options: "i" } },
+        { searchKeyword: { $regex: escapedPattern, $options: "i" } },
+      ];
+
+      keywordParts.forEach((part) => {
+        const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        orConditions.push({ searchKeyword: { $regex: escapedPart, $options: "i" } });
+        orConditions.push({ tags: part.toLowerCase() });
       });
+
+      this.query = this.query.find({ $or: orConditions });
     }
     return this;
   }

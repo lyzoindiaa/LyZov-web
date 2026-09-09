@@ -158,6 +158,14 @@ const ProductDetailsPage = () => {
     setIsSlideshowPlaying((prev) => !prev);
   };
 
+  const handleIncreaseQuantity = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const handleDecreaseQuantity = () => {
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
   const handleNextImage = () => {
     setActiveImage((prev) => (prev + 1) % product.images.length);
   };
@@ -745,7 +753,7 @@ const ProductDetailsPage = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)" }}>Quantity:</span>
-                  <QuantityStepper value={quantity} onChange={setQuantity} max={stock > 0 ? stock : 10} />
+                  <QuantityStepper quantity={quantity} onIncrease={handleIncreaseQuantity} onDecrease={handleDecreaseQuantity} max={stock > 0 ? stock : 10} />
                 </div>
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                   <button
