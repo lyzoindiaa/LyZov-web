@@ -1,19 +1,8 @@
 const GST_RATES = [
-  "GST 0.25",
-  "GST 18",
-  "GST_3",
-  "GST_40",
-  "GST 5",
-  "GST_APPAREL",
-  "GST Footwear",
-  "GST_Old_12_New_0",
-  "GST_Old_12_New_5",
-  "GST_Old_12_new_18",
-  "GST_Old_18_New_0",
-  "GST_Old_18_New_40",
-  "GST_Old_18_New_5",
-  "GST_Old_28_New_18",
-  "GST_Old_28_New_40",
+  "GST-18",
+  "GST-3",
+  "GST-40",
+  "GST-5"
 ];
 
 module.exports = GST_RATES;

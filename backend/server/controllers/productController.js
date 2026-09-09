@@ -109,8 +109,9 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Product not found");
   }
 
+  const categoryId = product.category?._id || product.category;
   const relatedProducts = await Product.find({
-    categoryPath: product.category,
+    $or: [{ categoryPath: categoryId }, { category: categoryId }],
     _id: { $ne: product._id },
     isActive: true,
   })
