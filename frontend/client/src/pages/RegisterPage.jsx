@@ -349,15 +349,10 @@ const RegisterPage = () => {
               Sign In
             </Link>
           </p>
-
-
-          Sign in
-        </Link>
-      </p>
+        </div>
+      </div>
     </div>
-      </div >
-    </div >
   );
-};
+}
 
 export default RegisterPage;
