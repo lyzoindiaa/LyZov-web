@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles, Ruler } from "lucide-react";
+import { Plus, AlertCircle, Scissors, MoveUp, MoveDown, Trash2, ArrowLeft, ArrowRight, CheckCircle2, Lock, Box, Tag, Image as ImageIcon, Package, Globe, Sparkles, Ruler, BookMarked, RotateCcw, X } from "lucide-react";
 import { toast } from "react-toastify";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -10,10 +10,11 @@ import { brandService } from "../../services/productService";
 import { adminProductService } from "../../services/adminProductService";
 import { adminBrandService } from "../../services/adminBrandService";
 import { GST_RATES } from "../../data/gstRates";
+import useDraft, { loadDraft, saveDraft, clearDraft } from "../../hooks/useDraft";
 
 const createDraftLyId = () => `LYZOV-${String(Date.now()).slice(-6)}`;
 
-const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
+const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externalDraftKey, onDraftSaved }) => {
   const [activeTab, setActiveTab] = useState("basic"); // "basic" | "specs" | "category" | "pricing" | "images" | "seo"
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -22,6 +23,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   const [currentImageToCrop, setCurrentImageToCrop] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Draft state
+  const [activeDraftKey, setActiveDraftKey] = useState(externalDraftKey || null);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Multi-level category hierarchy states
   const [selectedL1, setSelectedL1] = useState("");
@@ -202,44 +208,117 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
         setImagePreviews([]);
       }
     } else {
-      reset({
-        lyId: createDraftLyId(),
-        hsnNumber: "",
-        gstRate: "",
-        title: "",
-        description: "",
-        shortDescription: "",
-        specialFeature: "",
-        color: "",
-        productSizeHeight: "",
-        productSizeLength: "",
-        productSizeWidth: "",
-        weight: "",
-        searchKeyword: "",
-        packagingSizeHeight: "",
-        packagingSizeLength: "",
-        packagingSizeWidth: "",
-        packOf: "",
-        warranty: "",
-        country: "",
-        manufacturer: "",
-        packer: "",
-        price: "",
-        discountPrice: "",
-        stock: "",
-        category: "",
-        brand: "",
-        slug: "",
-        mpn: "",
-        metaTitle: "",
-        metaDescription: "",
-        canonicalUrl: "",
-      });
-      setImagePreviews([]);
+      // For new products, try to restore from a saved draft
+      const draftToLoad = externalDraftKey
+        ? loadDraft(externalDraftKey)
+        : null;
+
+      if (draftToLoad) {
+        // Restore draft data
+        const dv = draftToLoad.formValues || {};
+        reset({
+          lyId: dv.lyId || createDraftLyId(),
+          hsnNumber: dv.hsnNumber || "",
+          gstRate: dv.gstRate || "",
+          title: dv.title || "",
+          description: dv.description || "",
+          shortDescription: dv.shortDescription || "",
+          specialFeature: dv.specialFeature || "",
+          color: dv.color || "",
+          productSizeHeight: dv.productSizeHeight || "",
+          productSizeLength: dv.productSizeLength || "",
+          productSizeWidth: dv.productSizeWidth || "",
+          weight: dv.weight || "",
+          searchKeyword: dv.searchKeyword || "",
+          packagingSizeHeight: dv.packagingSizeHeight || "",
+          packagingSizeLength: dv.packagingSizeLength || "",
+          packagingSizeWidth: dv.packagingSizeWidth || "",
+          packOf: dv.packOf || "",
+          warranty: dv.warranty || "",
+          country: dv.country || "",
+          manufacturer: dv.manufacturer || "",
+          packer: dv.packer || "",
+          price: dv.price || "",
+          discountPrice: dv.discountPrice || "",
+          stock: dv.stock || "",
+          category: dv.category || "",
+          brand: dv.brand || "",
+          slug: dv.slug || "",
+          mpn: dv.mpn || "",
+          metaTitle: dv.metaTitle || "",
+          metaDescription: dv.metaDescription || "",
+          canonicalUrl: dv.canonicalUrl || "",
+        });
+
+        // Restore category hierarchy
+        const cats = draftToLoad.categorySelections || {};
+        if (cats.l1) setSelectedL1(cats.l1);
+        if (cats.l2) setSelectedL2(cats.l2);
+        if (cats.l3) setSelectedL3(cats.l3);
+
+        // Restore existing (cloud) images if any
+        const existingImgs = draftToLoad.existingImages || [];
+        if (existingImgs.length > 0) {
+          setImagePreviews(existingImgs.map((img) => ({
+            preview: img.url || img,
+            isNew: false,
+            existingImage: img,
+          })));
+        } else {
+          setImagePreviews([]);
+        }
+
+        // Restore the step the user was on
+        if (draftToLoad.currentStep) {
+          setActiveTab(draftToLoad.currentStep);
+        }
+
+        setActiveDraftKey(externalDraftKey);
+        setDraftRestored(true);
+      } else {
+        // Fresh form
+        const newLyId = createDraftLyId();
+        reset({
+          lyId: newLyId,
+          hsnNumber: "",
+          gstRate: "",
+          title: "",
+          description: "",
+          shortDescription: "",
+          specialFeature: "",
+          color: "",
+          productSizeHeight: "",
+          productSizeLength: "",
+          productSizeWidth: "",
+          weight: "",
+          searchKeyword: "",
+          packagingSizeHeight: "",
+          packagingSizeLength: "",
+          packagingSizeWidth: "",
+          packOf: "",
+          warranty: "",
+          country: "",
+          manufacturer: "",
+          packer: "",
+          price: "",
+          discountPrice: "",
+          stock: "",
+          category: "",
+          brand: "",
+          slug: "",
+          mpn: "",
+          metaTitle: "",
+          metaDescription: "",
+          canonicalUrl: "",
+        });
+        setImagePreviews([]);
+        // Auto-set draft key so Save Draft knows where to write
+        setActiveDraftKey(newLyId);
+      }
     }
     setImages([]);
     setShowQuickBrand(false);
-  }, [product]);
+  }, [product, externalDraftKey]);
 
   const handleCreateBrandInline = async (e) => {
     e.preventDefault();
@@ -369,6 +448,28 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
     setImages(prev => [...prev, ...files]);
   };
 
+  const handleSaveDraft = () => {
+    const currentValues = watch();
+    const draftKeyToUse = activeDraftKey || currentValues.lyId || createDraftLyId();
+
+    setIsSavingDraft(true);
+    saveDraft(draftKeyToUse, {
+      formValues: currentValues,
+      categorySelections: { l1: selectedL1, l2: selectedL2, l3: selectedL3 },
+      currentStep: activeTab,
+      existingImages: imagePreviews
+        .filter((img) => !img.isNew)
+        .map((img) => img.existingImage || { url: img.preview }),
+    });
+
+    if (!activeDraftKey) setActiveDraftKey(draftKeyToUse);
+
+    setTimeout(() => setIsSavingDraft(false), 600);
+    toast.success("✅ Draft saved! You can safely leave and return later.", { autoClose: 3000 });
+
+    if (onDraftSaved) onDraftSaved(draftKeyToUse);
+  };
+
   const onFormSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -388,6 +489,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
       newImages.forEach((file) => formData.append("images", file));
 
       await onSubmit(formData);
+
+      // Clear draft on successful publish
+      if (activeDraftKey) {
+        clearDraft(activeDraftKey);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not save product");
     }
@@ -446,7 +552,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {product ? "Edit Product" : "Add New Product"}
@@ -455,17 +561,58 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
             {product ? "Update product information and images" : "Create a new product for your store"}
           </p>
         </div>
-        {onCancel && (
-          <Button
-            variant="secondary"
-            onClick={onCancel}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Save Draft button — only for new products */}
+          {!product && (
+            <button
+              type="button"
+              id="save-draft-btn"
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-amber-400/60 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-500/40 dark:hover:bg-amber-900/40 transition-all disabled:opacity-60"
+            >
+              <BookMarked size={15} />
+              {isSavingDraft ? "Saving…" : "Save Draft"}
+            </button>
+          )}
+          {onCancel && (
+            <Button
+              variant="secondary"
+              onClick={onCancel}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Draft Restored Banner */}
+      {draftRestored && (
+        <div
+          id="draft-restored-banner"
+          className="flex items-start gap-3 mb-5 px-4 py-3 rounded-xl border border-amber-400/50 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-500/40"
+        >
+          <RotateCcw size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+              📄 Draft restored
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              Your previously saved progress has been loaded. New images will need to be re-uploaded — click <strong>Create Product</strong> when you're ready to publish.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDraftRestored(false)}
+            className="text-amber-500 hover:text-amber-700 dark:hover:text-amber-300 transition-colors shrink-0"
+            title="Dismiss"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
 
       {/* Progressive Step Tabs Bar */}
       <div className="flex flex-wrap gap-2 border-b border-hairline pb-2 dark:border-hairline-dark mb-6">
