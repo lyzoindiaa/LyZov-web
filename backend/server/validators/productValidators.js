@@ -3,7 +3,7 @@ const { body } = require("express-validator");
 const createProductValidator = [
   body("title").trim().notEmpty().withMessage("Title is required").isLength({ max: 150 }),
   body("description").trim().notEmpty().withMessage("Description is required"),
-  body("brand").notEmpty().withMessage("Brand is required").isMongoId().withMessage("Invalid brand id"),
+  body("brand").optional({ checkFalsy: true }).isMongoId().withMessage("Invalid brand id"),
   body("category")
     .notEmpty()
     .withMessage("Category is required")
@@ -19,11 +19,11 @@ const createProductValidator = [
   body("metaDescription").optional().trim().isLength({ max: 300 }).withMessage("Meta description cannot exceed 300 characters"),
   body("mpn").optional().trim(),
   body("slug").optional().trim(),
-  body("productSizeHeight").optional({ checkFalsy: true }).trim(),
-  body("productSizeLength").optional({ checkFalsy: true }).trim(),
-  body("productSizeWidth").optional({ checkFalsy: true }).trim(),
-  body("weight").optional({ checkFalsy: true }).trim(),
-  body("packOf").optional({ checkFalsy: true }).trim(),
+  body("productSizeHeight").trim().notEmpty().withMessage("Product height is required"),
+  body("productSizeLength").trim().notEmpty().withMessage("Product length is required"),
+  body("productSizeWidth").trim().notEmpty().withMessage("Product width is required"),
+  body("weight").trim().notEmpty().withMessage("Product weight is required"),
+  body("packOf").trim().notEmpty().withMessage("Pack of is required"),
   body("searchKeyword").optional().trim(),
 ];
 

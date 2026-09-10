@@ -52,9 +52,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
     formValues?.description?.trim()
   );
 
-  // Product specifications are supplementary, so completing the basic details
-  // is enough to continue to category selection.
-  const isStep2Complete = isStep1Complete;
+  const isStep2Complete = Boolean(
+    isStep1Complete &&
+    formValues?.productSizeHeight?.toString().trim() &&
+    formValues?.productSizeLength?.toString().trim() &&
+    formValues?.productSizeWidth?.toString().trim() &&
+    formValues?.weight?.toString().trim() &&
+    formValues?.packOf?.toString().trim()
+  );
 
   const isStep3Complete = Boolean(
     isStep2Complete &&
@@ -698,7 +703,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
               <div>
                 <h3 className="font-display text-lg font-bold">Step 2: Product Specifications</h3>
                 <p className="text-xs text-stone mt-0.5">
-                  Product dimensions, weight, and pack details are optional.
+                  Enter product dimensions, weight, and pack details. Fields marked with <span className="text-rose-500 font-bold">*</span> are required.
                 </p>
               </div>
               {isStep2Complete && (
@@ -710,55 +715,55 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }) => {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Product Size (Optional)</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Product Size *</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <Input
-                    label="Height (cm) (Optional)"
+                    label="Height (cm) *"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="e.g. 25"
-                    {...register("productSizeHeight", { min: { value: 0, message: "Height cannot be negative" } })}
+                    {...register("productSizeHeight", { required: "Height is required", min: { value: 0, message: "Height cannot be negative" } })}
                     error={errors.productSizeHeight?.message}
                   />
                   <Input
-                    label="Length (cm) (Optional)"
+                    label="Length (cm) *"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="e.g. 30"
-                    {...register("productSizeLength", { min: { value: 0, message: "Length cannot be negative" } })}
+                    {...register("productSizeLength", { required: "Length is required", min: { value: 0, message: "Length cannot be negative" } })}
                     error={errors.productSizeLength?.message}
                   />
                   <Input
-                    label="Width (cm) (Optional)"
+                    label="Width (cm) *"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="e.g. 15"
-                    {...register("productSizeWidth", { min: { value: 0, message: "Width cannot be negative" } })}
+                    {...register("productSizeWidth", { required: "Width is required", min: { value: 0, message: "Width cannot be negative" } })}
                     error={errors.productSizeWidth?.message}
                   />
                 </div>
               </div>
 
               <Input
-                label="Weight (kg) (Optional)"
+                label="Weight (kg) *"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="e.g. 0.5"
-                {...register("weight", { min: { value: 0, message: "Weight cannot be negative" } })}
+                {...register("weight", { required: "Weight is required", min: { value: 0, message: "Weight cannot be negative" } })}
                 error={errors.weight?.message}
               />
 
               <Input
-                label="Pack Of (Optional)"
+                label="Pack Of *"
                 type="number"
                 min="1"
                 step="1"
                 placeholder="e.g. 1"
-                {...register("packOf", { min: { value: 1, message: "Pack of must be at least 1" } })}
+                {...register("packOf", { required: "Pack of is required", min: { value: 1, message: "Pack of must be at least 1" } })}
                 error={errors.packOf?.message}
               />
 
