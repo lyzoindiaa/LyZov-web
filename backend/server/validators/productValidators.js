@@ -3,7 +3,7 @@ const { body } = require("express-validator");
 const createProductValidator = [
   body("title").trim().notEmpty().withMessage("Title is required").isLength({ max: 150 }),
   body("description").trim().notEmpty().withMessage("Description is required"),
-  body("brand").notEmpty().withMessage("Brand is required").isMongoId().withMessage("Invalid brand id"),
+  body("brand").optional({ checkFalsy: true }).isMongoId().withMessage("Invalid brand id"),
   body("category")
     .notEmpty()
     .withMessage("Category is required")
