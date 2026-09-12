@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Package } from "lucide-react";
 import { orderService } from "../../services/cartService";
+import { shippingService } from "../../services/shippingService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 
 const statusOptions = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
@@ -12,6 +13,7 @@ const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
+  const [manifestingId, setManifestingId] = useState(null);
 
   const loadOrders = async () => {
     setIsLoading(true);
@@ -105,17 +107,51 @@ const AdminOrdersPage = () => {
                   <td className="px-5 py-4 text-stone">{formatDateTime(order.createdAt)}</td>
                   <td className="px-5 py-4 tabular-nums">{formatCurrency(order.totalPrice)}</td>
                   <td className="px-5 py-4">
-                    <select
-                      value={order.orderStatus}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                      className="rounded-full border border-ink/12 bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--ink)] outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]"
-                    >
-                      {statusOptions.map((s) => (
-                        <option key={s} value={s} className="bg-[var(--surface)] text-[var(--ink)] dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex flex-col gap-2">
+                      <select
+                        value={order.orderStatus}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        className="rounded-full border border-ink/12 bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--ink)] outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-cream/15 dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]"
+                      >
+                        {statusOptions.map((s) => (
+                          <option key={s} value={s} className="bg-[var(--surface)] text-[var(--ink)] dark:bg-[var(--bg-raised)] dark:text-[var(--ink)]">
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                      {order.trackingNumber ? (
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--accent)] font-semibold">
+                          <span>AWB:</span>
+                          <span className="font-mono">{order.trackingNumber}</span>
+                        </div>
+                      ) : ["pending", "processing"].includes(order.orderStatus) ? (
+                        <button
+                          type="button"
+                          disabled={manifestingId === order._id}
+                          onClick={async () => {
+                            try {
+                              setManifestingId(order._id);
+                              await shippingService.manifestOrder(order._id);
+                              toast.success("Manifested with Delhivery!");
+                              loadOrders();
+                            } catch (err) {
+                              toast.error("Delhivery error: " + (err.response?.data?.message || err.message));
+                            } finally {
+                              setManifestingId(null);
+                            }
+                          }}
+                          className="rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-3 py-1 text-xs font-semibold hover:bg-blue-200 disabled:opacity-50"
+                        >
+                          {manifestingId === order._id ? "Shipping..." : "Ship via Delhivery"}
+                        </button>
+                      ) : null}
+
+                      {order.returnStatus && order.returnStatus !== "Not Requested" && (
+                        <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                          Return: {order.returnStatus}
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

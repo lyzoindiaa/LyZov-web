@@ -107,6 +107,23 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    returnStatus: {
+      type: String,
+      enum: ["Not Requested", "Requested", "Approved", "Rejected", "Picked Up", "Returned", "Refunded", "Exchanged"],
+      default: "Not Requested"
+    },
+    returnReason: {
+      type: String,
+      default: ""
+    },
+    isExchange: {
+      type: Boolean,
+      default: false
+    },
+    exchangeDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    }
   },
   { timestamps: true }
 );

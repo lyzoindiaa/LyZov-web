@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Truck, RefreshCw, Printer, AlertCircle, CheckCircle, Package } from "lucide-react";
 import { orderService } from "../../services/cartService";
+import { shippingService } from "../../services/shippingService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 
 const statusOptions = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
@@ -12,6 +13,9 @@ const AdminOrderDetailsPage = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isManifesting, setIsManifesting] = useState(false);
+    const [isApprovingReturn, setIsApprovingReturn] = useState(false);
+    const [isProcessingExchange, setIsProcessingExchange] = useState(false);
 
     const loadOrder = async () => {
         try {
@@ -40,6 +44,45 @@ const AdminOrderDetailsPage = () => {
         }
     };
 
+    const handleManifest = async () => {
+        try {
+            setIsManifesting(true);
+            await shippingService.manifestOrder(orderId);
+            toast.success("Manifested successfully with Delhivery!");
+            loadOrder();
+        } catch (err) {
+            toast.error("Manifestation failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setIsManifesting(false);
+        }
+    };
+
+    const handleApproveReturn = async () => {
+        try {
+            setIsApprovingReturn(true);
+            await orderService.approveReturn(orderId);
+            toast.success("Return approved! Reverse pickup scheduled with Delhivery.");
+            loadOrder();
+        } catch (err) {
+            toast.error("Approval failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setIsApprovingReturn(false);
+        }
+    };
+
+    const handleProcessExchange = async () => {
+        try {
+            setIsProcessingExchange(true);
+            const res = await orderService.processExchange(orderId);
+            toast.success(`Exchange processed! New replacement order: ${res.data.replacementOrder?.orderNumber}`);
+            loadOrder();
+        } catch (err) {
+            toast.error("Exchange processing failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setIsProcessingExchange(false);
+        }
+    };
+
     if (isLoading) return <div className="py-12 text-center text-sm text-stone">Loading order details...</div>;
     if (!order) return null;
 
@@ -50,7 +93,14 @@ const AdminOrderDetailsPage = () => {
                     <button type="button" onClick={() => navigate("/seller/orders")} className="mb-3 inline-flex items-center gap-2 text-sm text-stone hover:text-[var(--accent)]">
                         <ArrowLeft size={15} /> Back to Orders
                     </button>
-                    <h1 className="font-display text-3xl tracking-tightest">{order.orderNumber}</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="font-display text-3xl tracking-tightest">{order.orderNumber}</h1>
+                        {order.returnStatus && order.returnStatus !== "Not Requested" && (
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                                Return: {order.returnStatus}
+                            </span>
+                        )}
+                    </div>
                     <p className="mt-1 text-sm text-stone">Placed on {formatDateTime(order.createdAt)}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -59,6 +109,54 @@ const AdminOrderDetailsPage = () => {
                     </select>
                 </div>
             </div>
+
+            {/* Return / Exchange Alert Banner */}
+            {order.returnStatus && order.returnStatus !== "Not Requested" && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" size={20} />
+                            <div>
+                                <h3 className="text-sm font-semibold">
+                                    Customer requested a {order.isExchange ? "Product Exchange" : "Return & Refund"} ({order.returnStatus})
+                                </h3>
+                                <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
+                                    Reason: <strong>{order.returnReason || "No reason provided"}</strong>
+                                </p>
+                                {order.exchangeDetails && (
+                                    <p className="mt-0.5 text-xs text-stone-600 dark:text-stone-300">
+                                        Exchange Details: <strong>{typeof order.exchangeDetails === 'object' ? JSON.stringify(order.exchangeDetails) : order.exchangeDetails}</strong>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {order.returnStatus === "Requested" && (
+                                <button
+                                    type="button"
+                                    disabled={isApprovingReturn}
+                                    onClick={handleApproveReturn}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                    <CheckCircle size={14} />
+                                    {isApprovingReturn ? "Scheduling Pickup..." : "Approve Return & Schedule Pickup"}
+                                </button>
+                            )}
+                            {order.isExchange && ["Approved", "Picked Up", "Returned"].includes(order.returnStatus) && (
+                                <button
+                                    type="button"
+                                    disabled={isProcessingExchange}
+                                    onClick={handleProcessExchange}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    <RefreshCw size={14} className={isProcessingExchange ? "animate-spin" : ""} />
+                                    {isProcessingExchange ? "Creating Replacement..." : "Process Exchange (Create Replacement Order)"}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
                 <section className="card-surface p-5">
@@ -83,6 +181,56 @@ const AdminOrderDetailsPage = () => {
                 </section>
 
                 <div className="flex flex-col gap-6">
+                    {/* Delhivery Shipping Card */}
+                    <section className="card-surface p-5">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <Truck size={18} className="text-[var(--accent)]" /> Delhivery Shipping
+                            </h2>
+                            {order.trackingNumber && (
+                                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                    Manifested
+                                </span>
+                            )}
+                        </div>
+
+                        {order.trackingNumber ? (
+                            <div className="flex flex-col gap-3">
+                                <div>
+                                    <span className="text-xs text-stone">Waybill (AWB):</span>
+                                    <p className="font-mono font-bold text-base text-[var(--accent)]">{order.trackingNumber}</p>
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    <a
+                                        href={`https://www.delhivery.com/track/package/${order.trackingNumber}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--bg-subtle)]"
+                                    >
+                                        <ExternalLink size={13} /> Track on Delhivery
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                <p className="text-xs text-stone">
+                                    This order has not been dispatched or manifested with Delhivery yet.
+                                </p>
+                                {["pending", "processing"].includes(order.orderStatus) && (
+                                    <button
+                                        type="button"
+                                        disabled={isManifesting}
+                                        onClick={handleManifest}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                                    >
+                                        <Truck size={16} />
+                                        {isManifesting ? "Manifesting with Courier..." : "Ship via Delhivery"}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </section>
+
                     <section className="card-surface p-5">
                         <h2 className="mb-3 text-lg font-semibold">Customer</h2>
                         <p className="font-medium">{order.user?.name}</p>
@@ -91,6 +239,7 @@ const AdminOrderDetailsPage = () => {
                         <p className="mt-2 text-sm">{order.shippingAddress.fullName}, {order.shippingAddress.phone}</p>
                         <p className="text-sm text-stone">{order.shippingAddress.addressLine1}{order.shippingAddress.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ""}, {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}, {order.shippingAddress.country}</p>
                     </section>
+
                     <section className="card-surface p-5">
                         <h2 className="mb-3 text-lg font-semibold">Payment Summary</h2>
                         <div className="flex flex-col gap-2 text-sm">

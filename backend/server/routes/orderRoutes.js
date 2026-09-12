@@ -6,6 +6,10 @@ const {
   getMyOrders,
   getOrderById,
   cancelOrder,
+  adminCancelOrder,
+  returnRequest,
+  approveReturn,
+  processExchange,
   getAllOrders,
   updateOrderStatus,
 } = require("../controllers/orderController");
@@ -32,9 +36,22 @@ router.post(
 
 router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
-router.put("/:id/cancel", cancelOrder);
 
+// Customer cancel & return routes
+router.put("/:id/cancel", cancelOrder);
+router.post("/:id/cancel-request", cancelOrder);
+router.post(
+  "/:id/return-request",
+  [body("reason").trim().notEmpty().withMessage("Return reason is required")],
+  validate,
+  returnRequest
+);
+
+// Admin & Seller order management routes
 router.get("/", authorize("seller"), getAllOrders);
+router.post("/:id/admin-cancel", authorize("seller"), adminCancelOrder);
+router.post("/:id/approve-return", authorize("seller"), approveReturn);
+router.post("/:id/process-exchange", authorize("seller"), processExchange);
 router.put(
   "/:id/status",
   authorize("seller"),

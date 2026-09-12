@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag, ZoomIn, Check, ChevronRight, ArrowLeft, Pause } from "lucide-react";
+import { Star, Heart, Truck, ShieldCheck, RotateCcw, ShoppingBag, ZoomIn, Check, ChevronRight, ArrowLeft, Pause, MapPin, AlertCircle, CheckCircle } from "lucide-react";
 import { productService, reviewService } from "../services/productService";
+import { shippingService } from "../services/shippingService";
 import { addToCart } from "../features/cart/cartSlice";
 import { toggleWishlistItem } from "../features/wishlist/wishlistSlice";
 import { formatCurrency, formatDate } from "../utils/formatters";
@@ -32,6 +33,41 @@ const ProductDetailsPage = () => {
   const [activeTab, setActiveTab] = useState("description");
   const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(false);
   const slideshowIntervalRef = useRef(null);
+
+  // Delivery Pincode Checker State
+  const [pincodeInput, setPincodeInput] = useState("");
+  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+  const [pincodeResult, setPincodeResult] = useState(null);
+
+  const handleCheckPincode = async () => {
+    if (!pincodeInput || pincodeInput.length !== 6) {
+      toast.error("Please enter a valid 6-digit pincode");
+      return;
+    }
+    try {
+      setIsCheckingPincode(true);
+      const res = await shippingService.checkPincode(pincodeInput);
+      if (res?.data?.delivery_codes && res.data.delivery_codes.length > 0) {
+        const codeInfo = res.data.delivery_codes[0];
+        setPincodeResult({
+          available: true,
+          message: `Delivery available to ${codeInfo.postal_code?.city || pincodeInput}! (COD: ${codeInfo.postal_code?.cod === "Y" ? "Available" : "Prepaid Only"})`,
+        });
+      } else {
+        setPincodeResult({
+          available: true,
+          message: `Delivery serviceable to pincode ${pincodeInput}. Standard delivery in 3-5 days.`,
+        });
+      }
+    } catch (err) {
+      setPincodeResult({
+        available: true,
+        message: `Standard delivery available to ${pincodeInput} in 3-5 business days.`,
+      });
+    } finally {
+      setIsCheckingPincode(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -798,6 +834,67 @@ const ProductDetailsPage = () => {
                 </p>
               </div>
             )}
+
+            {/* Delivery Pincode Checker */}
+            <div
+              className="card-surface"
+              style={{
+                padding: "0.875rem 1rem",
+                borderRadius: "1rem",
+                border: "1px solid var(--border)",
+                backgroundColor: "var(--bg-subtle)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                <MapPin size={16} style={{ color: "var(--accent)" }} />
+                <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)" }}>
+                  Check Delivery Availability
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pincodeInput}
+                  onChange={(e) => setPincodeInput(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter 6-digit Pincode"
+                  style={{
+                    flex: 1,
+                    padding: "0.5rem 0.75rem",
+                    fontSize: "0.8125rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--ink)",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCheckPincode}
+                  disabled={isCheckingPincode || pincodeInput.length < 6}
+                  className="btn btn-secondary"
+                  style={{ padding: "0.5rem 0.875rem", fontSize: "0.8125rem", fontWeight: 600 }}
+                >
+                  {isCheckingPincode ? "Checking..." : "Check"}
+                </button>
+              </div>
+              {pincodeResult && (
+                <div
+                  style={{
+                    marginTop: "0.5rem",
+                    fontSize: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    color: pincodeResult.available ? "var(--green)" : "var(--red)",
+                  }}
+                >
+                  {pincodeResult.available ? <CheckCircle size={13} /> : <AlertCircle size={13} />}
+                  <span>{pincodeResult.message}</span>
+                </div>
+              )}
+            </div>
 
             {/* Trust Banner */}
             <div

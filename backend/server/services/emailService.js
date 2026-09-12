@@ -378,6 +378,30 @@ class EmailService {
       metadata: { test: true },
     });
   }
+
+  /**
+   * Send a Google Sign-Up welcome email containing the temporary password.
+   * Called only for brand-new Google registrations.
+   */
+  async sendGoogleWelcomeWithTempPassword({ user, tempPassword, changePasswordUrl, loginUrl }) {
+    const { subject, text, html } = templates.googleWelcomeWithTempPasswordTemplate({
+      name: user.name,
+      tempPassword,
+      changePasswordUrl,
+      loginUrl,
+    });
+
+    return this.dispatch({
+      to: user.email,
+      recipientName: user.name,
+      template: "google_welcome_temp_password",
+      subject,
+      text,
+      html,
+      relatedUser: user._id,
+      metadata: { authProvider: "google", hasTempPassword: true },
+    });
+  }
 }
 
 const emailService = new EmailService();
