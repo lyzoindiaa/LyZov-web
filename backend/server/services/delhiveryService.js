@@ -15,6 +15,7 @@ class DelhiveryService {
 
     this.client = axios.create({
       baseURL: this.baseUrl,
+      timeout: 10000, // 10s — fail fast instead of hanging indefinitely
       headers: {
         'Authorization': `Token ${this.apiToken}`,
         'Content-Type': 'application/json'

@@ -160,7 +160,7 @@ const Hero = () => {
 
       {/* Trust strip - displays shipping, quality, returns, and value guarantees */}
       {/* Each trust card has rounded corners (border-radius: 1rem) */}
-      <div className="hero-trust-strip">
+      {/* <div className="hero-trust-strip">
         <div className="container-page">
           <div className="hero-trust-grid" style={{ justifyContent: "center" }}>
             {trustItems.map(({ icon: Icon, title, sub }) => (
@@ -176,7 +176,7 @@ const Hero = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 };

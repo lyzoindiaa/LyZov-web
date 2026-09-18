@@ -3,13 +3,48 @@ const Shipment = require('../models/Shipment');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
 
+// ---------------------------------------------------------------------------
+// Helper: converts a raw Delhivery/network error into a structured response
+// ---------------------------------------------------------------------------
+const handleDelhiveryError = (res, error, context = 'Delhivery request') => {
+  const networkCodes = ['ECONNABORTED', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET'];
+
+  if (networkCodes.includes(error.code)) {
+    console.error(`[Delhivery] Network error during "${context}":`, error.code, error.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Shipping partner unreachable, please retry in a moment.',
+      errorCode: error.code,
+    });
+  }
+
+  // Delhivery returned a non-2xx HTTP response — surface it faithfully
+  if (error.response) {
+    const status = error.response.status;
+    console.error(`[Delhivery] HTTP ${status} during "${context}":`, error.response.data);
+    return res.status(status >= 500 ? 502 : status).json({
+      success: false,
+      message: `Shipping partner returned an error (${status}).`,
+      detail: error.response.data,
+    });
+  }
+
+  // Unexpected / unknown error
+  console.error(`[Delhivery] Unknown error during "${context}":`, error.message);
+  return res.status(500).json({
+    success: false,
+    message: `Failed: ${context}`,
+    error: error.message,
+  });
+};
+
 exports.checkPincode = async (req, res) => {
   try {
     const { pincode } = req.params;
     const result = await delhiveryService.checkPincodeServiceability(pincode);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to check pincode serviceability', error: error.message });
+    return handleDelhiveryError(res, error, 'check pincode serviceability');
   }
 };
 
@@ -20,7 +55,7 @@ exports.estimateRates = async (req, res) => {
     const result = await delhiveryService.estimateShippingRates(params);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to estimate rates', error: error.message });
+    return handleDelhiveryError(res, error, 'estimate shipping rates');
   }
 };
 
@@ -154,10 +189,7 @@ exports.getPackingSlip = async (req, res) => {
     const result = await delhiveryService.getPackingSlip(waybill);
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch packing slip: ' + (error.response?.data?.message || error.message),
-    });
+    return handleDelhiveryError(res, error, 'fetch packing slip');
   }
 };
 
@@ -167,10 +199,7 @@ exports.createPickupRequest = async (req, res) => {
     const result = await delhiveryService.createPickupRequest(params);
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to create pickup request: ' + (error.response?.data?.message || error.message),
-    });
+    return handleDelhiveryError(res, error, 'create pickup request');
   }
 };
 
@@ -182,7 +211,7 @@ exports.createReturn = async (req, res) => {
     const result = await delhiveryService.createReversePickup(orderData);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to create return', error: error.message });
+    return handleDelhiveryError(res, error, 'create return/reverse pickup');
   }
 };
 
@@ -196,7 +225,7 @@ exports.cancelOrder = async (req, res) => {
     
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to cancel order', error: error.message });
+    return handleDelhiveryError(res, error, 'cancel order');
   }
 };
 
@@ -206,7 +235,7 @@ exports.trackOrder = async (req, res) => {
     const result = await delhiveryService.trackOrder(waybill);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to track order', error: error.message });
+    return handleDelhiveryError(res, error, 'track order');
   }
 };
 

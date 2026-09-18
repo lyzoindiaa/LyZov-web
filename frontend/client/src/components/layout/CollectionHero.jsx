@@ -50,9 +50,9 @@ function CollectionHero() {
                     {/* <p className="about-hero-kicker">Curated for every lifestyle</p> */}
                     {/* <h2>{slide.title}</h2>
                     <p>{slide.subtitle}</p> */}
-                    <button type="button" className="about-hero-button" onClick={handleBrowse}>
+                    {/* <button type="button" className="about-hero-button" onClick={handleBrowse}>
                         {slide.button}
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </section>
