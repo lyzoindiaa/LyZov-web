@@ -26,6 +26,7 @@ const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
+  const [manifestingId, setManifestingId] = useState(null);
 
   // Delivered confirmation modal state
   const [pendingDelivery, setPendingDelivery] = useState(null); // { orderId, order }
