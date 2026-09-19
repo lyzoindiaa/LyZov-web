@@ -32,6 +32,7 @@ const getSitemap = async (req, res) => {
     const staticPages = [
       { path: "", updatedAt: new Date() },
       { path: "/shop", updatedAt: new Date() },
+      { path: "/products", updatedAt: new Date() },
       { path: "/contact", updatedAt: new Date() },
       { path: "/policies/privacy-policy", updatedAt: new Date() },
       { path: "/policies/terms-and-conditions", updatedAt: new Date() },

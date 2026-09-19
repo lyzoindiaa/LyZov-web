@@ -106,6 +106,7 @@ function App() {
           <Route path="/product" element={<Navigate to="/shop" replace />} />
           <Route path="/products" element={<Navigate to="/shop" replace />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route
             path="/checkout"
