@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Package, AlertTriangle } from "lucide-react";
+import { Package, AlertTriangle, Truck } from "lucide-react";
 import { orderService } from "../../services/cartService";
 // import { shippingService } from "../../services/shippingService"; // [DELHIVERY PAUSED]
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
@@ -227,32 +227,14 @@ const AdminOrdersPage = () => {
                             </div>
                           )}
 
-                          {/*
-                            [DELHIVERY PAUSED] — "Ship via Delhivery" button commented out.
-                            Manual tracking assignment is now done from the order detail page.
-
-                          {!order.trackingNumber && ["pending", "processing"].includes(order.orderStatus) && (
-                            <button
-                              type="button"
-                              disabled={manifestingId === order._id}
-                              onClick={async () => {
-                                try {
-                                  setManifestingId(order._id);
-                                  await shippingService.manifestOrder(order._id);
-                                  toast.success("Manifested with Delhivery!");
-                                  loadOrders();
-                                } catch (err) {
-                                  toast.error("Delhivery error: " + (err.response?.data?.message || err.message));
-                                } finally {
-                                  setManifestingId(null);
-                                }
-                              }}
-                              className="rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-3 py-1 text-xs font-semibold hover:bg-blue-200 disabled:opacity-50"
+                          {!order.trackingNumber && !isDelivered && (
+                            <Link
+                              to={`/seller/orders/${order._id}`}
+                              className="inline-flex items-center gap-1 rounded-full bg-[var(--accent-bg,rgba(197,160,89,0.12))] text-[var(--accent)] px-2.5 py-0.5 text-[11px] font-semibold hover:opacity-80 transition-opacity"
                             >
-                              {manifestingId === order._id ? "Shipping..." : "Ship via Delhivery"}
-                            </button>
+                              <Truck size={11} /> + Assign AWB
+                            </Link>
                           )}
-                          */}
 
                           {order.returnStatus && order.returnStatus !== "Not Requested" && (
                             <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">

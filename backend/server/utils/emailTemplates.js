@@ -479,9 +479,10 @@ const orderStatusUpdateTemplate = ({ order, user, newStatus, note, trackingNumbe
       </div>
       ${
         trackingNumber || order.trackingNumber
-          ? `<div style="font-size: 14px; margin-bottom: 8px;">
-              <span style="color: ${textMuted};">Tracking ID / Carrier:</span>
-              <strong style="color: ${primaryGold}; margin-left: 6px;">${trackingNumber || order.trackingNumber}</strong>
+          ? `<div style="margin: 12px 0; padding: 12px 16px; background-color: #FEF9C3; border: 1.5px solid #FACC15; border-radius: 6px;">
+              <span style="display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #854D0E; font-weight: 700;">Courier Tracking / AWB</span>
+              <strong style="display: block; margin-top: 4px; font-family: monospace; font-size: 16px; color: #713F12; letter-spacing: 0.05em;">${trackingNumber || order.trackingNumber}</strong>
+              <span style="display: block; margin-top: 6px; font-size: 12px; color: #A16207;">Track live anytime at <a href="${clientUrl}/track" style="color: #713F12; font-weight: 700; text-decoration: underline;">${clientUrl}/track</a></span>
             </div>`
           : ""
       }
@@ -495,15 +496,24 @@ const orderStatusUpdateTemplate = ({ order, user, newStatus, note, trackingNumbe
     </div>
 
     <div style="text-align: center; margin: 32px 0 16px;">
-      <a href="${orderUrl}" class="btn-gold" target="_blank">
+      <a href="${orderUrl}" class="btn-gold" target="_blank" style="display: inline-block; margin: 4px 6px;">
         View Order Status
       </a>
+      ${
+        trackingNumber || order.trackingNumber
+          ? `<a href="${clientUrl}/track" class="btn-gold" target="_blank" style="display: inline-block; background-color: #0F172A; margin: 4px 6px;">
+              Live Tracking Page
+            </a>`
+          : ""
+      }
     </div>
   `;
 
+  const finalTrackingNum = trackingNumber || order.trackingNumber;
+
   return {
-    subject: `Order Update #${order.orderNumber}: ${statusTitle}`,
-    text: `Hello ${recipientName},\n\nYour order #${order.orderNumber} status is now: ${newStatus}.\n${trackingNumber ? `Tracking: ${trackingNumber}\n` : ""}Check details here: ${orderUrl}`,
+    subject: `Order Update #${order.orderNumber}: ${statusTitle}${finalTrackingNum ? ` (AWB: ${finalTrackingNum})` : ""}`,
+    text: `Hello ${recipientName},\n\nYour order #${order.orderNumber} status is now: ${newStatus}.\n${finalTrackingNum ? `Tracking / AWB Number: ${finalTrackingNum}\nTrack online at: ${clientUrl}/track\n` : ""}Check full details here: ${orderUrl}`,
     html: baseEmailWrapper({
       title: `Order Update #${order.orderNumber}`,
       preheader: `Your order #${order.orderNumber} is now ${newStatus}.`,

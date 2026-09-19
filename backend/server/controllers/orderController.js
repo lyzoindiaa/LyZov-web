@@ -793,36 +793,75 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     order.statusHistory.push({ status, note: note || "" });
   }
 
-  if (trackingNumber) order.trackingNumber = trackingNumber;
+  const trackingTrimmed = typeof trackingNumber === "string" ? trackingNumber.trim() : trackingNumber;
+  const isTrackingUpdated = Boolean(trackingTrimmed && trackingTrimmed !== order.trackingNumber);
+
+  if (trackingTrimmed !== undefined) {
+    order.trackingNumber = trackingTrimmed;
+  }
+
+  if (isTrackingUpdated && !status) {
+    order.statusHistory.push({
+      status: order.orderStatus,
+      note: note || `Tracking/AWB assigned: ${trackingTrimmed}`,
+    });
+  }
+
   if (status === "delivered") {
     order.isDelivered = true;
     order.deliveredAt = new Date();
   }
   await order.save();
 
-  await Notification.create({
-    user: order.user,
-    title: "Order status updated",
-    message: `Your order ${order.orderNumber} status is now: ${status}.`,
-    type: "order",
-    link: `/dashboard/orders/${order._id}`,
-  });
-
-  // Non-blocking status update email to customer
-  if (status) {
-    User.findById(order.user).then((customer) => {
-      if (customer) {
-        emailService.sendOrderStatusUpdate({
-          order,
-          user: customer,
-          newStatus: status,
-          note,
-          trackingNumber,
-        }).catch((err) =>
-          console.error("[EmailService] Order status update email error:", err.message)
-        );
-      }
+  if (order.user) {
+    await Notification.create({
+      user: order.user,
+      title: isTrackingUpdated ? "Tracking details assigned" : "Order status updated",
+      message: isTrackingUpdated
+        ? `Tracking number ${trackingTrimmed} assigned to order #${order.orderNumber}.`
+        : `Your order #${order.orderNumber} status is now: ${status || order.orderStatus}.`,
+      type: "order",
+      link: `/dashboard/orders/${order._id}`,
     }).catch(() => {});
+  }
+
+  // Automated notification email to customer whenever status OR tracking number is updated
+  if (status || isTrackingUpdated) {
+    const statusToSend = status || order.orderStatus;
+    const finalTracking = trackingTrimmed !== undefined ? trackingTrimmed : order.trackingNumber;
+
+    const userPromise = order.user ? User.findById(order.user) : Promise.resolve(null);
+    userPromise
+      .then((customer) => {
+        const recipientUser = customer || {
+          name: order.shippingAddress?.fullName || "Valued Customer",
+          email: order.shippingAddress?.email,
+        };
+
+        if (recipientUser.email || customer?.email || order.shippingAddress?.email) {
+          emailService
+            .sendOrderStatusUpdate({
+              order,
+              user: recipientUser,
+              newStatus: statusToSend,
+              note: note || (isTrackingUpdated && !status ? `Tracking ID assigned: ${finalTracking}` : ""),
+              trackingNumber: finalTracking,
+            })
+            .then(() => {
+              console.log(
+                `[EmailService] Automated tracking/status update email sent for order #${order.orderNumber} to ${
+                  recipientUser.email || order.shippingAddress?.email
+                }`
+              );
+            })
+            .catch((err) =>
+              console.error("[EmailService] Order status update email error:", err.message)
+            );
+        }
+      })
+      .catch((err) => {
+        console.error("[EmailService] Customer lookup error:", err.message);
+      });
   }
 
   return sendSuccess(res, 200, "Order status updated successfully", order);

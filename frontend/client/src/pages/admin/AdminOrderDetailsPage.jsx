@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   ArrowLeft, ExternalLink, Truck, RefreshCw, AlertCircle,
-  CheckCircle, AlertTriangle, MessageCircle, Lock
+  CheckCircle, AlertTriangle, MessageCircle, Lock, Copy, Edit2, Send, Check
 } from "lucide-react";
 import { orderService } from "../../services/cartService";
 // import { shippingService } from "../../services/shippingService"; // [DELHIVERY PAUSED]
@@ -36,7 +36,11 @@ const AdminOrderDetailsPage = () => {
   // Delivered confirmation modal
   const [showDeliveredModal, setShowDeliveredModal] = useState(false);
 
-  // [DELHIVERY PAUSED] const [isManifesting, setIsManifesting] = useState(false);
+  // Manual tracking assignment state
+  const [trackingInput, setTrackingInput] = useState("");
+  const [markAsShipped, setMarkAsShipped] = useState(true);
+  const [isEditingTracking, setIsEditingTracking] = useState(false);
+  const [isSavingTracking, setIsSavingTracking] = useState(false);
 
   const loadOrder = async () => {
     try {
@@ -54,6 +58,45 @@ const AdminOrderDetailsPage = () => {
   useEffect(() => {
     loadOrder();
   }, [orderId]);
+
+  useEffect(() => {
+    if (order?.trackingNumber) {
+      setTrackingInput(order.trackingNumber);
+    } else {
+      setTrackingInput("");
+    }
+  }, [order?.trackingNumber]);
+
+  const handleSaveTracking = async (e) => {
+    e?.preventDefault();
+    const clean = trackingInput.trim();
+    if (!clean) {
+      toast.error("Please enter a valid tracking or AWB number");
+      return;
+    }
+    try {
+      setIsSavingTracking(true);
+      const payload = { trackingNumber: clean };
+      if (markAsShipped && order.orderStatus !== "shipped" && order.orderStatus !== "delivered") {
+        payload.status = "shipped";
+      }
+      const res = await orderService.updateOrderStatus(orderId, payload);
+      setOrder(res.data);
+      toast.success("Tracking ID assigned & automated email dispatched to customer! ✓");
+      setIsEditingTracking(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to assign tracking number");
+    } finally {
+      setIsSavingTracking(false);
+    }
+  };
+
+  const handleCopyTracking = () => {
+    if (order?.trackingNumber) {
+      navigator.clipboard.writeText(order.trackingNumber);
+      toast.success("Tracking / AWB copied to clipboard!");
+    }
+  };
 
   const updateOrder = async (payload, message) => {
     try {
@@ -376,54 +419,140 @@ const AdminOrderDetailsPage = () => {
                 </h2>
                 {order.trackingNumber && (
                   <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                    Shipped
+                    AWB Assigned
                   </span>
                 )}
               </div>
 
-              {order.trackingNumber ? (
+              {order.trackingNumber && !isEditingTracking ? (
                 <div className="flex flex-col gap-3">
-                  <div>
-                    <span className="text-xs text-stone">Tracking / AWB Number:</span>
-                    <p className="font-mono font-bold text-base text-[var(--accent)]">
-                      {order.trackingNumber}
-                    </p>
-                  </div>
-                  <p className="text-xs text-stone">
-                    Customer can track at <strong>/track</strong> using their order number and phone/email.
-                  </p>
-                  {/* [DELHIVERY PAUSED] — Track on Delhivery link commented out.
-                  <a href={`https://www.delhivery.com/track/package/${order.trackingNumber}`}
-                    target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--bg-subtle)]">
-                    <ExternalLink size={13} /> Track on Delhivery
-                  </a>
-                  */}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs text-stone">
-                    No tracking number assigned yet. Once you dispatch via your courier partner, update
-                    the order status to <strong>Shipped</strong>.
-                  </p>
-                  <p className="text-xs text-stone rounded-lg bg-[var(--bg-subtle)] border border-hairline px-3 py-2 dark:border-hairline-dark">
-                    ℹ️ Delhivery auto-manifest is paused. Tracking IDs are assigned manually within 2 business days.
-                  </p>
-                  {/*
-                    [DELHIVERY PAUSED] — Ship via Delhivery button commented out.
-                    {["pending", "processing"].includes(order.orderStatus) && (
+                  <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-bg,rgba(197,160,89,0.08))] flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-stone block">Tracking / AWB Number</span>
+                      <p className="font-mono font-extrabold text-base text-[var(--accent)] tracking-wide mt-0.5">
+                        {order.trackingNumber}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        disabled={isManifesting}
-                        onClick={handleManifest}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                        onClick={handleCopyTracking}
+                        title="Copy AWB Number"
+                        className="p-2 rounded-lg border border-border bg-white text-xs font-semibold text-[var(--ink)] hover:bg-[var(--bg-subtle)] dark:bg-stone-900 transition-colors"
                       >
-                        <Truck size={16} />
-                        {isManifesting ? "Manifesting with Courier..." : "Ship via Delhivery"}
+                        <Copy size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingTracking(true)}
+                        title="Edit AWB Number"
+                        className="p-2 rounded-lg border border-border bg-white text-xs font-semibold text-[var(--ink)] hover:bg-[var(--bg-subtle)] dark:bg-stone-900 transition-colors"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Link
+                      to={`/track`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
+                    >
+                      <ExternalLink size={13} /> View Live Tracking Page (/track)
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingTracking(true)}
+                      className="text-xs text-stone hover:text-[var(--ink)] underline"
+                    >
+                      Change AWB
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-stone">
+                    ✓ Automated tracking email with this AWB was sent to <strong>{order.shippingAddress?.email || order.user?.email}</strong>.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSaveTracking} className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1.5">
+                      Enter Courier Tracking / AWB ID
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={trackingInput}
+                        onChange={(e) => setTrackingInput(e.target.value)}
+                        placeholder="e.g. 142371908234 or BLUEDART-88219"
+                        className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2.5 font-mono text-sm font-semibold text-[var(--ink)] placeholder:text-stone/60 focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                        disabled={isSavingTracking}
+                      />
+                    </div>
+                    <span className="text-[11px] text-stone mt-1 block">
+                      Compatible with any courier (Delhivery, BlueDart, DTDC, India Post, etc.)
+                    </span>
+                  </div>
+
+                  {/* Mark as shipped toggle if not yet shipped/delivered */}
+                  {!["shipped", "delivered"].includes(order.orderStatus) && (
+                    <label className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border bg-[var(--bg-subtle)] cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={markAsShipped}
+                        onChange={(e) => setMarkAsShipped(e.target.checked)}
+                        className="mt-0.5 rounded accent-[var(--accent)]"
+                        disabled={isSavingTracking}
+                      />
+                      <div className="text-xs">
+                        <span className="font-semibold text-[var(--ink)] block">
+                          Also update status to "Shipped"
+                        </span>
+                        <span className="text-stone">
+                          Transitions the order progress stepper and notifies customer of dispatch.
+                        </span>
+                      </div>
+                    </label>
+                  )}
+
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
+                    ✉️ <strong>Automatic Email:</strong> Saving will immediately send an order tracking email with this AWB number to <strong>{order.shippingAddress?.email || order.user?.email || "the customer"}</strong>.
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="submit"
+                      disabled={isSavingTracking || !trackingInput.trim()}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50 transition-opacity shadow-sm"
+                    >
+                      {isSavingTracking ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Assigning &amp; Sending Email...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          {order.trackingNumber ? "Update AWB & Dispatch Email" : "Save AWB & Dispatch Email"}
+                        </>
+                      )}
+                    </button>
+                    {isEditingTracking && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingTracking(false);
+                          setTrackingInput(order.trackingNumber || "");
+                        }}
+                        disabled={isSavingTracking}
+                        className="rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-stone hover:text-[var(--ink)]"
+                      >
+                        Cancel
                       </button>
                     )}
-                  */}
-                </div>
+                  </div>
+                </form>
               )}
             </section>
 
