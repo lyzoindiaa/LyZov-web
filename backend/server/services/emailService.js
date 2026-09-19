@@ -9,8 +9,9 @@ class EmailService {
   }
 
   initTransporter() {
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+    const user = process.env.SMTP_USER?.trim();
+    const rawPass = process.env.SMTP_PASS?.trim();
+    const pass = rawPass ? rawPass.replace(/\s+/g, "") : "";
 
     if (!user || !pass) {
       console.warn(
@@ -252,7 +253,11 @@ class EmailService {
   }
 
   async sendSellerNewOrder({ order, user }) {
-    const sellerEmail = process.env.SELLER_NOTIFICATION_EMAIL || process.env.SMTP_USER;
+    const sellerEmail =
+      process.env.SELLER_NOTIFICATION_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      process.env.SMTP_USER ||
+      "lyzovindia@gmail.com";
     if (!sellerEmail) return;
 
     const { subject, text, html } = templates.sellerNewOrderTemplate({ order, user });

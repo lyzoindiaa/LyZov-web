@@ -106,9 +106,10 @@ const getRobotsTxt = (req, res) => {
   const content = `User-agent: *
 Allow: /
 Allow: /shop
-Allow: /product/
+Allow: /products/
 Allow: /policies/
 Allow: /contact
+Allow: /track
 
 Disallow: /dashboard/
 Disallow: /admin/

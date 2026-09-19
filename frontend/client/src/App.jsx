@@ -103,6 +103,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/product" element={<Navigate to="/shop" replace />} />
+          <Route path="/products" element={<Navigate to="/shop" replace />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route

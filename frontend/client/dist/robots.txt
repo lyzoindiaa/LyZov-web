@@ -4,6 +4,7 @@ Allow: /shop
 Allow: /product/
 Allow: /policies/
 Allow: /contact
+Allow: /track
 
 Disallow: /dashboard/
 Disallow: /admin/

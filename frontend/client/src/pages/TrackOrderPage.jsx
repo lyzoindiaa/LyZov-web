@@ -325,7 +325,7 @@ const TrackOrderPage = () => {
           </div>
 
           {/* Tracking number */}
-          {result.trackingNumber ? (
+          {Boolean(result.trackingNumber && String(result.trackingNumber).trim()) ? (
             <div style={{ backgroundColor: "var(--surface)", border: "1.5px solid var(--accent)", borderRadius: "1.25rem", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
                 <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "0.625rem", backgroundColor: "var(--accent-bg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

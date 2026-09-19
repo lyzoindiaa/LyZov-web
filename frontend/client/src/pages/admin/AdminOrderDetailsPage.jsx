@@ -41,6 +41,8 @@ const AdminOrderDetailsPage = () => {
   const [markAsShipped, setMarkAsShipped] = useState(true);
   const [isEditingTracking, setIsEditingTracking] = useState(false);
   const [isSavingTracking, setIsSavingTracking] = useState(false);
+  const [isSendingShippingEmail, setIsSendingShippingEmail] = useState(false);
+  const [shippingEmailSent, setShippingEmailSent] = useState(false);
 
   const loadOrder = async () => {
     try {
@@ -84,10 +86,30 @@ const AdminOrderDetailsPage = () => {
       setOrder(res.data);
       toast.success("Tracking ID assigned & automated email dispatched to customer! ✓");
       setIsEditingTracking(false);
+      setShippingEmailSent(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to assign tracking number");
+      const errMsg = err.response?.data?.message || err.message || "Failed to assign tracking number";
+      toast.error(errMsg);
     } finally {
       setIsSavingTracking(false);
+    }
+  };
+
+  const handleSendShippingEmail = async () => {
+    if (!order?.trackingNumber) {
+      toast.error("Please assign a tracking / AWB number first");
+      return;
+    }
+    try {
+      setIsSendingShippingEmail(true);
+      const res = await orderService.sendTrackingEmail(orderId);
+      toast.success(res.message || "Shipping email sent successfully to customer! ✓");
+      setShippingEmailSent(true);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || "Failed to send shipping email";
+      toast.error(errMsg);
+    } finally {
+      setIsSendingShippingEmail(false);
     }
   };
 
@@ -467,6 +489,32 @@ const AdminOrderDetailsPage = () => {
                       className="text-xs text-stone hover:text-[var(--ink)] underline"
                     >
                       Change AWB
+                    </button>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSendShippingEmail}
+                      disabled={isSendingShippingEmail || shippingEmailSent}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                    >
+                      {isSendingShippingEmail ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Sending Shipping Mail...
+                        </>
+                      ) : shippingEmailSent ? (
+                        <>
+                          <Check size={14} />
+                          Shipping Mail Sent
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          Send Shipping Mail to Customer
+                        </>
+                      )}
                     </button>
                   </div>
 

@@ -166,17 +166,10 @@ const CategoryFilter = () => {
                   transition: "all 0.2s ease",
                 }}
               >
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
+                <CategoryIcon
+                  id={category.id}
+                  size={26}
+                  color={selectedCategory === category.id ? "#ffffff" : "var(--accent)"}
                 />
               </div>
               <span

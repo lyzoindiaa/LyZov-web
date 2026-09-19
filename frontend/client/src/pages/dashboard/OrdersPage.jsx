@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, ArrowRight, ChevronRight, Clock } from "lucide-react";
+import { Package, ArrowRight, ChevronRight, Clock, Truck } from "lucide-react";
 import { orderService } from "../../services/cartService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
@@ -108,6 +108,11 @@ const OrdersPage = () => {
               <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.15rem" }}>
                 Placed on {formatDateTime(order.createdAt)} · {order.items?.length || 1} item(s)
               </p>
+              {order.trackingNumber && (
+                <div style={{ marginTop: "0.35rem", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--accent)", backgroundColor: "var(--accent-bg)", padding: "0.15rem 0.5rem", borderRadius: "0.375rem" }}>
+                  <Truck size={11} /> AWB: {order.trackingNumber}
+                </div>
+              )}
             </div>
           </div>
 
