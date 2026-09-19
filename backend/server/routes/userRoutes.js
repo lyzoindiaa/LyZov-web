@@ -47,8 +47,8 @@ router.put(
   changePassword
 );
 
-router.get("/", authorize("seller"), getUsers);
-router.put("/:id", authorize("seller"), updateUser);
-router.delete("/:id", authorize("seller"), deleteUser);
+router.get("/", authorize("admin"), getUsers);
+router.put("/:id", authorize("admin"), updateUser);
+router.delete("/:id", authorize("admin"), deleteUser);
 
 module.exports = router;

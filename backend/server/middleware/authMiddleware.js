@@ -40,7 +40,8 @@ const authorize = (...roles) => {
     const userRole = req.user.role;
     const allowed = roles.some((role) => {
       if (role === userRole) return true;
-      if ((role === "seller" || role === "admin") && (userRole === "seller" || userRole === "admin")) return true;
+      // Admin has superuser access to seller operations
+      if (role === "seller" && userRole === "admin") return true;
       return false;
     });
     if (!allowed) {

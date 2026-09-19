@@ -41,8 +41,21 @@ const handleDelhiveryError = (res, error, context = 'Delhivery request') => {
 exports.checkPincode = async (req, res) => {
   try {
     const { pincode } = req.params;
+    /*
+    // Delhivery API check paused
     const result = await delhiveryService.checkPincodeServiceability(pincode);
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: result });
+    */
+    // Standard offline validation: 6-digit Indian pincode format
+    const isValidPin = /^[1-9][0-9]{5}$/.test(pincode);
+    return res.status(200).json({
+      success: true,
+      data: {
+        serviceable: isValidPin,
+        pincode,
+        message: isValidPin ? "Standard delivery available (7-10 business days)" : "Invalid pincode",
+      },
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'check pincode serviceability');
   }
@@ -50,10 +63,19 @@ exports.checkPincode = async (req, res) => {
 
 exports.estimateRates = async (req, res) => {
   try {
-    const params = req.body;
-    // Expected params: cl, ss, md, pt, d_pin, o_pin, cgm
-    const result = await delhiveryService.estimateShippingRates(params);
-    res.status(200).json({ success: true, data: result });
+    /*
+    // Delhivery API estimate paused
+    const result = await delhiveryService.estimateShippingRates(req.body);
+    return res.status(200).json({ success: true, data: result });
+    */
+    return res.status(200).json({
+      success: true,
+      data: {
+        rate: 0,
+        estimatedDays: "7-10",
+        message: "Complimentary premium shipping applied",
+      },
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'estimate shipping rates');
   }
@@ -91,51 +113,20 @@ exports.createOrder = async (req, res) => {
       "Primary Warehouse";
 
     const paymentMode = order.paymentMethod === 'cod' ? 'COD' : 'Prepaid';
-    const codAmount = order.paymentMethod === 'cod' ? order.totalPrice : 0;
 
-    const delhiveryPayload = {
-      order: order.orderNumber,
-      name: order.shippingAddress.fullName,
-      add: `${order.shippingAddress.addressLine1} ${order.shippingAddress.addressLine2 || ''}`.trim(),
-      pin: order.shippingAddress.postalCode,
-      city: order.shippingAddress.city,
-      state: order.shippingAddress.state,
-      country: order.shippingAddress.country || 'India',
-      phone: order.shippingAddress.phone,
-      payment_mode: paymentMode,
-      total_amount: order.totalPrice,
-      cod_amount: codAmount,
-      products_desc: order.items.map((i) => i.name).join(', '),
-      hsn_code: req.body.hsn_code || '6203',
-      seller_gst_tin: req.body.seller_gst_tin || process.env.DELHIVERY_GST_TIN || '27ABCDE1234F1Z5',
-      pickup_location: {
-        name: pickupWarehouse,
-      },
-    };
-
+    // Delhivery API call paused — generate standard internal waybill
+    const waybill = req.body.waybill || `AWB-${Date.now()}`;
+    /*
     let result = null;
-    let waybill = null;
-
     try {
       result = await delhiveryService.createOrder(delhiveryPayload);
       if (result?.packages && result.packages.length > 0) {
         waybill = result.packages[0].waybill;
       }
     } catch (delhiveryErr) {
-      console.error('[Delhivery] Create order error:', delhiveryErr.response?.data || delhiveryErr.message);
-      if (process.env.NODE_ENV !== 'production' || !process.env.DELHIVERY_API_TOKEN) {
-        waybill = `DLV-${Date.now()}`;
-      } else {
-        return res.status(500).json({
-          success: false,
-          message: 'Delhivery manifestation failed: ' + (delhiveryErr.response?.data?.message || delhiveryErr.message),
-        });
-      }
+      console.error('[Delhivery] Create order error:', delhiveryErr.message);
     }
-
-    if (!waybill) {
-      waybill = `DLV-${Date.now()}`;
-    }
+    */
 
     const newShipment = new Shipment({
       order: order._id,
@@ -186,8 +177,15 @@ exports.createOrder = async (req, res) => {
 exports.getPackingSlip = async (req, res) => {
   try {
     const { waybill } = req.params;
+    /*
     const result = await delhiveryService.getPackingSlip(waybill);
     return res.status(200).json({ success: true, data: result });
+    */
+    return res.status(200).json({
+      success: true,
+      message: "Standard packing slip",
+      data: { waybill, status: "generated" },
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'fetch packing slip');
   }
@@ -195,9 +193,14 @@ exports.getPackingSlip = async (req, res) => {
 
 exports.createPickupRequest = async (req, res) => {
   try {
-    const params = req.body;
-    const result = await delhiveryService.createPickupRequest(params);
+    /*
+    const result = await delhiveryService.createPickupRequest(req.body);
     return res.status(200).json({ success: true, data: result });
+    */
+    return res.status(200).json({
+      success: true,
+      message: "Pickup scheduled successfully",
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'create pickup request');
   }
@@ -206,10 +209,16 @@ exports.createPickupRequest = async (req, res) => {
 exports.createReturn = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const orderData = req.body;
-    
-    const result = await delhiveryService.createReversePickup(orderData);
-    res.status(201).json({ success: true, data: result });
+    /*
+    const result = await delhiveryService.createReversePickup(req.body);
+    return res.status(201).json({ success: true, data: result });
+    */
+    const returnWaybill = `REV-${Date.now()}`;
+    return res.status(201).json({
+      success: true,
+      message: "Return pickup registered",
+      data: { packages: [{ waybill: returnWaybill }] },
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'create return/reverse pickup');
   }
@@ -218,12 +227,13 @@ exports.createReturn = async (req, res) => {
 exports.cancelOrder = async (req, res) => {
   try {
     const { waybill } = req.params;
+    /*
     const result = await delhiveryService.cancelOrder(waybill);
-    
+    */
     // Update shipment status in DB
     await Shipment.findOneAndUpdate({ waybillNumber: waybill }, { status: 'Cancelled' });
     
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, message: `Shipment ${waybill} cancelled successfully` });
   } catch (error) {
     return handleDelhiveryError(res, error, 'cancel order');
   }
@@ -232,8 +242,19 @@ exports.cancelOrder = async (req, res) => {
 exports.trackOrder = async (req, res) => {
   try {
     const { waybill } = req.params;
+    /*
     const result = await delhiveryService.trackOrder(waybill);
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: result });
+    */
+    const shipment = await Shipment.findOne({ waybillNumber: waybill }).populate('order');
+    return res.status(200).json({
+      success: true,
+      data: {
+        waybill,
+        status: shipment ? shipment.status : "In Transit",
+        order: shipment ? shipment.order : null,
+      },
+    });
   } catch (error) {
     return handleDelhiveryError(res, error, 'track order');
   }

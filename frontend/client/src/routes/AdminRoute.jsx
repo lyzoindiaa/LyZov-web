@@ -15,7 +15,11 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated || (!isSeller && !isAdmin)) {
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isSeller && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

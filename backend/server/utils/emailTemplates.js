@@ -346,8 +346,21 @@ const orderConfirmationTemplate = ({ order, user }) => {
       </tr>
     </table>
 
+    <!-- Delivery Timeline Promise Banner -->
+    <div style="background-color: #F8FAFC; border-left: 4px solid ${primaryGold}; border-radius: 4px; padding: 16px 20px; margin-bottom: 24px;">
+      <h4 style="margin: 0 0 6px; font-size: 14px; font-weight: 700; color: ${textDark}; text-transform: uppercase; letter-spacing: 0.05em;">
+        Delivery & Tracking Schedule
+      </h4>
+      <p style="margin: 0 0 6px; font-size: 13px; color: ${textDark}; line-height: 1.5;">
+        • <strong>Tracking ID Generation:</strong> Your tracking ID will be generated and emailed to you within <strong>2 business days</strong> as our artisans prepare and inspect your items.
+      </p>
+      <p style="margin: 0; font-size: 13px; color: ${textDark}; line-height: 1.5;">
+        • <strong>Estimated Delivery:</strong> Safely delivered to your doorstep within <strong>7–10 business days</strong>.
+      </p>
+    </div>
+
     <!-- Shipping Address & Payment Details -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
       <tr>
         <td width="50%" valign="top" style="padding-right: 12px;">
           <h4 style="margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: ${textMuted};">Delivery Address</h4>
@@ -369,9 +382,12 @@ const orderConfirmationTemplate = ({ order, user }) => {
       </tr>
     </table>
 
-    <div style="text-align: center; margin: 32px 0 16px;">
-      <a href="${orderUrl}" class="btn-gold" target="_blank">
+    <div style="text-align: center; margin: 28px 0 16px;">
+      <a href="${orderUrl}" class="btn-gold" target="_blank" style="margin-right: 10px; margin-bottom: 8px;">
         Track Your Order
+      </a>
+      <a href="https://wa.me/919999999999?text=Hello%20LyZov,%20I%20have%20an%20inquiry%20regarding%20my%20order%20${order.orderNumber}" target="_blank" style="display: inline-block; background-color: #25D366; color: #FFFFFF !important; font-weight: 600; font-size: 13px; padding: 13px 20px; border-radius: 6px; text-decoration: none; margin-bottom: 8px;">
+        WhatsApp Concierge
       </a>
     </div>
   `;

@@ -29,7 +29,23 @@ const updateCoupon = asyncHandler(async (req, res) => {
   const coupon = await Coupon.findById(req.params.id);
   if (!coupon) throw ApiError.notFound("Coupon not found");
 
-  Object.keys(req.body).forEach((key) => (coupon[key] = req.body[key]));
+  const allowedUpdates = [
+    "description",
+    "discountType",
+    "discountValue",
+    "minPurchaseAmount",
+    "maxDiscountAmount",
+    "validFrom",
+    "validUntil",
+    "usageLimit",
+    "isActive",
+    "applicableCategories",
+  ];
+  allowedUpdates.forEach((key) => {
+    if (req.body[key] !== undefined) {
+      coupon[key] = req.body[key];
+    }
+  });
   await coupon.save();
 
   return sendSuccess(res, 200, "Coupon updated successfully", coupon);

@@ -38,7 +38,30 @@ const clientOrigin = process.env.CLIENT_URL ||
 
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy:
+      process.env.NODE_ENV === "production"
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com", "https://accounts.google.com"],
+              styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+              fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+              imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.stripe.com", "https://lh3.googleusercontent.com"],
+              connectSrc: [
+                "'self'",
+                clientOrigin,
+                "https://api.stripe.com",
+                "https://accounts.google.com",
+                "https://res.cloudinary.com",
+                "https://staging-express.delhivery.com",
+                "https://track.delhivery.com",
+              ],
+              frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com", "https://accounts.google.com"],
+              objectSrc: ["'none'"],
+              upgradeInsecureRequests: [],
+            },
+          }
+        : false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
@@ -54,8 +77,8 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(mongoSanitize());
 
@@ -64,7 +87,7 @@ const globalLimiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV === "development", // disable in dev
+  skip: () => process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test",
 });
 app.use("/api", globalLimiter);
 

@@ -30,7 +30,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     secure: isSecure,
     sameSite,
-    maxAge: 7*24*60 * 60 * 1000,
+    maxAge: 15 * 60 * 1000, // 15 minutes to match access token lifespan
   });
 
   res.cookie("refreshToken", refreshToken, {

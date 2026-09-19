@@ -9,10 +9,12 @@ const { sendSuccess } = require("../utils/apiResponse");
 // @access  Private/Admin
 exports.getDashboardStats = asyncHandler(async (req, res) => {
   const totalRevenueAgg = await Order.aggregate([
+    { $match: { orderStatus: { $nin: ["cancelled", "refunded"] } } },
     { $group: { _id: null, total: { $sum: "$totalPrice" } } }
   ]);
 
   const revenueByDay = await Order.aggregate([
+    { $match: { orderStatus: { $nin: ["cancelled", "refunded"] } } },
     {
       $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -48,6 +50,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 exports.getRevenueByDay = asyncHandler(async (req, res) => {
   const revenueByDay = await Order.aggregate([
+    { $match: { orderStatus: { $nin: ["cancelled", "refunded"] } } },
     {
       $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },

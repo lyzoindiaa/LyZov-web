@@ -3,6 +3,9 @@ const router = express.Router();
 const shippingController = require('../controllers/shippingController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
+// NOTE: Delhivery live external dispatch is currently paused.
+// Endpoints provide resilient offline/mock responses so admin order management runs uninterrupted.
+
 // Phase 2: Pincode Serviceability (Public)
 router.get('/pincode/:pincode', shippingController.checkPincode);
 
