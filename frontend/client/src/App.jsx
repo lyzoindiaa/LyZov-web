@@ -102,9 +102,9 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/products" element={<ShopPage />} />
-          <Route path="/product" element={<ShopPage />} />
-          <Route path="/products/:slug" element={<ProductDetailsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/product" element={<Navigate to="/shop" replace />} />
+          <Route path="/products" element={<Navigate to="/shop" replace />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/cart" element={<CartPage />} />
