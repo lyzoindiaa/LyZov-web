@@ -32,6 +32,7 @@ const getSitemap = async (req, res) => {
     const staticPages = [
       { path: "", updatedAt: new Date() },
       { path: "/shop", updatedAt: new Date() },
+      { path: "/products", updatedAt: new Date() },
       { path: "/contact", updatedAt: new Date() },
       { path: "/policies/privacy-policy", updatedAt: new Date() },
       { path: "/policies/terms-and-conditions", updatedAt: new Date() },
@@ -106,7 +107,9 @@ const getRobotsTxt = (req, res) => {
   const content = `User-agent: *
 Allow: /
 Allow: /shop
+Allow: /products
 Allow: /products/
+Allow: /product/
 Allow: /policies/
 Allow: /contact
 Allow: /track
