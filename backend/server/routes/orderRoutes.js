@@ -12,6 +12,7 @@ const {
   processExchange,
   getAllOrders,
   updateOrderStatus,
+  sendTrackingEmail,
   trackOrderPublic,
 } = require("../controllers/orderController");
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -69,9 +70,18 @@ router.post("/:id/process-exchange", authorize("seller"), processExchange);
 router.put(
   "/:id/status",
   authorize("seller"),
-  [body("status").isIn(["pending", "processing", "shipped", "delivered", "cancelled", "refunded"])],
+  [
+    body("status")
+      .optional()
+      .isIn(["pending", "processing", "shipped", "delivered", "cancelled", "refunded"])
+      .withMessage("Invalid order status"),
+    body("trackingNumber").optional().trim(),
+    body("note").optional().trim(),
+  ],
   validate,
   updateOrderStatus
 );
+
+router.post("/:id/send-tracking-email", authorize("seller"), sendTrackingEmail);
 
 module.exports = router;

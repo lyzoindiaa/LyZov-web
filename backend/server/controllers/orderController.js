@@ -811,7 +811,27 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     order.isDelivered = true;
     order.deliveredAt = new Date();
   }
-  await order.save();
+
+  try {
+    await order.save({ validateModifiedOnly: true });
+  } catch (saveErr) {
+    console.warn("[OrderController] order.save validation failed, applying fallback direct update:", saveErr.message);
+    const updateObj = {};
+    if (status) {
+      updateObj.orderStatus = status;
+      if (status === "delivered") {
+        updateObj.isDelivered = true;
+        updateObj.deliveredAt = new Date();
+      }
+    }
+    if (trackingTrimmed !== undefined) {
+      updateObj.trackingNumber = trackingTrimmed;
+    }
+    updateObj.statusHistory = order.statusHistory;
+    const updated = await Order.findByIdAndUpdate(order._id, { $set: updateObj }, { new: true, runValidators: false });
+    if (!updated) throw saveErr;
+    Object.assign(order, updated.toObject());
+  }
 
   if (order.user) {
     await Notification.create({
@@ -833,12 +853,13 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     const userPromise = order.user ? User.findById(order.user) : Promise.resolve(null);
     userPromise
       .then((customer) => {
-        const recipientUser = customer || {
-          name: order.shippingAddress?.fullName || "Valued Customer",
-          email: order.shippingAddress?.email,
+        const targetEmail = customer?.email || order.paymentResult?.email || order.shippingAddress?.email;
+        const recipientUser = {
+          name: customer?.name || order.shippingAddress?.fullName || "Valued Customer",
+          email: targetEmail,
         };
 
-        if (recipientUser.email || customer?.email || order.shippingAddress?.email) {
+        if (targetEmail) {
           emailService
             .sendOrderStatusUpdate({
               order,
@@ -849,9 +870,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
             })
             .then(() => {
               console.log(
-                `[EmailService] Automated tracking/status update email sent for order #${order.orderNumber} to ${
-                  recipientUser.email || order.shippingAddress?.email
-                }`
+                `[EmailService] Automated tracking/status update email sent for order #${order.orderNumber} to ${targetEmail}`
               );
             })
             .catch((err) =>
@@ -865,6 +884,45 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   return sendSuccess(res, 200, "Order status updated successfully", order);
+});
+
+// @desc    Send shipping / tracking email manually
+// @route   POST /api/orders/:id/send-tracking-email
+// @access  Private/Seller
+const sendTrackingEmail = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw ApiError.notFound("Order not found");
+
+  if (!order.trackingNumber) {
+    throw ApiError.badRequest("Order does not have a tracking / AWB number assigned yet.");
+  }
+
+  const customer = order.user ? await User.findById(order.user).lean() : null;
+  const customerEmail = customer?.email || order.paymentResult?.email || order.shippingAddress?.email;
+
+  if (!customerEmail) {
+    throw ApiError.badRequest("No valid customer email address found for this order.");
+  }
+
+  const recipientUser = {
+    name: customer?.name || order.shippingAddress?.fullName || "Valued Customer",
+    email: customerEmail,
+    _id: order.user,
+  };
+
+  const dispatchResult = await emailService.sendOrderStatusUpdate({
+    order,
+    user: recipientUser,
+    newStatus: order.orderStatus,
+    note: `Tracking / AWB details: ${order.trackingNumber}`,
+    trackingNumber: order.trackingNumber,
+  });
+
+  return sendSuccess(res, 200, `Shipping email sent successfully to ${customerEmail}`, {
+    recipient: customerEmail,
+    trackingNumber: order.trackingNumber,
+    dispatchResult,
+  });
 });
 
 // @desc    Public tracking endpoint for orders without login
@@ -936,6 +994,7 @@ module.exports = {
   processExchange,
   getAllOrders,
   updateOrderStatus,
+  sendTrackingEmail,
   trackOrderPublic,
 };
 

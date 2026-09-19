@@ -27,7 +27,7 @@ const errorHandler = (err, req, res, next) => {
     if (error.name === "ValidationError") {
       statusCode = 400;
       errors = Object.values(error.errors).map((e) => e.message);
-      message = "Validation failed";
+      message = errors.length ? `Validation failed: ${errors.join("; ")}` : "Validation failed";
     }
 
     if (error.name === "JsonWebTokenError") {

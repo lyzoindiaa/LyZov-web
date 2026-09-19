@@ -30,6 +30,7 @@ export const orderService = {
   processExchange: (id, payload) => api.post(`/orders/${id}/process-exchange`, payload).then((res) => res.data),
   getAllOrders: (params) => api.get("/orders", { params }).then((res) => res.data),
   updateOrderStatus: (id, payload) => api.put(`/orders/${id}/status`, payload).then((res) => res.data),
+  sendTrackingEmail: (id) => api.post(`/orders/${id}/send-tracking-email`).then((res) => res.data),
 };
 
 export const addressService = {
