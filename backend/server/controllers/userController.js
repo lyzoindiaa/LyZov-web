@@ -148,7 +148,14 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
   }
 
   if (businessAddress) {
-    const addr = typeof businessAddress === "string" ? JSON.parse(businessAddress) : businessAddress;
+    let addr = businessAddress;
+    if (typeof businessAddress === "string") {
+      try {
+        addr = JSON.parse(businessAddress);
+      } catch (err) {
+        throw ApiError.badRequest("Invalid JSON format for businessAddress");
+      }
+    }
     user.sellerProfile.businessAddress = {
       addressLine1: addr.addressLine1 !== undefined ? addr.addressLine1 : (user.sellerProfile.businessAddress?.addressLine1 || ""),
       addressLine2: addr.addressLine2 !== undefined ? addr.addressLine2 : (user.sellerProfile.businessAddress?.addressLine2 || ""),
@@ -160,7 +167,14 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
   }
 
   if (bankDetails) {
-    const bank = typeof bankDetails === "string" ? JSON.parse(bankDetails) : bankDetails;
+    let bank = bankDetails;
+    if (typeof bankDetails === "string") {
+      try {
+        bank = JSON.parse(bankDetails);
+      } catch (err) {
+        throw ApiError.badRequest("Invalid JSON format for bankDetails");
+      }
+    }
     user.sellerProfile.bankDetails = {
       accountHolderName: bank.accountHolderName !== undefined ? bank.accountHolderName : (user.sellerProfile.bankDetails?.accountHolderName || ""),
       accountNumber: bank.accountNumber !== undefined ? bank.accountNumber : (user.sellerProfile.bankDetails?.accountNumber || ""),
@@ -265,9 +279,10 @@ const getUsers = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.role) filter.role = req.query.role;
   if (req.query.search) {
+    const escapedSearch = String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     filter.$or = [
-      { name: { $regex: req.query.search, $options: "i" } },
-      { email: { $regex: req.query.search, $options: "i" } },
+      { name: { $regex: escapedSearch, $options: "i" } },
+      { email: { $regex: escapedSearch, $options: "i" } },
     ];
   }
 

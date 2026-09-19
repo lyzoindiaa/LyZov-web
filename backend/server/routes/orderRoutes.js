@@ -34,6 +34,9 @@ router.post(
   createOrder
 );
 
+// Admin & Seller order listing
+router.get("/", authorize("seller"), getAllOrders);
+
 router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
 
@@ -48,7 +51,6 @@ router.post(
 );
 
 // Admin & Seller order management routes
-router.get("/", authorize("seller"), getAllOrders);
 router.post("/:id/admin-cancel", authorize("seller"), adminCancelOrder);
 router.post("/:id/approve-return", authorize("seller"), approveReturn);
 router.post("/:id/process-exchange", authorize("seller"), processExchange);

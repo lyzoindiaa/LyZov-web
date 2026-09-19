@@ -12,9 +12,9 @@ const emailService = require("../services/emailService");
 const Shipment = require("../models/Shipment");
 const delhiveryService = require("../services/delhiveryService");
 
-const TAX_RATE = 0.08;
-const FREE_SHIPPING_THRESHOLD = 100;
-const FLAT_SHIPPING_RATE = 9.99;
+const TAX_RATE = Number(process.env.TAX_RATE) || 0; // 0 default for GST-inclusive catalog prices
+const FREE_SHIPPING_THRESHOLD = Number(process.env.FREE_SHIPPING_THRESHOLD) || 999;
+const FLAT_SHIPPING_RATE = Number(process.env.FLAT_SHIPPING_RATE) || 99;
 
 const calculateTotals = (cart) => {
   const itemsPrice = cart.subtotal;
@@ -213,6 +213,9 @@ const createOrder = asyncHandler(async (req, res) => {
     if (intent.status !== "succeeded") {
       throw ApiError.badRequest("Payment has not been completed");
     }
+    if (intent.metadata?.userId && intent.metadata.userId !== req.user._id.toString()) {
+      throw ApiError.forbidden("Payment intent does not belong to the current authenticated user");
+    }
     paymentResult = {
       id: intent.id,
       status: intent.status,
@@ -223,6 +226,26 @@ const createOrder = asyncHandler(async (req, res) => {
       email: req.user.email,
     };
     isPaid = true;
+  }
+
+  // Server-side coupon verification before placing order
+  if (cart.coupon?.code) {
+    const coupon = await Coupon.findOne({ code: cart.coupon.code.toUpperCase() });
+    if (!coupon || !coupon.isValid()) {
+      cart.coupon = { code: null, discountType: null, discountValue: 0 };
+      await cart.save();
+      throw ApiError.badRequest("The applied coupon is no longer valid or has expired.");
+    }
+    if (coupon.usersUsed.some((u) => u.toString() === req.user._id.toString())) {
+      cart.coupon = { code: null, discountType: null, discountValue: 0 };
+      await cart.save();
+      throw ApiError.badRequest("You have already used this coupon.");
+    }
+    if (cart.subtotal < coupon.minPurchaseAmount) {
+      cart.coupon = { code: null, discountType: null, discountValue: 0 };
+      await cart.save();
+      throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for coupon ${coupon.code}`);
+    }
   }
 
   // Atomically reserve/deduct stock for all cart items

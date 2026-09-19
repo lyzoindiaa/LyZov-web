@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
-// Derive a 32-byte key from existing secrets or fallback
-const secret = process.env.JWT_SECRET || process.env.COOKIE_SECRET || "lyzov_kyc_secure_encryption_key_32";
+// Derive a 32-byte key from dedicated ENCRYPTION_KEY or existing secrets or fallback
+const secret = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET || process.env.COOKIE_SECRET || "lyzov_kyc_secure_encryption_key_32";
 const ENCRYPTION_KEY = crypto.createHash("sha256").update(secret).digest(); // 32 bytes
 const IV_LENGTH = 16; // 16 bytes for AES-256-CBC
 

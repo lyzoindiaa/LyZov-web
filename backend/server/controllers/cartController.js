@@ -172,7 +172,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   const cart = await getOrCreateCart(req.user._id);
 
   if (cart.subtotal < coupon.minPurchaseAmount) {
-    throw ApiError.badRequest(`Minimum purchase of $${coupon.minPurchaseAmount} required for this coupon`);
+    throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for this coupon`);
   }
 
   cart.coupon = {

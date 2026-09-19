@@ -315,8 +315,18 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.seo.metaTitle = `${req.body.title.trim()} | Buy Online at LyZov`;
   }
 
-  Object.keys(req.body).forEach((key) => {
-    if (key !== "images" && key !== "slug" && key !== "mpn" && key !== "seo" && key !== "searchKeyword" && key !== "tags") {
+  const allowedFields = [
+    "title", "description", "shortDescription", "specialFeature", "color",
+    "productSizeHeight", "productSizeLength", "productSizeWidth", "weight",
+    "packagingSizeHeight", "packagingSizeLength", "packagingSizeWidth", "packOf",
+    "warranty", "country", "manufacturer", "packer", "hsnNumber", "gstRate",
+    "brand", "category", "subCategory", "material", "careInstructions",
+    "price", "compareAtPrice", "costPrice", "sku", "barcode", "inventory",
+    "variants", "isFeatured", "isActive", "status"
+  ];
+
+  allowedFields.forEach((key) => {
+    if (req.body[key] !== undefined) {
       product[key] = req.body[key];
     }
   });
