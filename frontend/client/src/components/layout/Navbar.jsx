@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Search, ShoppingBag, Heart, User, Menu, X,
   ChevronDown, LogOut, LayoutDashboard, Settings,
-  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart, Mail
+  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart, Mail, Truck
 } from "lucide-react";
 import { toggleMobileMenu, closeMobileMenu, toggleTheme, setSearchDraft } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
