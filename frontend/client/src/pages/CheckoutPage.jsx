@@ -196,8 +196,9 @@ const CheckoutPage = () => {
     }
     setPincodeStatus({ loading: true, valid: null, message: "" });
     try {
+      /*
+      // Delhivery API pincode check paused
       const res = await checkPincode(pincodeCheck);
-      // Assuming Delhivery returns delivery codes with an 'NSZ' marker for non-serviceable
       if (res.data?.data?.delivery_codes?.length > 0) {
         const info = res.data.data.delivery_codes[0].postal_code;
         if (info.is_odd === "Y") {
@@ -209,6 +210,15 @@ const CheckoutPage = () => {
         }
       } else {
         setPincodeStatus({ loading: false, valid: false, message: "Invalid pincode." });
+      }
+      */
+      const isValid = /^[1-9][0-9]{5}$/.test(pincodeCheck.trim());
+      if (isValid) {
+        setPincodeStatus({ loading: false, valid: true, message: "Standard delivery available (7-10 business days)" });
+        toast.success("Delivery available to this pincode!");
+      } else {
+        setPincodeStatus({ loading: false, valid: false, message: "Invalid 6-digit postal code." });
+        toast.error("Please enter a valid 6-digit postal code.");
       }
     } catch (err) {
       setPincodeStatus({ loading: false, valid: false, message: "Error verifying pincode." });

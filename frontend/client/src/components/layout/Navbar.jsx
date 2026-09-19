@@ -356,6 +356,9 @@ const Navbar = () => {
                 </div>
 
                 <Link to="/shop" className="nav-link-animated">All Products</Link>
+                <Link to="/track" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  <Truck size={13} /> Track Order
+                </Link>
                 <Link to="/contact" className="nav-link-animated">Contact</Link>
 
                 {/* Shop CTA */}
@@ -660,6 +663,7 @@ const Navbar = () => {
                 <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
                 <MobileNavLink to={isAuthenticated ? "/dashboard/wishlist" : "/login"}>Saved Wishlist</MobileNavLink>
                 {isAuthenticated && <MobileNavLink to="/dashboard/orders">My Orders</MobileNavLink>}
+                <MobileNavLink to="/track">Track Order</MobileNavLink>
                 <MobileNavLink to="/contact">Contact Support</MobileNavLink>
               </>
             )}

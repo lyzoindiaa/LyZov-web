@@ -12,12 +12,24 @@ const {
   processExchange,
   getAllOrders,
   updateOrderStatus,
+  trackOrderPublic,
 } = require("../controllers/orderController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const { requireProfileComplete } = require("../middleware/profileMiddleware");
 const validate = require("../middleware/validateMiddleware");
 
 const router = express.Router();
+
+// Public track order endpoint (no login required)
+router.post(
+  "/track-public",
+  [
+    body("orderNumber").trim().notEmpty().withMessage("Order number is required"),
+    body("phoneOrEmail").trim().notEmpty().withMessage("Phone or Email is required"),
+  ],
+  validate,
+  trackOrderPublic
+);
 
 router.use(protect);
 

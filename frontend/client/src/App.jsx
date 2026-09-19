@@ -21,6 +21,7 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ContactPage from "./pages/ContactPage";
 import PolicyPage from "./pages/PolicyPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import TrackOrderPage from "./pages/TrackOrderPage";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import OrdersPage from "./pages/dashboard/OrdersPage";
@@ -112,6 +113,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Public Track Order ── */}
+          <Route path="/track" element={<TrackOrderPage />} />
 
           {/* ── Official Store Policies ── */}
           <Route path="/policies" element={<Navigate to="/policies/privacy-policy" replace />} />

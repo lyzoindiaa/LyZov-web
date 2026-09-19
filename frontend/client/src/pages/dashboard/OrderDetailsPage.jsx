@@ -14,6 +14,7 @@ import {
   AlertCircle,
   CheckCircle,
   Package,
+  MessageCircle,
 } from "lucide-react";
 
 const statusTones = {
@@ -156,7 +157,7 @@ const OrderDetailsPage = () => {
               )}
               {order.returnStatus === "Approved" && (
                 <p className="text-stone-600 dark:text-stone-300">
-                  Your return request was approved! A Delhivery courier pickup will be scheduled at your address.
+                  Your return request was approved! Our team will coordinate a pickup at your address shortly.
                 </p>
               )}
               {order.returnStatus === "Picked Up" && (
@@ -180,7 +181,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* Delhivery Courier Tracking Card */}
+      {/* Courier Tracking Card */}
       {order.trackingNumber && (
         <div className="card-surface flex flex-wrap items-center justify-between gap-4 p-4 border border-blue-200 dark:border-blue-900/40">
           <div className="flex items-center gap-3">
@@ -188,13 +189,15 @@ const OrderDetailsPage = () => {
               <Truck size={20} />
             </div>
             <div>
-              <p className="text-xs text-stone">Courier Partner</p>
-              <p className="text-sm font-semibold">Delhivery Express</p>
+              <p className="text-xs text-stone">Courier Tracking</p>
+              {/* [DELHIVERY PAUSED] Previously branded as 'Delhivery Express'. Now shows generic courier info. */}
+              <p className="text-sm font-semibold">Your Order is on the Way!</p>
               <p className="font-mono text-xs text-[var(--accent)] font-bold">
                 AWB: {order.trackingNumber}
               </p>
             </div>
           </div>
+          {/* [DELHIVERY PAUSED] — 'Track Live on Delhivery' external link commented out.
           <a
             href={`https://www.delhivery.com/track/package/${order.trackingNumber}`}
             target="_blank"
@@ -203,6 +206,10 @@ const OrderDetailsPage = () => {
           >
             Track Live on Delhivery <ExternalLink size={13} />
           </a>
+          */}
+          <span className="text-xs text-stone">
+            Estimated delivery: <strong>7–10 business days</strong> from order date.
+          </span>
         </div>
       )}
 
@@ -493,31 +500,57 @@ const OrderDetailsPage = () => {
         <span style={{ color: "var(--ink-muted)" }}>Order #{order.orderNumber}</span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <Link to="/dashboard/orders" className="text-sm text-stone underline-offset-2 hover:underline">
           &larr; Back to Orders
         </Link>
-        <Link
-          to={`/dashboard/support?subject=${encodeURIComponent(
-            `Inquiry regarding Order #${order.orderNumber}`
-          )}&category=Order Tracking & Delivery`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.5rem 1rem",
-            borderRadius: "0.75rem",
-            backgroundColor: "var(--accent-bg)",
-            color: "var(--accent)",
-            fontSize: "0.8125rem",
-            fontWeight: 600,
-            textDecoration: "none",
-            transition: "all 0.2s",
-          }}
-        >
-          <Mail size={15} />
-          <span>Need Help? Email Support</span>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {/* WhatsApp support */}
+          <a
+            href={`https://wa.me/919999999999?text=${encodeURIComponent(`Hi! I need help with my LyZov order #${order.orderNumber}.`)}`}
+            target="_blank"
+            rel="noreferrer"
+            id="customer-order-whatsapp-support-btn"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.5rem 0.875rem",
+              borderRadius: "0.75rem",
+              backgroundColor: "#25d366",
+              color: "#fff",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              textDecoration: "none",
+              transition: "opacity 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            <MessageCircle size={14} /> WhatsApp Support
+          </a>
+          <Link
+            to={`/dashboard/support?subject=${encodeURIComponent(
+              `Inquiry regarding Order #${order.orderNumber}`
+            )}&category=Order Tracking & Delivery`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
+              backgroundColor: "var(--accent-bg)",
+              color: "var(--accent)",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              textDecoration: "none",
+              transition: "all 0.2s",
+            }}
+          >
+            <Mail size={15} />
+            <span>Email Support</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

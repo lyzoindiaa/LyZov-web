@@ -380,18 +380,22 @@ const cancelOrder = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Cannot cancel an order that has already shipped or delivered");
   }
 
-  // Cancel any active Delhivery shipment
+  // Cancel active shipment record (Delhivery API dispatch paused)
   const shipment = await Shipment.findOne({
     order: order._id,
     status: { $nin: ["Cancelled", "Returned", "RTO"] },
   });
 
-  if (shipment && shipment.waybillNumber) {
-    try {
-      await delhiveryService.cancelOrder(shipment.waybillNumber);
-    } catch (delhiveryErr) {
-      console.error("[Delhivery] Failed to cancel waybill during order cancellation:", delhiveryErr.message);
+  if (shipment) {
+    /*
+    if (shipment.waybillNumber) {
+      try {
+        await delhiveryService.cancelOrder(shipment.waybillNumber);
+      } catch (delhiveryErr) {
+        console.error("[Delhivery] Failed to cancel waybill during order cancellation:", delhiveryErr.message);
+      }
     }
+    */
     shipment.status = "Cancelled";
     await shipment.save();
   }
@@ -456,12 +460,16 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
     status: { $nin: ["Cancelled", "Returned", "RTO"] },
   });
 
-  if (shipment && shipment.waybillNumber) {
-    try {
-      await delhiveryService.cancelOrder(shipment.waybillNumber);
-    } catch (delhiveryErr) {
-      console.error("[Delhivery] Failed to cancel waybill during admin order cancellation:", delhiveryErr.message);
+  if (shipment) {
+    /*
+    if (shipment.waybillNumber) {
+      try {
+        await delhiveryService.cancelOrder(shipment.waybillNumber);
+      } catch (delhiveryErr) {
+        console.error("[Delhivery] Failed to cancel waybill during admin order cancellation:", delhiveryErr.message);
+      }
     }
+    */
     shipment.status = "Cancelled";
     await shipment.save();
   }
@@ -591,9 +599,10 @@ const approveReturn = asyncHandler(async (req, res) => {
     cod_amount: 0,
   };
 
-  let waybillNumber = null;
+  // Delhivery reverse pickup dispatch paused — assigning standard return waybill
+  const waybillNumber = `REV-${Date.now()}`;
+  /*
   let reversePickupResult = null;
-
   try {
     reversePickupResult = await delhiveryService.createReversePickup(reversePayload);
     if (reversePickupResult?.packages && reversePickupResult.packages.length > 0) {
@@ -601,16 +610,8 @@ const approveReturn = asyncHandler(async (req, res) => {
     }
   } catch (delhiveryErr) {
     console.error("[Delhivery] Reverse pickup error:", delhiveryErr.response?.data || delhiveryErr.message);
-    if (process.env.NODE_ENV !== "production" || !process.env.DELHIVERY_API_TOKEN) {
-      waybillNumber = `REV-${Date.now()}`;
-    } else {
-      throw ApiError.internal(`Delhivery reverse pickup failed: ${delhiveryErr.message}`);
-    }
   }
-
-  if (!waybillNumber) {
-    waybillNumber = `REV-${Date.now()}`;
-  }
+  */
 
   // Create reverse Shipment record
   const returnShipment = new Shipment({
@@ -767,6 +768,11 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const prevStatus = order.orderStatus;
 
+  // Strict Rule: Once an order has been marked "delivered", it cannot be moved back to "pending", "processing", or "shipped"
+  if (prevStatus === "delivered" && ["pending", "processing", "shipped"].includes(status)) {
+    throw ApiError.badRequest("Order has already been delivered and cannot be reverted to earlier stages (shipped, processing, or pending).");
+  }
+
   if (status) {
     // If order is transitioning TO cancelled/refunded from an active status, restore stock
     if (
@@ -822,6 +828,63 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, "Order status updated successfully", order);
 });
 
+// @desc    Public tracking endpoint for orders without login
+// @route   POST /api/orders/track-public
+// @access  Public
+const trackOrderPublic = asyncHandler(async (req, res) => {
+  const { orderNumber, phoneOrEmail } = req.body;
+  if (!orderNumber || !phoneOrEmail) {
+    throw ApiError.badRequest("Please provide both Order Number and Phone or Email");
+  }
+
+  const cleanOrderNumber = orderNumber.trim().toUpperCase();
+  const cleanInput = phoneOrEmail.trim().toLowerCase();
+
+  const order = await Order.findOne({ orderNumber: cleanOrderNumber })
+    .populate("user", "name email phone")
+    .lean();
+
+  if (!order) {
+    throw ApiError.notFound("No order found matching the provided order number");
+  }
+
+  // Verify phone or email match
+  const customerEmail = (order.user?.email || order.shippingAddress?.email || "").toLowerCase();
+  const customerPhone = (order.shippingAddress?.phone || order.user?.phone || "").replace(/[^0-9]/g, "");
+  const inputPhone = cleanInput.replace(/[^0-9]/g, "");
+
+  const emailMatches = customerEmail && customerEmail === cleanInput;
+  const phoneMatches = inputPhone && customerPhone && (customerPhone.endsWith(inputPhone) || inputPhone.endsWith(customerPhone));
+
+  if (!emailMatches && !phoneMatches) {
+    throw ApiError.badRequest("The phone or email does not match our records for this order number.");
+  }
+
+  // Return non-sensitive tracking summary
+  return sendSuccess(res, 200, "Order tracking details retrieved", {
+    orderNumber: order.orderNumber,
+    orderStatus: order.orderStatus,
+    createdAt: order.createdAt,
+    trackingNumber: order.trackingNumber || null,
+    isDelivered: order.isDelivered,
+    deliveredAt: order.deliveredAt || null,
+    statusHistory: order.statusHistory || [],
+    itemsCount: (order.items || []).reduce((acc, i) => acc + i.quantity, 0),
+    items: (order.items || []).map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      image: i.image,
+      color: i.color,
+      size: i.size,
+    })),
+    shippingCity: order.shippingAddress?.city,
+    shippingState: order.shippingAddress?.state,
+    shippingPostalCode: order.shippingAddress?.postalCode,
+    recipientName: order.shippingAddress?.fullName,
+    customerPhone: order.shippingAddress?.phone,
+  });
+});
+
 module.exports = {
   createPaymentIntent,
   createOrder,
@@ -834,5 +897,6 @@ module.exports = {
   processExchange,
   getAllOrders,
   updateOrderStatus,
+  trackOrderPublic,
 };
 
