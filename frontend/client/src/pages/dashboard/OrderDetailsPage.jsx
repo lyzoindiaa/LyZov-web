@@ -16,6 +16,7 @@ import {
   Package,
   MessageCircle,
 } from "lucide-react";
+import { buildWhatsAppSupportLink } from "../../utils/constants";
 
 const statusTones = {
   pending: "warning",
@@ -507,7 +508,7 @@ const OrderDetailsPage = () => {
         <div className="flex flex-wrap gap-2">
           {/* WhatsApp support */}
           <a
-            href={`https://wa.me/919999999999?text=${encodeURIComponent(`Hi! I need help with my LyZov order #${order.orderNumber}.`)}`}
+            href={buildWhatsAppSupportLink(`Hi! I need help with my LyZov order #${order.orderNumber}.`)}
             target="_blank"
             rel="noreferrer"
             id="customer-order-whatsapp-support-btn"

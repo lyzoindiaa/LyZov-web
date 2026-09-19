@@ -835,7 +835,7 @@ const ProductDetailsPage = () => {
               </div>
             )}
 
-            {/* Delivery Pincode Checker */}
+            {/* PINCODE CHECK — commented out for now, re-enable when Delhivery API is ready
             <div
               className="card-surface"
               style={{
@@ -895,6 +895,8 @@ const ProductDetailsPage = () => {
                 </div>
               )}
             </div>
+            */}
+
 
             {/* Trust Banner */}
             <div

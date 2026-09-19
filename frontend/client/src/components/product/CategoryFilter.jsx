@@ -1,15 +1,77 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
+// Inline SVG icons for each category — no external image dependencies, always loads
+const CategoryIcon = ({ id, size = 28, color = "currentColor" }) => {
+  const icons = {
+    "ethnic-wear": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L8 6H4l2 5-4 3 4 1 1 7h10l1-7 4-1-4-3 2-5h-4L12 2z"/>
+        <path d="M9 13c0 1.657 1.343 3 3 3s3-1.343 3-3"/>
+      </svg>
+    ),
+    "western-dresses": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2h12l-2 6h2l-8 14L2 8h2L2 2"/>
+        <path d="M9.5 8h5"/>
+      </svg>
+    ),
+    "menswear": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 2h10l2 6-3 1v13H8V9L5 8z"/>
+        <path d="M12 2v5M10 4l2-2 2 2"/>
+      </svg>
+    ),
+    "footwear": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11l2-8 5 3 4-3 7 2v2c0 0-2 1-3 4-1 3-2 3-5 3H5l-1 4H2"/>
+        <path d="M3 11h16"/>
+      </svg>
+    ),
+    "home-decor": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
+        <path d="M9 21V12h6v9"/>
+      </svg>
+    ),
+    "beauty": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2c-2 4-6 5-6 9a6 6 0 0012 0c0-4-4-5-6-9z"/>
+        <path d="M12 12v9M9 18h6"/>
+      </svg>
+    ),
+    "accessories": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        <path d="M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+      </svg>
+    ),
+    "grocery": (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <path d="M3 6h18"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+    ),
+  };
+  return icons[id] || (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="3"/>
+      <path d="M9 9h6M9 12h6M9 15h4"/>
+    </svg>
+  );
+};
+
 const categories = [
-  { id: "ethnic-wear", name: "Ethnic Wear", image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=200&h=200&fit=crop" },
-  { id: "western-dresses", name: "Western Dresses", image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=200&h=200&fit=crop" },
-  { id: "menswear", name: "Menswear", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=200&h=200&fit=crop" },
-  { id: "footwear", name: "Footwear", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop" },
-  { id: "home-decor", name: "Home Decor", image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=200&h=200&fit=crop" },
-  { id: "beauty", name: "Beauty", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop" },
-  { id: "accessories", name: "Accessories", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=200&h=200&fit=crop" },
-  { id: "grocery", name: "Grocery", image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop" },
+  { id: "ethnic-wear",      name: "Ethnic Wear" },
+  { id: "western-dresses",  name: "Western Dresses" },
+  { id: "menswear",         name: "Menswear" },
+  { id: "footwear",         name: "Footwear" },
+  { id: "home-decor",       name: "Home Decor" },
+  { id: "beauty",           name: "Beauty" },
+  { id: "accessories",      name: "Accessories" },
+  { id: "grocery",          name: "Grocery" },
 ];
 
 const CategoryFilter = () => {

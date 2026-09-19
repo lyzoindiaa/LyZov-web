@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Truck, Package, CheckCircle, Clock, XCircle, Search, MapPin, MessageCircle } from "lucide-react";
+import { buildWhatsAppSupportLink } from "../utils/constants";
 
 /* ── Status stepper config ─────────────────────────────────── */
 const STEPS = [
@@ -126,7 +127,7 @@ const TrackOrderPage = () => {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
-  const SUPPORT_WHATSAPP = "919999999999"; // TODO: replace with real WhatsApp number
+  // WhatsApp number is read from VITE_WHATSAPP_NUMBER env var (set in .env or Render/Vercel env vars)
 
   const handleTrack = async (e) => {
     e.preventDefault();
@@ -289,7 +290,7 @@ const TrackOrderPage = () => {
           <p style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.75rem", color: "var(--ink-subtle)", lineHeight: 1.6 }}>
             Your order number is in your confirmation email.{" "}
             <a
-              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent("Hi! I need help tracking my LyZov order.")}`}
+              href={buildWhatsAppSupportLink("Hi! I need help tracking my LyZov order.")}
               target="_blank"
               rel="noreferrer"
               style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "underline" }}
@@ -383,7 +384,7 @@ const TrackOrderPage = () => {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
             <a
               id="track-whatsapp-support-btn"
-              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Hi! I need help with my LyZov order #${result.orderNumber}.`)}`}
+              href={buildWhatsAppSupportLink(`Hi! I need help with my LyZov order #${result.orderNumber}.`)}
               target="_blank"
               rel="noreferrer"
               style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.75rem", borderRadius: "0.875rem", backgroundColor: "#25d366", color: "#fff", fontSize: "0.875rem", fontWeight: 700, textDecoration: "none", transition: "opacity 0.2s" }}

@@ -8,6 +8,7 @@ import { supportService } from "../services/supportService";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import SEO from "../components/common/SEO";
+import { WHATSAPP_SUPPORT_NUMBER, buildWhatsAppSupportLink } from "../utils/constants";
 
 const categories = [
   { value: "Order Tracking & Delivery", label: "Order Tracking & Delivery" },
@@ -251,7 +252,7 @@ const ContactPage = ({ isDashboard = false }) => {
                       Direct Phone & WhatsApp
                     </span>
                     <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", marginTop: "2px" }}>
-                      +91 xxxxxxxxxx
+                      +{WHATSAPP_SUPPORT_NUMBER}
                     </p>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "2px" }}>
                       Mon - Sat: 9:30 AM – 7:00 PM IST

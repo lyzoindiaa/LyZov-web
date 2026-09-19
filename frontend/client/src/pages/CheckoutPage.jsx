@@ -289,6 +289,7 @@ const CheckoutPage = () => {
         <div>
           {step === "address" ? (
             <div className="card-surface p-6 sm:p-8">
+              {/* PINCODE CHECK — commented out for now, re-enable when Delhivery API is ready
               <div style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--border)" }}>
                 <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--ink)" }}>Check Delivery Serviceability</h3>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -309,6 +310,8 @@ const CheckoutPage = () => {
                   </p>
                 )}
               </div>
+              */}
+
 
               <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <MapPin size={18} style={{ color: "var(--accent)" }} /> Select Delivery Address
