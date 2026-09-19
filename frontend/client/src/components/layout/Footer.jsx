@@ -124,7 +124,6 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand column */}
           <div className="sm:col-span-2 lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Logo size="lg" variant="elevated" />
             <p style={{ maxWidth: "24rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.7 }}>
               LyZov is your trusted online store for premium fitness gear, handcrafted spiritual idols, and everyday lifestyle essentials — carefully selected, quality-checked, and delivered safely across India.
             </p>

@@ -23,6 +23,11 @@ export const orderService = {
   getMyOrders: (params) => api.get("/orders/my-orders", { params }).then((res) => res.data),
   getOrderById: (id) => api.get(`/orders/${id}`).then((res) => res.data),
   cancelOrder: (id, reason) => api.put(`/orders/${id}/cancel`, { reason }).then((res) => res.data),
+  cancelRequest: (id, reason) => api.post(`/orders/${id}/cancel-request`, { reason }).then((res) => res.data),
+  returnRequest: (id, payload) => api.post(`/orders/${id}/return-request`, payload).then((res) => res.data),
+  adminCancelOrder: (id, reason) => api.post(`/orders/${id}/admin-cancel`, { reason }).then((res) => res.data),
+  approveReturn: (id, payload) => api.post(`/orders/${id}/approve-return`, payload).then((res) => res.data),
+  processExchange: (id, payload) => api.post(`/orders/${id}/process-exchange`, payload).then((res) => res.data),
   getAllOrders: (params) => api.get("/orders", { params }).then((res) => res.data),
   updateOrderStatus: (id, payload) => api.put(`/orders/${id}/status`, payload).then((res) => res.data),
 };

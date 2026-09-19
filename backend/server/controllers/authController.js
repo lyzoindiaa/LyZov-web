@@ -130,10 +130,14 @@ const googleCallback = async (req, res) => {
       user.isEmailVerified = true;
       if (payload.picture && !user.avatar?.url) user.avatar = { url: payload.picture, publicId: "" };
     } else {
+      // Generate a readable temporary password for email-login fallback
+      // Format: Lyzov@<6 uppercase alphanumeric chars> e.g. "Lyzov@A3K9BF"
+      const tempPasswordPlain = `Lyzov@${crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6)}`;
+
       user = new User({
         name: payload.name || payload.email.split("@")[0],
         email: payload.email.toLowerCase(),
-        password: crypto.randomBytes(32).toString("hex"),
+        password: tempPasswordPlain, // pre-save hook will bcrypt this
         authProvider: "google",
         googleId: payload.sub,
         isEmailVerified: true,
@@ -143,6 +147,21 @@ const googleCallback = async (req, res) => {
       await user.save();
       await Cart.create({ user: user._id, items: [] });
       await Wishlist.create({ user: user._id, products: [] });
+
+      // Send the welcome email with the temporary password (non-blocking)
+      const clientUrl = getFrontendUrl();
+      const changePasswordUrl = `${clientUrl}/dashboard/profile`;
+      const loginUrl = `${clientUrl}/login`;
+      emailService
+        .sendGoogleWelcomeWithTempPassword({
+          user,
+          tempPassword: tempPasswordPlain,
+          changePasswordUrl,
+          loginUrl,
+        })
+        .catch((err) =>
+          console.error("[Auth] Failed to send Google welcome email:", err.message)
+        );
     }
 
     if (!user.isActive) return redirectToLogin("account_deactivated");

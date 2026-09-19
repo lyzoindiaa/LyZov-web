@@ -23,6 +23,7 @@ import { formatCurrency } from "../utils/formatters";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import StripePaymentForm from "../components/checkout/StripePaymentForm";
+import { checkPincode } from "../services/shippingService";
 
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
@@ -44,6 +45,8 @@ const CheckoutPage = () => {
   const [paymentIntentError, setPaymentIntentError] = useState(null);
   const [step, setStep] = useState("address");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [pincodeCheck, setPincodeCheck] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState(null); // { loading, valid, message }
 
   const {
     register,
@@ -186,6 +189,33 @@ const CheckoutPage = () => {
     }
   };
 
+  const handleVerifyPincode = async () => {
+    if (!pincodeCheck || pincodeCheck.length < 6) {
+      toast.error("Please enter a valid 6-digit pincode");
+      return;
+    }
+    setPincodeStatus({ loading: true, valid: null, message: "" });
+    try {
+      const res = await checkPincode(pincodeCheck);
+      // Assuming Delhivery returns delivery codes with an 'NSZ' marker for non-serviceable
+      if (res.data?.data?.delivery_codes?.length > 0) {
+        const info = res.data.data.delivery_codes[0].postal_code;
+        if (info.is_odd === "Y") {
+          setPincodeStatus({ loading: false, valid: true, message: "Delivery available!" });
+          toast.success("Delivery available to this pincode!");
+        } else {
+          setPincodeStatus({ loading: false, valid: false, message: "Pincode is unserviceable." });
+          toast.error("Pincode is currently unserviceable.");
+        }
+      } else {
+        setPincodeStatus({ loading: false, valid: false, message: "Invalid pincode." });
+      }
+    } catch (err) {
+      setPincodeStatus({ loading: false, valid: false, message: "Error verifying pincode." });
+      toast.error("Could not verify pincode serviceability.");
+    }
+  };
+
   return (
     <div className="container-page py-8 lg:py-12">
       {/* Header & Step progress */}
@@ -249,6 +279,27 @@ const CheckoutPage = () => {
         <div>
           {step === "address" ? (
             <div className="card-surface p-6 sm:p-8">
+              <div style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--border)" }}>
+                <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--ink)" }}>Check Delivery Serviceability</h3>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <Input 
+                    placeholder="Enter 6-digit Pincode" 
+                    value={pincodeCheck} 
+                    onChange={(e) => setPincodeCheck(e.target.value)} 
+                    maxLength={6}
+                    style={{ flex: 1 }}
+                  />
+                  <Button onClick={handleVerifyPincode} disabled={pincodeStatus?.loading}>
+                    {pincodeStatus?.loading ? <Loader2 className="animate-spin" size={16} /> : "Verify"}
+                  </Button>
+                </div>
+                {pincodeStatus && pincodeStatus.message && (
+                  <p style={{ marginTop: "0.5rem", fontSize: "0.875rem", fontWeight: 500, color: pincodeStatus.valid ? "var(--green)" : "var(--error)" }}>
+                    {pincodeStatus.message}
+                  </p>
+                )}
+              </div>
+
               <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <MapPin size={18} style={{ color: "var(--accent)" }} /> Select Delivery Address
               </h2>

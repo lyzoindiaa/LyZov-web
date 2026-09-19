@@ -27,6 +27,7 @@ const supportRoutes = require("./routes/supportRoutes");
 const sellerEmailRoutes = require("./routes/sellerEmailRoutes");
 const customerEmailRoutes = require("./routes/customerEmailRoutes");
 const seoRoutes = require("./routes/seoRoutes");
+const shippingRoutes = require("./routes/shippingRoutes");
 const { prerenderProductPage } = require("./services/prerenderService");
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
@@ -93,6 +94,7 @@ app.use("/api/support", supportRoutes);
 app.use("/api/seller/emails", sellerEmailRoutes);
 app.use("/api/admin/emails", sellerEmailRoutes);
 app.use("/api/customer/emails", customerEmailRoutes);
+app.use("/api/shipping", shippingRoutes);
 
 // ── SEO Endpoints (Sitemap & Robots) ──
 app.use("/", seoRoutes);

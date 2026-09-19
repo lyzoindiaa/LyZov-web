@@ -635,6 +635,90 @@ const testEmailTemplate = ({ sellerName, serverTimestamp }) => {
   };
 };
 
+// 11. Google Sign-Up Welcome — Temp Password Notification
+const googleWelcomeWithTempPasswordTemplate = ({ name, tempPassword, changePasswordUrl, loginUrl }) => {
+  const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
+
+  const content = `
+    <!-- Icon -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); line-height: 64px; font-size: 30px; text-align: center;">
+        G
+      </div>
+    </div>
+
+    <h2 style="text-align: center; margin: 0 0 8px; font-size: 23px; color: ${textDark}; font-weight: 700;">
+      Welcome to LyZov, ${name || "Gentleman"}!
+    </h2>
+    <p style="text-align: center; margin: 0 0 28px; font-size: 14px; color: ${textMuted}; line-height: 1.6;">
+      You've successfully joined LyZov via your Google account. Your account is ready.
+    </p>
+
+    <!-- Temp Password Block -->
+    <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-left: 4px solid #F59E0B; border-radius: 8px; padding: 20px 24px; margin-bottom: 28px;">
+      <p style="margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #92400E;">
+        &#128274; Email Login Password
+      </p>
+      <p style="margin: 0 0 12px; font-size: 14px; color: #78350F; line-height: 1.6;">
+        If you ever want to log in with your email &amp; password instead of Google, use the temporary password below. We strongly recommend you change it from your profile settings.
+      </p>
+      <div style="background-color: #FFFFFF; border: 1px dashed #FCD34D; border-radius: 6px; padding: 14px 20px; text-align: center;">
+        <span style="font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: #1E293B; user-select: all;">
+          ${tempPassword}
+        </span>
+      </div>
+      <p style="margin: 10px 0 0; font-size: 12px; color: #92400E; text-align: center;">
+        This is a system-generated password. Change it as soon as possible.
+      </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 28px;">
+      <tr>
+        <td align="center" style="padding-bottom: 12px;">
+          <a href="${changePasswordUrl}" class="btn-gold" target="_blank">
+            &#128274; Change My Password
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td align="center">
+          <a href="${loginUrl}" style="font-size: 13px; color: ${textMuted}; text-decoration: underline;" target="_blank">
+            Or sign in with email instead
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Steps / Instructions -->
+    <div style="background-color: #F8FAFC; border-radius: 8px; padding: 18px 22px; margin-bottom: 24px;">
+      <p style="margin: 0 0 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: ${textMuted};">
+        How to change your password
+      </p>
+      <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: ${textDark}; line-height: 2;">
+        <li>Log in to LyZov (with Google or the temp password above)</li>
+        <li>Go to <a href="${changePasswordUrl}" style="color: ${primaryGold}; font-weight: 600;">Dashboard &rarr; Profile &rarr; Security</a></li>
+        <li>Enter the temporary password as your current password</li>
+        <li>Set a new secure password of your choice</li>
+      </ol>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: ${textMuted}; line-height: 1.6; text-align: center;">
+      If you didn't sign up for LyZov, please <a href="${clientUrl}/contact" style="color: ${primaryGold};">contact support</a> immediately.
+    </p>
+  `;
+
+  return {
+    subject: "Welcome to LyZov — Your Account &amp; Temporary Password",
+    text: `Welcome to LyZov, ${name || "Gentleman"}!\n\nYou signed up with Google. Your temporary email login password is:\n\n  ${tempPassword}\n\nPlease change it here: ${changePasswordUrl}\n\nOr log in at: ${loginUrl}\n\nIf you didn't create this account, contact us immediately.`,
+    html: baseEmailWrapper({
+      title: "Welcome to LyZov — Google Sign-Up",
+      preheader: `Welcome ${name || ""}! Your LyZov account is ready. Here's your temporary password.`,
+      content,
+    }),
+  };
+};
+
 module.exports = {
   welcomeVerificationTemplate,
   verificationSuccessTemplate,
@@ -646,4 +730,5 @@ module.exports = {
   orderCancelledTemplate,
   customerSupportInquiryTemplate,
   testEmailTemplate,
+  googleWelcomeWithTempPasswordTemplate,
 };
