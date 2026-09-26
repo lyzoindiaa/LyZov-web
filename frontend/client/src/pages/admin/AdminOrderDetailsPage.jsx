@@ -218,12 +218,22 @@ const AdminOrderDetailsPage = () => {
       if (sendEmail) {
         setIsSendingEmail(true);
         const res = await orderService.notifyOrderShipment(orderId, payload);
-        setOrder(res.data.order);
-        toast.success(`Shipment details saved & email sent to customer! ✓`);
+        if (res.data?.order) {
+          setOrder(res.data.order);
+        }
+        if (res.data?.emailSent) {
+          toast.success(`Shipment details saved & email sent to customer! ✓`);
+        } else if (res.data?.emailError) {
+          toast.warning(`Shipment details saved & status updated! (Email issue: ${res.data.emailError})`);
+        } else {
+          toast.success(`Shipment details saved & status updated! ✓`);
+        }
       } else {
         setIsSavingShipment(true);
         const res = await orderService.saveOrderShipment(orderId, payload);
-        setOrder(res.data.order);
+        if (res.data?.order) {
+          setOrder(res.data.order);
+        }
         toast.success(`Shipment details saved & in-app notification sent to customer! ✓`);
       }
       setIsEditingTracking(false);

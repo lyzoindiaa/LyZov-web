@@ -36,6 +36,10 @@ class EmailService {
           user,
           pass,
         },
+        connectionTimeout: 8000, // 8s TCP connection timeout
+        greetingTimeout: 5000,   // 5s SMTP greeting timeout
+        socketTimeout: 10000,    // 10s socket inactivity timeout
+        dnsTimeout: 5000,        // 5s DNS resolution timeout
       });
 
       console.log(`[EmailService] SMTP transporter initialized (${user} via ${host}:${port})`);
@@ -101,15 +105,21 @@ class EmailService {
       return { success: true, simulated: true, message: "Email simulated successfully." };
     }
 
-    // 2. Real dispatch via Gmail SMTP
+    // 2. Real dispatch via Gmail SMTP with 8s maximum timeout protection
     try {
-      const info = await this.transporter.sendMail({
+      const sendPromise = this.transporter.sendMail({
         from: fromAddress,
         to,
         subject,
         text,
         html,
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("SMTP server response timed out (8s limit reached)")), 8000)
+      );
+
+      const info = await Promise.race([sendPromise, timeoutPromise]);
 
       try {
         await EmailLog.create({

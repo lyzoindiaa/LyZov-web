@@ -1022,9 +1022,6 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
   await order.save();
 
   const ctx = await loadCustomerContext(order);
-  if (!ctx?.email) {
-    throw ApiError.badRequest("No valid customer email address found for this order.");
-  }
 
   if (sendInAppNotification && order.user) {
     await Notification.create({
@@ -1036,23 +1033,41 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
     }).catch(() => {});
   }
 
-  const dispatchResult = await emailCustomerShipmentTracking(order, {
-    platformLabel,
-    trackingNumber: order.trackingNumber,
-    trackingUrl,
-    emailBody: String(emailBody).trim(),
-    emailSubject: emailSubject?.trim(),
-  });
+  let dispatchResult = null;
+  let emailSent = false;
+  let emailError = null;
 
-  if (!dispatchResult?.success) {
-    throw ApiError.internal(
-      dispatchResult?.error || "Failed to send shipment email. Check SMTP configuration and email logs."
-    );
+  if (ctx?.email) {
+    try {
+      dispatchResult = await emailCustomerShipmentTracking(order, {
+        platformLabel,
+        trackingNumber: order.trackingNumber,
+        trackingUrl,
+        emailBody: String(emailBody).trim(),
+        emailSubject: emailSubject?.trim(),
+      });
+
+      emailSent = Boolean(dispatchResult?.success);
+      if (!emailSent) {
+        emailError = dispatchResult?.error || "Email delivery skipped or failed.";
+      }
+    } catch (err) {
+      console.error("[notifyOrderShipment] Email dispatch error:", err.message);
+      emailError = err.message || "Failed to send shipment email";
+    }
+  } else {
+    emailError = "No customer email address on file";
   }
 
-  return sendSuccess(res, 200, `Shipment notification sent to ${ctx.email}`, {
-    recipient: ctx.email,
+  const msg = emailSent
+    ? `Shipment notification sent to ${ctx.email}`
+    : `Tracking assigned & order marked as Shipped! (${emailError})`;
+
+  return sendSuccess(res, 200, msg, {
+    recipient: ctx?.email || null,
     order,
+    emailSent,
+    emailError,
     dispatchResult,
   });
 });
