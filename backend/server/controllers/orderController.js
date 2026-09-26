@@ -9,6 +9,20 @@ const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const stripe = require("../config/stripe");
 const emailService = require("../services/emailService");
+const {
+  loadCustomerContext,
+  emailCustomerOrderStatusUpdate,
+  emailCustomerOrderCancelled,
+  emailCustomerOrderConfirmation,
+  emailCustomerShipmentTracking,
+} = require("../utils/orderCustomerNotifications");
+const { assertForwardStatusTransition } = require("../utils/orderStatusRules");
+const {
+  SHIPPING_PLATFORMS,
+  getPlatformById,
+  buildTrackingUrl,
+  buildDefaultShipmentEmailText,
+} = require("../config/shippingPlatforms");
 const Shipment = require("../models/Shipment");
 const delhiveryService = require("../services/delhiveryService");
 
@@ -432,14 +446,9 @@ const cancelOrder = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  // Non-blocking cancellation email to customer
-  User.findById(order.user).then((customer) => {
-    if (customer) {
-      emailService.sendOrderCancelled({ order, user: customer, reason: order.cancelReason }).catch((err) =>
-        console.error("[EmailService] Order cancellation email error:", err.message)
-      );
-    }
-  }).catch(() => {});
+  emailCustomerOrderCancelled(order, order.cancelReason).catch((err) =>
+    console.error("[EmailService] Order cancellation email error:", err.message)
+  );
 
   return sendSuccess(res, 200, "Order cancelled successfully", order);
 });
@@ -503,6 +512,10 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
     type: "order",
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
+
+  emailCustomerOrderCancelled(order, reason).catch((err) =>
+    console.error("[EmailService] Admin cancellation email error:", err.message)
+  );
 
   return sendSuccess(res, 200, "Order cancelled by admin successfully", order);
 });
@@ -641,10 +654,15 @@ const approveReturn = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
+  emailCustomerOrderStatusUpdate(order, {
+    newStatus: order.orderStatus,
+    note: `Return approved. Courier reverse pickup AWB: ${waybillNumber}`,
+  }).catch((err) => console.error("[EmailService] Return approval email error:", err.message));
+
   return sendSuccess(res, 200, "Return approved and reverse pickup scheduled successfully", {
     order,
     shipment: returnShipment,
-    delhivery: reversePickupResult,
+    delhivery: null,
   });
 });
 
@@ -725,6 +743,14 @@ const processExchange = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${replacementOrder._id}`,
   }).catch(() => {});
 
+  emailCustomerOrderConfirmation(replacementOrder).catch((err) =>
+    console.error("[EmailService] Replacement order confirmation email error:", err.message)
+  );
+  emailCustomerOrderStatusUpdate(order, {
+    newStatus: order.orderStatus,
+    note: `Exchange processed. Replacement order ${replacementOrder.orderNumber} is being prepared.`,
+  }).catch((err) => console.error("[EmailService] Exchange processed email error:", err.message));
+
   return sendSuccess(res, 200, "Exchange processed and replacement order created", {
     originalOrder: order,
     replacementOrder,
@@ -768,12 +794,8 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const prevStatus = order.orderStatus;
 
-  // Strict Rule: Once an order has been marked "delivered", it cannot be moved back to "pending", "processing", or "shipped"
-  if (prevStatus === "delivered" && ["pending", "processing", "shipped"].includes(status)) {
-    throw ApiError.badRequest("Order has already been delivered and cannot be reverted to earlier stages (shipped, processing, or pending).");
-  }
-
   if (status) {
+    assertForwardStatusTransition(prevStatus, status);
     // If order is transitioning TO cancelled/refunded from an active status, restore stock
     if (
       ["cancelled", "refunded"].includes(status) &&
@@ -845,45 +867,194 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     }).catch(() => {});
   }
 
-  // Automated notification email to customer whenever status OR tracking number is updated
-  if (status || isTrackingUpdated) {
+  const statusChanged = Boolean(status && status !== prevStatus);
+
+  // Tracking-only updates: in-app notification only — shipment email is sent from the seller dispatch flow.
+  if (statusChanged) {
     const statusToSend = status || order.orderStatus;
     const finalTracking = trackingTrimmed !== undefined ? trackingTrimmed : order.trackingNumber;
+    const emailNote = note || "";
 
-    const userPromise = order.user ? User.findById(order.user) : Promise.resolve(null);
-    userPromise
-      .then((customer) => {
-        const targetEmail = customer?.email || order.paymentResult?.email || order.shippingAddress?.email;
-        const recipientUser = {
-          name: customer?.name || order.shippingAddress?.fullName || "Valued Customer",
-          email: targetEmail,
-        };
-
-        if (targetEmail) {
-          emailService
-            .sendOrderStatusUpdate({
-              order,
-              user: recipientUser,
-              newStatus: statusToSend,
-              note: note || (isTrackingUpdated && !status ? `Tracking ID assigned: ${finalTracking}` : ""),
-              trackingNumber: finalTracking,
-            })
-            .then(() => {
-              console.log(
-                `[EmailService] Automated tracking/status update email sent for order #${order.orderNumber} to ${targetEmail}`
-              );
-            })
-            .catch((err) =>
-              console.error("[EmailService] Order status update email error:", err.message)
-            );
-        }
-      })
-      .catch((err) => {
-        console.error("[EmailService] Customer lookup error:", err.message);
-      });
+    if (["cancelled", "refunded"].includes(statusToSend)) {
+      emailCustomerOrderCancelled(order, emailNote || order.cancelReason || statusToSend).catch((err) =>
+        console.error("[EmailService] Order cancellation email error:", err.message)
+      );
+    } else {
+      emailCustomerOrderStatusUpdate(order, {
+        newStatus: statusToSend,
+        note: emailNote,
+        trackingNumber: finalTracking,
+      }).catch((err) => console.error("[EmailService] Order status update email error:", err.message));
+    }
   }
 
   return sendSuccess(res, 200, "Order status updated successfully", order);
+});
+
+// @desc    List manual shipping platforms + default email template snippet
+// @route   GET /api/orders/shipment/platforms
+// @access  Private/Seller
+const getShipmentPlatforms = asyncHandler(async (req, res) => {
+  return sendSuccess(res, 200, "Shipping platforms retrieved", SHIPPING_PLATFORMS);
+});
+
+// @desc    Preview default shipment email body for an order
+// @route   POST /api/orders/:id/shipment/preview-email
+// @access  Private/Seller
+const previewShipmentEmail = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw ApiError.notFound("Order not found");
+
+  const trackingNumber = (req.body.trackingNumber || order.trackingNumber || "").trim();
+  const platformId = req.body.shippingPlatform || order.shippingPlatform || "other";
+  const platform = getPlatformById(platformId);
+  const platformLabel =
+    req.body.shippingPlatformLabel?.trim() || platform?.label || order.shippingPlatformLabel || "Courier";
+  const trackingUrl = buildTrackingUrl(
+    platformId,
+    trackingNumber,
+    req.body.trackingUrl || order.trackingUrl
+  );
+
+  const ctx = await loadCustomerContext(order);
+  const emailBody = buildDefaultShipmentEmailText({
+    recipientName: ctx?.recipientUser?.name || order.shippingAddress?.fullName,
+    orderNumber: order.orderNumber,
+    platformLabel,
+    trackingNumber,
+    trackingUrl,
+  });
+
+  const defaultSubject = `Order #${order.orderNumber} shipped — ${platformLabel} tracking ${trackingNumber}`;
+
+  return sendSuccess(res, 200, "Shipment email preview generated", {
+    emailSubject: defaultSubject,
+    emailBody,
+    platformLabel,
+    trackingUrl,
+    recipientEmail: ctx?.email || null,
+  });
+});
+
+const applyShipmentFieldsToOrder = (order, body) => {
+  const trackingNumber = String(body.trackingNumber || "").trim();
+  if (!trackingNumber) {
+    throw ApiError.badRequest("Tracking / AWB number is required");
+  }
+
+  const platformId = body.shippingPlatform || "other";
+  const platform = getPlatformById(platformId);
+  const platformLabel =
+    body.shippingPlatformLabel?.trim() || platform?.label || "Courier";
+  const trackingUrl = buildTrackingUrl(platformId, trackingNumber, body.trackingUrl);
+
+  const isNewTracking = trackingNumber !== order.trackingNumber;
+
+  order.trackingNumber = trackingNumber;
+  order.shippingPlatform = platformId;
+  order.shippingPlatformLabel = platformLabel;
+  order.trackingUrl = trackingUrl;
+  if (isNewTracking || !order.trackingAssignedAt) {
+    order.trackingAssignedAt = new Date();
+  }
+
+  if (body.markAsShipped && !["shipped", "delivered", "cancelled", "refunded"].includes(order.orderStatus)) {
+    assertForwardStatusTransition(order.orderStatus, "shipped");
+    order.orderStatus = "shipped";
+    order.statusHistory.push({
+      status: "shipped",
+      note: body.note || `Dispatched via ${platformLabel}. AWB: ${trackingNumber}`,
+    });
+  } else if (isNewTracking) {
+    order.statusHistory.push({
+      status: order.orderStatus,
+      note: body.note || `Tracking assigned (${platformLabel}): ${trackingNumber}`,
+    });
+  }
+
+  return { platformLabel, trackingUrl, isNewTracking };
+};
+
+// @desc    Save shipment / tracking details (no customer email)
+// @route   PUT /api/orders/:id/shipment
+// @access  Private/Seller
+const saveOrderShipment = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw ApiError.notFound("Order not found");
+
+  const { platformLabel, trackingUrl } = applyShipmentFieldsToOrder(order, req.body);
+  await order.save();
+
+  if (order.user) {
+    await Notification.create({
+      user: order.user,
+      title: "Tracking details added",
+      message: `Tracking for order #${order.orderNumber} is available (${platformLabel}: ${order.trackingNumber}).`,
+      type: "order",
+      link: `/dashboard/orders/${order._id}`,
+    }).catch(() => {});
+  }
+
+  return sendSuccess(res, 200, "Shipment details saved", {
+    order,
+    platformLabel,
+    trackingUrl,
+  });
+});
+
+// @desc    Save shipment details + send customizable tracking email + optional in-app notification
+// @route   POST /api/orders/:id/shipment/notify
+// @access  Private/Seller
+const notifyOrderShipment = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw ApiError.notFound("Order not found");
+
+  const { emailBody, emailSubject, markAsShipped = true, sendInAppNotification = true } = req.body;
+
+  if (!String(emailBody || "").trim()) {
+    throw ApiError.badRequest("Email message body is required before sending");
+  }
+
+  const { platformLabel, trackingUrl } = applyShipmentFieldsToOrder(order, {
+    ...req.body,
+    markAsShipped,
+  });
+  await order.save();
+
+  const ctx = await loadCustomerContext(order);
+  if (!ctx?.email) {
+    throw ApiError.badRequest("No valid customer email address found for this order.");
+  }
+
+  if (sendInAppNotification && order.user) {
+    await Notification.create({
+      user: order.user,
+      title: "Your order has shipped",
+      message: `Order #${order.orderNumber} dispatched via ${platformLabel}. Tracking: ${order.trackingNumber}.`,
+      type: "order",
+      link: `/dashboard/orders/${order._id}`,
+    }).catch(() => {});
+  }
+
+  const dispatchResult = await emailCustomerShipmentTracking(order, {
+    platformLabel,
+    trackingNumber: order.trackingNumber,
+    trackingUrl,
+    emailBody: String(emailBody).trim(),
+    emailSubject: emailSubject?.trim(),
+  });
+
+  if (!dispatchResult?.success) {
+    throw ApiError.internal(
+      dispatchResult?.error || "Failed to send shipment email. Check SMTP configuration and email logs."
+    );
+  }
+
+  return sendSuccess(res, 200, `Shipment notification sent to ${ctx.email}`, {
+    recipient: ctx.email,
+    order,
+    dispatchResult,
+  });
 });
 
 // @desc    Send shipping / tracking email manually
@@ -897,29 +1068,37 @@ const sendTrackingEmail = asyncHandler(async (req, res) => {
     throw ApiError.badRequest("Order does not have a tracking / AWB number assigned yet.");
   }
 
-  const customer = order.user ? await User.findById(order.user).lean() : null;
-  const customerEmail = customer?.email || order.paymentResult?.email || order.shippingAddress?.email;
-
-  if (!customerEmail) {
+  const ctx = await loadCustomerContext(order);
+  if (!ctx?.email) {
     throw ApiError.badRequest("No valid customer email address found for this order.");
   }
 
-  const recipientUser = {
-    name: customer?.name || order.shippingAddress?.fullName || "Valued Customer",
-    email: customerEmail,
-    _id: order.user,
-  };
+  const platformLabel = order.shippingPlatformLabel || "Courier";
+  const trackingUrl = order.trackingUrl || "";
+  const emailBody =
+    buildDefaultShipmentEmailText({
+      recipientName: ctx.recipientUser?.name,
+      orderNumber: order.orderNumber,
+      platformLabel,
+      trackingNumber: order.trackingNumber,
+      trackingUrl,
+    });
 
-  const dispatchResult = await emailService.sendOrderStatusUpdate({
-    order,
-    user: recipientUser,
-    newStatus: order.orderStatus,
-    note: `Tracking / AWB details: ${order.trackingNumber}`,
+  const dispatchResult = await emailCustomerShipmentTracking(order, {
+    platformLabel,
     trackingNumber: order.trackingNumber,
+    trackingUrl,
+    emailBody,
   });
 
-  return sendSuccess(res, 200, `Shipping email sent successfully to ${customerEmail}`, {
-    recipient: customerEmail,
+  if (!dispatchResult?.success) {
+    throw ApiError.internal(
+      dispatchResult?.error || "Failed to send shipping email. Check SMTP configuration and email logs."
+    );
+  }
+
+  return sendSuccess(res, 200, `Shipping email sent successfully to ${ctx.email}`, {
+    recipient: ctx.email,
     trackingNumber: order.trackingNumber,
     dispatchResult,
   });
@@ -963,6 +1142,9 @@ const trackOrderPublic = asyncHandler(async (req, res) => {
     orderStatus: order.orderStatus,
     createdAt: order.createdAt,
     trackingNumber: order.trackingNumber || null,
+    shippingPlatform: order.shippingPlatform || null,
+    shippingPlatformLabel: order.shippingPlatformLabel || null,
+    trackingUrl: order.trackingUrl || null,
     isDelivered: order.isDelivered,
     deliveredAt: order.deliveredAt || null,
     statusHistory: order.statusHistory || [],
@@ -995,6 +1177,10 @@ module.exports = {
   getAllOrders,
   updateOrderStatus,
   sendTrackingEmail,
+  getShipmentPlatforms,
+  previewShipmentEmail,
+  saveOrderShipment,
+  notifyOrderShipment,
   trackOrderPublic,
 };
 

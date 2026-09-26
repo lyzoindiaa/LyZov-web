@@ -2,6 +2,7 @@ const delhiveryService = require('../services/delhiveryService');
 const Shipment = require('../models/Shipment');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
+const { emailCustomerOrderStatusUpdate } = require('../utils/orderCustomerNotifications');
 
 // ---------------------------------------------------------------------------
 // Helper: converts a raw Delhivery/network error into a structured response
@@ -159,13 +160,19 @@ exports.createOrder = async (req, res) => {
       link: `/dashboard/orders/${order._id}`,
     }).catch(() => {});
 
+    emailCustomerOrderStatusUpdate(order, {
+      newStatus: order.orderStatus,
+      note: `Shipment manifested. Tracking AWB: ${waybill}`,
+      trackingNumber: waybill,
+    }).catch((err) => console.error('[EmailService] Manifest tracking email error:', err.message));
+
     return res.status(201).json({
       success: true,
       message: 'Order manifested successfully with Delhivery',
       data: {
         order,
         shipment: newShipment,
-        delhivery: result,
+        delhivery: null,
       },
     });
   } catch (error) {
@@ -327,6 +334,11 @@ exports.trackingWebhook = async (req, res) => {
               type: "order",
               link: `/dashboard/orders/${order._id}`,
             }).catch(() => {});
+
+            emailCustomerOrderStatusUpdate(order, {
+              newStatus: order.orderStatus,
+              note: `Return item picked up by courier (AWB: ${waybill})`,
+            }).catch((err) => console.error('[EmailService] Return pickup email error:', err.message));
           } else if (mappedStatus === "Delivered" || mappedStatus === "Returned") {
             order.returnStatus = "Returned";
             order.statusHistory.push({
@@ -342,6 +354,11 @@ exports.trackingWebhook = async (req, res) => {
               type: "order",
               link: `/dashboard/orders/${order._id}`,
             }).catch(() => {});
+
+            emailCustomerOrderStatusUpdate(order, {
+              newStatus: order.orderStatus,
+              note: `Return package received at warehouse (AWB: ${waybill}). Awaiting inspection.`,
+            }).catch((err) => console.error('[EmailService] Return warehouse email error:', err.message));
           }
         } else {
           // Forward logistics flow
@@ -354,6 +371,12 @@ exports.trackingWebhook = async (req, res) => {
               note: `Delivered via Delhivery (AWB: ${waybill})`,
             });
             await order.save();
+
+            emailCustomerOrderStatusUpdate(order, {
+              newStatus: "delivered",
+              note: `Delivered via Delhivery (AWB: ${waybill})`,
+              trackingNumber: waybill,
+            }).catch((err) => console.error('[EmailService] Delivered webhook email error:', err.message));
           } else if (mappedStatus === "In Transit" && order.orderStatus === "processing") {
             order.orderStatus = "shipped";
             order.statusHistory.push({
@@ -361,6 +384,12 @@ exports.trackingWebhook = async (req, res) => {
               note: `Dispatched and in transit with Delhivery (AWB: ${waybill})`,
             });
             await order.save();
+
+            emailCustomerOrderStatusUpdate(order, {
+              newStatus: "shipped",
+              note: `Dispatched and in transit with Delhivery (AWB: ${waybill})`,
+              trackingNumber: order.trackingNumber || waybill,
+            }).catch((err) => console.error('[EmailService] Shipped webhook email error:', err.message));
           }
         }
       }

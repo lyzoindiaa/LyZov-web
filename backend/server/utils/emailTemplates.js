@@ -522,6 +522,84 @@ const orderStatusUpdateTemplate = ({ order, user, newStatus, note, trackingNumbe
   };
 };
 
+// 7b. Manual shipment / tracking assignment (custom seller message + platform link)
+const shipmentTrackingTemplate = ({
+  order,
+  user,
+  platformLabel,
+  trackingNumber,
+  trackingUrl,
+  emailBody,
+  emailSubject,
+}) => {
+  const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
+  const orderUrl = `${clientUrl}/dashboard/orders/${order._id}`;
+  const trackPageUrl = `${clientUrl}/track`;
+  const recipientName = order.shippingAddress?.fullName || user?.name || "Valued Customer";
+  const platform = platformLabel || "Courier";
+
+  const bodyParagraphs = String(emailBody || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map(
+      (line) =>
+        `<p style="margin: 0 0 12px; font-size: 15px; color: ${textMuted}; line-height: 1.65;">${line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`
+    )
+    .join("");
+
+  const content = `
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: ${primaryGold}; text-transform: uppercase;">
+      Shipment Dispatched
+    </span>
+    <h2 style="margin: 6px 0 12px; font-size: 22px; color: ${textDark}; font-weight: 700;">
+      Tracking for Order #${order.orderNumber}
+    </h2>
+    ${bodyParagraphs || `<p style="margin: 0 0 12px; font-size: 15px; color: ${textMuted}; line-height: 1.65;">Hello ${recipientName}, your order has been shipped.</p>`}
+
+    <div style="background-color: #F8FAFC; border-radius: 8px; padding: 20px; margin: 20px 0 24px; border: 1px solid ${borderCol};">
+      <div style="font-size: 13px; margin-bottom: 10px;">
+        <span style="color: ${textMuted}; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;">Shipping platform</span>
+        <strong style="color: ${textDark}; font-size: 15px;">${platform}</strong>
+      </div>
+      <div style="margin: 14px 0; padding: 14px 16px; background-color: #FEF9C3; border: 1.5px solid #FACC15; border-radius: 6px;">
+        <span style="display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #854D0E; font-weight: 700;">Tracking / AWB</span>
+        <strong style="display: block; margin-top: 4px; font-family: monospace; font-size: 17px; color: #713F12; letter-spacing: 0.05em;">${trackingNumber}</strong>
+      </div>
+      ${
+        trackingUrl
+          ? `<div style="text-align: center; margin-top: 16px;">
+              <a href="${trackingUrl}" class="btn-gold" target="_blank" rel="noopener" style="display: inline-block;">
+                Track on ${platform}
+              </a>
+            </div>`
+          : ""
+      }
+    </div>
+
+    <div style="text-align: center; margin: 24px 0 8px;">
+      <a href="${orderUrl}" class="btn-gold" target="_blank" style="display: inline-block; margin: 4px 6px;">
+        View Order
+      </a>
+      <a href="${trackPageUrl}" target="_blank" style="display: inline-block; margin: 4px 6px; font-size: 13px; font-weight: 600; color: ${textMuted}; text-decoration: underline;">
+        LyZov Track Page
+      </a>
+    </div>
+  `;
+
+  const defaultSubject = `Order #${order.orderNumber} shipped — ${platform} tracking ${trackingNumber}`;
+
+  return {
+    subject: emailSubject?.trim() || defaultSubject,
+    text: emailBody || `Order #${order.orderNumber}\nPlatform: ${platform}\nTracking: ${trackingNumber}\n${trackingUrl ? `Track: ${trackingUrl}\n` : ""}${orderUrl}`,
+    html: baseEmailWrapper({
+      title: `Shipment #${order.orderNumber}`,
+      preheader: `Your order #${order.orderNumber} tracking via ${platform}.`,
+      content,
+    }),
+  };
+};
+
 // 8. Order Cancellation & Refund Notice
 const orderCancelledTemplate = ({ order, user, reason }) => {
   const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
@@ -753,6 +831,7 @@ module.exports = {
   orderConfirmationTemplate,
   sellerNewOrderTemplate,
   orderStatusUpdateTemplate,
+  shipmentTrackingTemplate,
   orderCancelledTemplate,
   customerSupportInquiryTemplate,
   testEmailTemplate,

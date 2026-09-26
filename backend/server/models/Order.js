@@ -96,6 +96,22 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    shippingPlatform: {
+      type: String,
+      default: "",
+    },
+    shippingPlatformLabel: {
+      type: String,
+      default: "",
+    },
+    trackingUrl: {
+      type: String,
+      default: "",
+    },
+    trackingAssignedAt: {
+      type: Date,
+      default: null,
+    },
     statusHistory: [
       {
         status: String,

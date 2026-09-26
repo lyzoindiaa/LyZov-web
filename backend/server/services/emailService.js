@@ -275,10 +275,52 @@ class EmailService {
     });
   }
 
+  async sendShipmentTrackingEmail({
+    order,
+    user,
+    platformLabel,
+    trackingNumber,
+    trackingUrl,
+    emailBody,
+    emailSubject,
+  }) {
+    const customerEmail =
+      user?.email || order.shippingAddress?.email || order.paymentResult?.email;
+    if (!customerEmail) return { success: false, skipped: true, reason: "no_email" };
+
+    const { subject, text, html } = templates.shipmentTrackingTemplate({
+      order,
+      user,
+      platformLabel,
+      trackingNumber,
+      trackingUrl,
+      emailBody,
+      emailSubject,
+    });
+
+    return this.dispatch({
+      to: customerEmail,
+      recipientName: order.shippingAddress?.fullName || user?.name || "",
+      template: "shipment_tracking",
+      subject,
+      text,
+      html,
+      relatedUser: user?._id || order.user,
+      relatedOrder: order._id,
+      metadata: {
+        orderNumber: order.orderNumber,
+        platformLabel,
+        trackingNumber,
+        trackingUrl,
+      },
+    });
+  }
+
   async sendOrderStatusUpdate({ order, user, newStatus, note, trackingNumber }) {
     if (user?.emailPreferences?.orderUpdates === false) return;
 
-    const customerEmail = user?.email || order.shippingAddress?.email;
+    const customerEmail =
+      user?.email || order.shippingAddress?.email || order.paymentResult?.email;
     if (!customerEmail) return;
 
     const { subject, text, html } = templates.orderStatusUpdateTemplate({
@@ -303,7 +345,8 @@ class EmailService {
   }
 
   async sendOrderCancelled({ order, user, reason }) {
-    const customerEmail = user?.email || order.shippingAddress?.email;
+    const customerEmail =
+      user?.email || order.shippingAddress?.email || order.paymentResult?.email;
     if (!customerEmail) return;
 
     const { subject, text, html } = templates.orderCancelledTemplate({

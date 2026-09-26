@@ -3,25 +3,39 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   ArrowLeft, ExternalLink, Truck, RefreshCw, AlertCircle,
-  CheckCircle, AlertTriangle, MessageCircle, Lock, Copy, Edit2, Send, Check
+  CheckCircle, AlertTriangle, MessageCircle, Lock, Copy, Edit2, Send, Check, Eye, Mail, FileText
 } from "lucide-react";
 import { orderService } from "../../services/cartService";
+import { SHIPPING_PLATFORMS, buildTrackingUrl } from "../../utils/shipmentPlatforms";
 // import { shippingService } from "../../services/shippingService"; // [DELHIVERY PAUSED]
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 
 const ALL_STATUS_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
+const FORWARD_STATUSES = ["pending", "processing", "shipped", "delivered"];
+
+const EMAIL_TEMPLATES = [
+  { key: "standard", label: "Standard Dispatch" },
+  { key: "express", label: "Express Shipping" },
+  { key: "delayed", label: "Dispatch Note (Delayed)" },
+  { key: "custom", label: "Custom Message" },
+];
 
 /**
- * Returns available status options.
- * Delivered orders cannot revert to pending/processing/shipped.
+ * Fulfillment statuses only move forward (e.g. processing cannot go back to pending).
  */
 function getAvailableStatuses(currentStatus) {
   if (currentStatus === "delivered") {
     return ["delivered", "cancelled", "refunded"];
   }
-  return ALL_STATUS_OPTIONS;
+  if (["cancelled", "refunded"].includes(currentStatus)) {
+    return ALL_STATUS_OPTIONS;
+  }
+  const idx = FORWARD_STATUSES.indexOf(currentStatus);
+  if (idx === -1) return ALL_STATUS_OPTIONS;
+  const forward = FORWARD_STATUSES.slice(idx);
+  return [...new Set([...forward, "cancelled", "refunded"])];
 }
 
 const AdminOrderDetailsPage = () => {
@@ -36,19 +50,86 @@ const AdminOrderDetailsPage = () => {
   // Delivered confirmation modal
   const [showDeliveredModal, setShowDeliveredModal] = useState(false);
 
-  // Manual tracking assignment state
+  // Manual shipment state (Platform, AWB, Tracking Link, Email Template, Subject, Body)
+  const [selectedPlatform, setSelectedPlatform] = useState("delhivery");
+  const [customPlatformLabel, setCustomPlatformLabel] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
+  const [trackingUrlInput, setTrackingUrlInput] = useState("");
   const [markAsShipped, setMarkAsShipped] = useState(true);
+
+  const [selectedTemplate, setSelectedTemplate] = useState("standard");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+
   const [isEditingTracking, setIsEditingTracking] = useState(false);
-  const [isSavingTracking, setIsSavingTracking] = useState(false);
-  const [isSendingShippingEmail, setIsSendingShippingEmail] = useState(false);
-  const [shippingEmailSent, setShippingEmailSent] = useState(false);
+  const [isSavingShipment, setIsSavingShipment] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  // Email Preview Modal
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+
+  const getEffectivePlatformLabel = (platformId = selectedPlatform, customLabel = customPlatformLabel) => {
+    if (platformId === "other") return customLabel.trim() || "Courier";
+    const found = SHIPPING_PLATFORMS.find((p) => p.id === platformId);
+    return found?.label || "Courier";
+  };
+
+  const generateEmailContent = (tplKey, orderObj, platformId, customLabel, awb, url) => {
+    if (!orderObj) return { subject: "", body: "" };
+    const recipientName = orderObj.shippingAddress?.fullName || orderObj.user?.name || "Valued Customer";
+    const platformLabel = getEffectivePlatformLabel(platformId, customLabel);
+    const tracking = String(awb || "").trim() || "[AWB ID]";
+    const trackLink = String(url || "").trim();
+
+    if (tplKey === "standard") {
+      return {
+        subject: `Order #${orderObj.orderNumber} shipped — ${platformLabel} tracking ${tracking}`,
+        body: `Hello ${recipientName},\n\nYour LyZov order #${orderObj.orderNumber} has been dispatched.\n\nCourier / Platform: ${platformLabel}\nTracking / AWB ID: ${tracking}${trackLink ? `\nTrack package: ${trackLink}` : ""}\n\nYou can also check your order progress anytime from your LyZov account.\n\nThank you for choosing LyZov Gentlemen.`,
+      };
+    }
+
+    if (tplKey === "express") {
+      return {
+        subject: `🚀 Priority Dispatch: Order #${orderObj.orderNumber} is on its way!`,
+        body: `Dear ${recipientName},\n\nExciting news! Your order #${orderObj.orderNumber} has been shipped via Express Delivery (${platformLabel}).\n\nAWB Tracking ID: ${tracking}${trackLink ? `\nLive Tracking Link: ${trackLink}` : ""}\n\nExpected delivery within 2-4 business days.\n\nBest regards,\nTeam LyZov`,
+      };
+    }
+
+    if (tplKey === "delayed") {
+      return {
+        subject: `Order #${orderObj.orderNumber} dispatched — Thank you for your patience`,
+        body: `Hello ${recipientName},\n\nThank you so much for your patience! Your order #${orderObj.orderNumber} is now fully packed and handed over to ${platformLabel}.\n\nTracking / AWB Number: ${tracking}${trackLink ? `\nTrack your package: ${trackLink}` : ""}\n\nWe appreciate your understanding and support!\n\nWarm regards,\nLyZov Gentlemen`,
+      };
+    }
+
+    // Custom
+    return {
+      subject: `Update regarding your LyZov order #${orderObj.orderNumber}`,
+      body: `Hello ${recipientName},\n\n`,
+    };
+  };
 
   const loadOrder = async () => {
     try {
       setIsLoading(true);
       const res = await orderService.getOrderById(orderId);
-      setOrder(res.data);
+      const o = res.data;
+      setOrder(o);
+
+      if (o) {
+        const plat = o.shippingPlatform || "delhivery";
+        setSelectedPlatform(plat);
+        setCustomPlatformLabel(o.shippingPlatformLabel || "");
+        setTrackingInput(o.trackingNumber || "");
+        const computedUrl = buildTrackingUrl(plat, o.trackingNumber, o.trackingUrl);
+        setTrackingUrlInput(computedUrl || "");
+
+        const initialTpl = generateEmailContent("standard", o, plat, o.shippingPlatformLabel, o.trackingNumber, computedUrl);
+        setEmailSubject(initialTpl.subject);
+        setEmailBody(initialTpl.body);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not load order");
       navigate("/seller/orders");
@@ -61,55 +142,96 @@ const AdminOrderDetailsPage = () => {
     loadOrder();
   }, [orderId]);
 
-  useEffect(() => {
-    if (order?.trackingNumber) {
-      setTrackingInput(order.trackingNumber);
-    } else {
-      setTrackingInput("");
-    }
-  }, [order?.trackingNumber]);
+  const handlePlatformChange = (newPlatform) => {
+    setSelectedPlatform(newPlatform);
+    const computed = buildTrackingUrl(newPlatform, trackingInput);
+    setTrackingUrlInput(computed);
 
-  const handleSaveTracking = async (e) => {
-    e?.preventDefault();
-    const clean = trackingInput.trim();
-    if (!clean) {
-      toast.error("Please enter a valid tracking or AWB number");
+    const updated = generateEmailContent(selectedTemplate, order, newPlatform, customPlatformLabel, trackingInput, computed);
+    setEmailSubject(updated.subject);
+    setEmailBody(updated.body);
+  };
+
+  const handleAwbChange = (val) => {
+    setTrackingInput(val);
+    const computed = buildTrackingUrl(selectedPlatform, val);
+    setTrackingUrlInput(computed);
+
+    const updated = generateEmailContent(selectedTemplate, order, selectedPlatform, customPlatformLabel, val, computed);
+    setEmailSubject(updated.subject);
+    setEmailBody(updated.body);
+  };
+
+  const handleTemplateSelect = (tplKey) => {
+    setSelectedTemplate(tplKey);
+    const updated = generateEmailContent(tplKey, order, selectedPlatform, customPlatformLabel, trackingInput, trackingUrlInput);
+    setEmailSubject(updated.subject);
+    setEmailBody(updated.body);
+  };
+
+  const handlePreviewEmail = async () => {
+    if (!trackingInput.trim()) {
+      toast.error("Please enter a tracking / AWB number first");
       return;
     }
     try {
-      setIsSavingTracking(true);
-      const payload = { trackingNumber: clean };
-      if (markAsShipped && order.orderStatus !== "shipped" && order.orderStatus !== "delivered") {
-        payload.status = "shipped";
-      }
-      const res = await orderService.updateOrderStatus(orderId, payload);
-      setOrder(res.data);
-      toast.success("Tracking ID assigned & automated email dispatched to customer! ✓");
-      setIsEditingTracking(false);
-      setShippingEmailSent(true);
+      setIsGeneratingPreview(true);
+      const res = await orderService.previewShipmentEmail(orderId, {
+        shippingPlatform: selectedPlatform,
+        shippingPlatformLabel: customPlatformLabel,
+        trackingNumber: trackingInput.trim(),
+        trackingUrl: trackingUrlInput.trim(),
+      });
+      setPreviewData(res.data);
+      setShowPreviewModal(true);
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.message || "Failed to assign tracking number";
-      toast.error(errMsg);
+      toast.error(err.response?.data?.message || "Could not generate email preview");
     } finally {
-      setIsSavingTracking(false);
+      setIsGeneratingPreview(false);
     }
   };
 
-  const handleSendShippingEmail = async () => {
-    if (!order?.trackingNumber) {
-      toast.error("Please assign a tracking / AWB number first");
+  const handleSaveShipment = async ({ sendEmail = true }) => {
+    const cleanAwb = trackingInput.trim();
+    if (!cleanAwb) {
+      toast.error("Please enter a valid tracking or AWB number");
       return;
     }
+
+    if (sendEmail && !emailBody.trim()) {
+      toast.error("Email message body cannot be empty when sending email");
+      return;
+    }
+
+    const payload = {
+      shippingPlatform: selectedPlatform,
+      shippingPlatformLabel: selectedPlatform === "other" ? customPlatformLabel : undefined,
+      trackingNumber: cleanAwb,
+      trackingUrl: trackingUrlInput.trim(),
+      markAsShipped,
+      emailSubject: emailSubject.trim(),
+      emailBody: emailBody.trim(),
+      sendInAppNotification: true,
+    };
+
     try {
-      setIsSendingShippingEmail(true);
-      const res = await orderService.sendTrackingEmail(orderId);
-      toast.success(res.message || "Shipping email sent successfully to customer! ✓");
-      setShippingEmailSent(true);
+      if (sendEmail) {
+        setIsSendingEmail(true);
+        const res = await orderService.notifyOrderShipment(orderId, payload);
+        setOrder(res.data.order);
+        toast.success(`Shipment details saved & email sent to customer! ✓`);
+      } else {
+        setIsSavingShipment(true);
+        const res = await orderService.saveOrderShipment(orderId, payload);
+        setOrder(res.data.order);
+        toast.success(`Shipment details saved & in-app notification sent to customer! ✓`);
+      }
+      setIsEditingTracking(false);
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.message || "Failed to send shipping email";
-      toast.error(errMsg);
+      toast.error(err.response?.data?.message || err.message || "Failed to save shipment details");
     } finally {
-      setIsSendingShippingEmail(false);
+      setIsSendingEmail(false);
+      setIsSavingShipment(false);
     }
   };
 
@@ -437,7 +559,7 @@ const AdminOrderDetailsPage = () => {
             <section className="card-surface p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Truck size={18} className="text-[var(--accent)]" /> Shipment &amp; Courier
+                  <Truck size={18} className="text-[var(--accent)]" /> Shipment &amp; Dispatch
                 </h2>
                 {order.trackingNumber && (
                   <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
@@ -450,7 +572,9 @@ const AdminOrderDetailsPage = () => {
                 <div className="flex flex-col gap-3">
                   <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-bg,rgba(197,160,89,0.08))] flex items-center justify-between gap-3">
                     <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-stone block">Tracking / AWB Number</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-stone block">
+                        Carrier: {order.shippingPlatformLabel || getEffectivePlatformLabel(order.shippingPlatform)}
+                      </span>
                       <p className="font-mono font-extrabold text-base text-[var(--accent)] tracking-wide mt-0.5">
                         {order.trackingNumber}
                       </p>
@@ -467,13 +591,22 @@ const AdminOrderDetailsPage = () => {
                       <button
                         type="button"
                         onClick={() => setIsEditingTracking(true)}
-                        title="Edit AWB Number"
+                        title="Edit Shipment & Email Message"
                         className="p-2 rounded-lg border border-border bg-white text-xs font-semibold text-[var(--ink)] hover:bg-[var(--bg-subtle)] dark:bg-stone-900 transition-colors"
                       >
                         <Edit2 size={14} />
                       </button>
                     </div>
                   </div>
+
+                  {order.trackingUrl && (
+                    <div className="text-xs text-stone truncate">
+                      <span className="font-semibold">Tracking Link: </span>
+                      <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-[var(--accent)] underline">
+                        {order.trackingUrl}
+                      </a>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <Link
@@ -488,62 +621,79 @@ const AdminOrderDetailsPage = () => {
                       onClick={() => setIsEditingTracking(true)}
                       className="text-xs text-stone hover:text-[var(--ink)] underline"
                     >
-                      Change AWB
+                      Edit Shipment / Resend Email
                     </button>
                   </div>
-
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={handleSendShippingEmail}
-                      disabled={isSendingShippingEmail || shippingEmailSent}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                    >
-                      {isSendingShippingEmail ? (
-                        <>
-                          <RefreshCw size={14} className="animate-spin" />
-                          Sending Shipping Mail...
-                        </>
-                      ) : shippingEmailSent ? (
-                        <>
-                          <Check size={14} />
-                          Shipping Mail Sent
-                        </>
-                      ) : (
-                        <>
-                          <Send size={14} />
-                          Send Shipping Mail to Customer
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <p className="text-xs text-stone">
-                    ✓ Automated tracking email with this AWB was sent to <strong>{order.shippingAddress?.email || order.user?.email}</strong>.
-                  </p>
                 </div>
               ) : (
-                <form onSubmit={handleSaveTracking} className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
+                  {/* Step 1: Courier Platform Selector */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1.5">
-                      Enter Courier Tracking / AWB ID
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1">
+                      1. Courier / Shipping Platform
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={trackingInput}
-                        onChange={(e) => setTrackingInput(e.target.value)}
-                        placeholder="e.g. 142371908234 or BLUEDART-88219"
-                        className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2.5 font-mono text-sm font-semibold text-[var(--ink)] placeholder:text-stone/60 focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                        disabled={isSavingTracking}
-                      />
-                    </div>
-                    <span className="text-[11px] text-stone mt-1 block">
-                      Compatible with any courier (Delhivery, BlueDart, DTDC, India Post, etc.)
-                    </span>
+                    <select
+                      value={selectedPlatform}
+                      onChange={(e) => handlePlatformChange(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2.5 text-sm font-semibold text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none"
+                    >
+                      {SHIPPING_PLATFORMS.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Mark as shipped toggle if not yet shipped/delivered */}
+                  {selectedPlatform === "other" && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1">
+                        Custom Courier Name
+                      </label>
+                      <input
+                        type="text"
+                        value={customPlatformLabel}
+                        onChange={(e) => {
+                          setCustomPlatformLabel(e.target.value);
+                          const updated = generateEmailContent(selectedTemplate, order, "other", e.target.value, trackingInput, trackingUrlInput);
+                          setEmailSubject(updated.subject);
+                          setEmailBody(updated.body);
+                        }}
+                        placeholder="e.g. Shadowfax, Professional Couriers"
+                        className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2 text-sm font-semibold text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Step 2: AWB Tracking Number */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1">
+                      2. Tracking / AWB Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={trackingInput}
+                      onChange={(e) => handleAwbChange(e.target.value)}
+                      placeholder="e.g. 142371908234 or BLUEDART-88219"
+                      className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2.5 font-mono text-sm font-bold text-[var(--ink)] placeholder:text-stone/50 focus:border-[var(--accent)] focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Step 3: Tracking URL */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone mb-1">
+                      3. Live Tracking Link (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={trackingUrlInput}
+                      onChange={(e) => setTrackingUrlInput(e.target.value)}
+                      placeholder="https://www.courier.com/track/..."
+                      className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3.5 py-2 text-xs font-medium text-[var(--ink)] placeholder:text-stone/50 focus:border-[var(--accent)] focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Mark as shipped toggle */}
                   {!["shipped", "delivered"].includes(order.orderStatus) && (
                     <label className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border bg-[var(--bg-subtle)] cursor-pointer select-none">
                       <input
@@ -551,56 +701,125 @@ const AdminOrderDetailsPage = () => {
                         checked={markAsShipped}
                         onChange={(e) => setMarkAsShipped(e.target.checked)}
                         className="mt-0.5 rounded accent-[var(--accent)]"
-                        disabled={isSavingTracking}
                       />
                       <div className="text-xs">
                         <span className="font-semibold text-[var(--ink)] block">
-                          Also update status to "Shipped"
+                          Update order status to "Shipped"
                         </span>
                         <span className="text-stone">
-                          Transitions the order progress stepper and notifies customer of dispatch.
+                          Advances status stepper &amp; flags order as dispatched.
                         </span>
                       </div>
                     </label>
                   )}
 
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
-                    ✉️ <strong>Automatic Email:</strong> Saving will immediately send an order tracking email with this AWB number to <strong>{order.shippingAddress?.email || order.user?.email || "the customer"}</strong>.
+                  {/* Step 4: Customizable Email Body & Templates */}
+                  <div className="pt-2 border-t border-hairline dark:border-hairline-dark">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-stone flex items-center gap-1.5">
+                        <Mail size={14} className="text-[var(--accent)]" /> 4. Customer Email Message &amp; Template
+                      </label>
+                    </div>
+
+                    {/* Template Pills */}
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {EMAIL_TEMPLATES.map((tpl) => (
+                        <button
+                          key={tpl.key}
+                          type="button"
+                          onClick={() => handleTemplateSelect(tpl.key)}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                            selectedTemplate === tpl.key
+                              ? "bg-[var(--accent)] text-white shadow-sm"
+                              : "bg-[var(--bg-subtle)] text-stone border border-border hover:bg-stone-200 dark:hover:bg-stone-800"
+                          }`}
+                        >
+                          {tpl.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Email Subject Line */}
+                    <div className="mb-2">
+                      <span className="text-[11px] font-semibold text-stone block mb-1">Subject Line</span>
+                      <input
+                        type="text"
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        placeholder="Subject line..."
+                        className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] px-3 py-2 text-xs font-semibold text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Email Body Textarea */}
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone block mb-1">Email Body Message</span>
+                      <textarea
+                        rows={4}
+                        value={emailBody}
+                        onChange={(e) => setEmailBody(e.target.value)}
+                        placeholder="Type custom instructions, delivery notes, or customer message..."
+                        className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] p-3 text-xs leading-relaxed font-sans text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none resize-none"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  {/* Actions & Live Email Preview */}
+                  <div className="flex flex-col gap-2 pt-2">
                     <button
-                      type="submit"
-                      disabled={isSavingTracking || !trackingInput.trim()}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50 transition-opacity shadow-sm"
+                      type="button"
+                      onClick={handlePreviewEmail}
+                      disabled={isGeneratingPreview || !trackingInput.trim()}
+                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-[var(--bg-subtle)] px-3 py-2 text-xs font-semibold text-[var(--ink)] hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors"
                     >
-                      {isSavingTracking ? (
-                        <>
-                          <RefreshCw size={14} className="animate-spin" />
-                          Assigning &amp; Sending Email...
-                        </>
-                      ) : (
-                        <>
-                          <Send size={14} />
-                          {order.trackingNumber ? "Update AWB & Dispatch Email" : "Save AWB & Dispatch Email"}
-                        </>
-                      )}
+                      <Eye size={14} />
+                      {isGeneratingPreview ? "Building Email Preview..." : "Preview rendered Email Modal"}
                     </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSaveShipment({ sendEmail: true })}
+                        disabled={isSendingEmail || isSavingShipment || !trackingInput.trim()}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50 transition-opacity shadow-sm"
+                      >
+                        {isSendingEmail ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            Sending Mail...
+                          </>
+                        ) : (
+                          <>
+                            <Send size={14} />
+                            Send Email &amp; Assign Tracking
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSaveShipment({ sendEmail: false })}
+                        disabled={isSendingEmail || isSavingShipment || !trackingInput.trim()}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-stone hover:text-[var(--ink)] disabled:opacity-50"
+                        title="Save tracking to database & send in-app notification without email"
+                      >
+                        Save (No Mail)
+                      </button>
+                    </div>
+
                     {isEditingTracking && (
                       <button
                         type="button"
                         onClick={() => {
                           setIsEditingTracking(false);
-                          setTrackingInput(order.trackingNumber || "");
                         }}
-                        disabled={isSavingTracking}
-                        className="rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-stone hover:text-[var(--ink)]"
+                        className="text-xs text-center text-stone hover:underline mt-1"
                       >
-                        Cancel
+                        Cancel Editing
                       </button>
                     )}
                   </div>
-                </form>
+                </div>
               )}
             </section>
 
