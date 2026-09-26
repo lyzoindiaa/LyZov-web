@@ -189,10 +189,12 @@ class EmailService {
   }
 
   /**
-   * Universal HTTP REST API Fallback (Resend / Brevo) — Works on all cloud hosting providers (Render, Vercel, AWS, Railway) on Port 443
+   * Universal HTTPS REST API Sender (Port 443) — Supports Resend, Brevo & SendGrid
+   * Bypasses cloud host SMTP port blocks (Render, AWS, Vercel, Railway, Azure)
    */
   async sendViaHttpApi({ to, recipientName, subject, html, text }) {
     try {
+      // 1. Resend API (HTTPS :443)
       const resendKey = process.env.RESEND_API_KEY?.trim();
       if (resendKey) {
         const response = await fetch("https://api.resend.com/emails", {
@@ -215,6 +217,7 @@ class EmailService {
         }
       }
 
+      // 2. Brevo (Sendinblue) API (HTTPS :443)
       const brevoKey = process.env.BREVO_API_KEY?.trim();
       if (brevoKey) {
         const response = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -234,6 +237,30 @@ class EmailService {
         const data = await response.json();
         if (response.ok && data.messageId) {
           return { success: true, messageId: data.messageId, provider: "brevo" };
+        }
+      }
+
+      // 3. SendGrid API (HTTPS :443)
+      const sendgridKey = process.env.SENDGRID_API_KEY?.trim();
+      if (sendgridKey) {
+        const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${sendgridKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: to, name: recipientName || undefined }] }],
+            from: { email: process.env.SMTP_USER || "lyzovindia@gmail.com", name: "LyZov Marketplace" },
+            subject,
+            content: [
+              { type: "text/plain", value: text || " " },
+              { type: "text/html", value: html || " " },
+            ],
+          }),
+        });
+        if (response.ok || response.status === 202) {
+          return { success: true, messageId: `sg-${Date.now()}`, provider: "sendgrid" };
         }
       }
     } catch (apiErr) {
