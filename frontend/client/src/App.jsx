@@ -45,6 +45,7 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
 import AdminEmailsPage from "./pages/admin/AdminEmailsPage";
 import AdminProfilePage from "./pages/admin/AdminProfilePage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
@@ -176,6 +177,7 @@ function App() {
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="emails" element={<AdminEmailsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
         {/* ── Backward-Compatible /admin Redirects ── */}

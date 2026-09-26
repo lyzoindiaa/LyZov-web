@@ -118,6 +118,7 @@ app.use("/api/seller/emails", sellerEmailRoutes);
 app.use("/api/admin/emails", sellerEmailRoutes);
 app.use("/api/customer/emails", customerEmailRoutes);
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/settings", require("./routes/settingsRoutes"));
 
 // ── SEO Endpoints (Sitemap & Robots) ──
 app.use("/", seoRoutes);

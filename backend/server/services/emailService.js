@@ -107,21 +107,32 @@ class EmailService {
       return { success: true, simulated: true, message: "Email simulated successfully." };
     }
 
-    // 2. Real dispatch via Gmail SMTP with 8s maximum timeout protection
+    // 2. Real dispatch via SMTP (with HTTP API fallback for cloud servers)
     try {
-      const sendPromise = this.transporter.sendMail({
-        from: fromAddress,
-        to,
-        subject,
-        text,
-        html,
-      });
+      let info = null;
+      let provider = "smtp";
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("SMTP server response timed out (8s limit reached)")), 8000)
-      );
+      // Try HTTP API first if RESEND_API_KEY or BREVO_API_KEY is defined (bypasses cloud SMTP blocks)
+      const httpResult = await this.sendViaHttpApi({ to, recipientName, subject, html, text });
+      if (httpResult?.success) {
+        info = { messageId: httpResult.messageId };
+        provider = httpResult.provider;
+      } else {
+        // Fallback to direct SMTP socket send
+        const sendPromise = this.transporter.sendMail({
+          from: fromAddress,
+          to,
+          subject,
+          text,
+          html,
+        });
 
-      const info = await Promise.race([sendPromise, timeoutPromise]);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("SMTP server response timed out (8s limit reached)")), 8000)
+        );
+
+        info = await Promise.race([sendPromise, timeoutPromise]);
+      }
 
       try {
         await EmailLog.create({
@@ -133,16 +144,27 @@ class EmailService {
           status: "sent",
           relatedUser,
           relatedOrder,
-          metadata: { ...metadata, messageId: info.messageId },
+          metadata: { ...metadata, messageId: info.messageId, provider },
           sentAt: new Date(),
         });
       } catch (logErr) {
         console.error("[EmailService] Failed to create EmailLog:", logErr.message);
       }
 
-      return { success: true, messageId: info.messageId };
+      return { success: true, messageId: info.messageId, provider };
     } catch (err) {
-      console.error(`[EmailService] Error sending email to ${to}:`, err.message);
+      console.error(`[EmailService] SMTP error sending email to ${to}:`, err.message);
+
+      // Final attempt via HTTP API fallback if direct SMTP timed out
+      try {
+        const fallbackRes = await this.sendViaHttpApi({ to, recipientName, subject, html, text });
+        if (fallbackRes?.success) {
+          console.log(`[EmailService] Recovered via HTTP API fallback (${fallbackRes.provider}) for ${to}`);
+          return fallbackRes;
+        }
+      } catch (fbErr) {
+        console.error("[EmailService] HTTP API fallback also failed:", fbErr.message);
+      }
 
       try {
         await EmailLog.create({
@@ -164,6 +186,60 @@ class EmailService {
 
       return { success: false, error: err.message };
     }
+  }
+
+  /**
+   * Universal HTTP REST API Fallback (Resend / Brevo) — Works on all cloud hosting providers (Render, Vercel, AWS, Railway) on Port 443
+   */
+  async sendViaHttpApi({ to, recipientName, subject, html, text }) {
+    try {
+      const resendKey = process.env.RESEND_API_KEY?.trim();
+      if (resendKey) {
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: process.env.SMTP_FROM || "LyZov Marketplace <onboarding@resend.dev>",
+            to: [to],
+            subject,
+            html,
+            text,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok && data.id) {
+          return { success: true, messageId: data.id, provider: "resend" };
+        }
+      }
+
+      const brevoKey = process.env.BREVO_API_KEY?.trim();
+      if (brevoKey) {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "api-key": brevoKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: "LyZov Marketplace", email: process.env.SMTP_USER || "lyzovindia@gmail.com" },
+            to: [{ email: to, name: recipientName }],
+            subject,
+            htmlContent: html,
+            textContent: text,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok && data.messageId) {
+          return { success: true, messageId: data.messageId, provider: "brevo" };
+        }
+      }
+    } catch (apiErr) {
+      console.error("[EmailService] sendViaHttpApi error:", apiErr.message);
+    }
+    return null;
   }
 
   // ----------------------------------------------------

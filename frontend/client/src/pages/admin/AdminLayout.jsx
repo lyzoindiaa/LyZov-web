@@ -16,6 +16,7 @@ import {
   X,
   Mail,
   UserCheck,
+  Settings,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },
   { label: "Profile & KYC", to: "/seller/profile", icon: UserCheck },
   { label: "Email Logs", to: "/seller/emails", icon: Mail },
+  { label: "Store Settings", to: "/seller/settings", icon: Settings },
 ];
 
 const AdminLayout = () => {
@@ -49,6 +51,7 @@ const AdminLayout = () => {
   else if (currentPath.includes("/orders")) activeTitle = "Orders Management";
   else if (currentPath.includes("/profile")) activeTitle = "Seller Profile & KYC";
   else if (currentPath.includes("/emails")) activeTitle = "Email Communications";
+  else if (currentPath.includes("/settings")) activeTitle = "Store Settings & Maintenance";
 
   // Keyboard navigation: Alt + Left Arrow to go back
   useEffect(() => {
