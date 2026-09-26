@@ -24,25 +24,27 @@ class EmailService {
     try {
       // Configure Gmail SMTP or custom host
       const host = process.env.SMTP_HOST || "smtp.gmail.com";
-      const port = Number(process.env.SMTP_PORT) || 465;
-      const secure = process.env.SMTP_SECURE === "true" || port === 465;
+      const port = Number(process.env.SMTP_PORT) || 587;
+      const secure = process.env.SMTP_SECURE === "true";
 
       this.transporter = nodemailer.createTransport({
-        service: !process.env.SMTP_HOST || process.env.SMTP_HOST.includes("gmail") ? "gmail" : undefined,
-        host: !process.env.SMTP_HOST?.includes("gmail") ? host : undefined,
+        host,
         port,
         secure,
         auth: {
           user,
           pass,
         },
-        connectionTimeout: 8000, // 8s TCP connection timeout
+        tls: {
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 10000, // 10s TCP connection timeout
         greetingTimeout: 5000,   // 5s SMTP greeting timeout
-        socketTimeout: 10000,    // 10s socket inactivity timeout
+        socketTimeout: 15000,    // 15s socket inactivity timeout
         dnsTimeout: 5000,        // 5s DNS resolution timeout
       });
 
-      console.log(`[EmailService] SMTP transporter initialized (${user} via ${host}:${port})`);
+      console.log(`[EmailService] SMTP transporter initialized (${user} via ${host}:${port}, secure=${secure})`);
     } catch (err) {
       console.error("[EmailService] Failed to initialize transporter:", err.message);
       this.transporter = null;
