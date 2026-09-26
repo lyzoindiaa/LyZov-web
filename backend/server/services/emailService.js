@@ -38,10 +38,10 @@ class EmailService {
         tls: {
           rejectUnauthorized: false,
         },
-        connectionTimeout: 10000, // 10s TCP connection timeout
-        greetingTimeout: 5000,   // 5s SMTP greeting timeout
-        socketTimeout: 15000,    // 15s socket inactivity timeout
-        dnsTimeout: 5000,        // 5s DNS resolution timeout
+        connectionTimeout: 20000, // 20s TCP connection timeout
+        greetingTimeout: 10000,   // 10s SMTP greeting timeout
+        socketTimeout: 30000,    // 30s socket inactivity timeout
+        dnsTimeout: 10000,       // 10s DNS resolution timeout
       });
 
       console.log(`[EmailService] SMTP transporter initialized (${user} via ${host}:${port}, secure=${secure})`);
@@ -128,7 +128,7 @@ class EmailService {
         });
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("SMTP server response timed out (8s limit reached)")), 8000)
+          setTimeout(() => reject(new Error("SMTP server response timed out (30s limit reached)")), 30000)
         );
 
         info = await Promise.race([sendPromise, timeoutPromise]);
