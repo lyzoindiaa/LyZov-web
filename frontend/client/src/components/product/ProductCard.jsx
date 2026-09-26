@@ -79,13 +79,13 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      toast.info("Please sign in to add items to your shopping bag");
+      toast.info("Please sign in to add items to your shopping cart");
       navigate("/login", { state: { from: { pathname: `/product/${product.slug || product._id}` } } });
       return;
     }
     if (isOutOfStock) return;
     dispatch(addToCart({ productId: product._id, quantity: 1 }));
-    toast.success(`${product.title || product.name} added to bag!`);
+    toast.success(`${product.title || product.name} added to cart!`);
   };
 
   return (
@@ -244,7 +244,7 @@ const ProductCard = ({ product }) => {
         {!isOutOfStock && (
           <button type="button" onClick={handleQuickAdd} className="quick-add-btn">
             <ShoppingBag size={13} style={{ display: "inline", marginRight: "0.35rem", verticalAlign: "middle" }} />
-            Add to Bag
+            Add to Cart
           </button>
         )}
       </div>

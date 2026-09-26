@@ -150,7 +150,7 @@ const ProductDetailsPage = () => {
 
   const handleAddToCart = (e) => {
     if (!isAuthenticated) {
-      toast.info("Please sign in to add items to your shopping bag");
+      toast.info("Please sign in to add items to your shopping cart");
       navigate("/login", { state: { from: { pathname: `/product/${slug}` } } });
       return;
     }
@@ -163,7 +163,7 @@ const ProductDetailsPage = () => {
       return;
     }
     dispatch(addToCart({ productId: product._id, variantId: selectedVariant?._id, quantity }));
-    toast.success(`${product.title || product.name} added to bag!`);
+    toast.success(`${product.title || product.name} added to cart!`);
 
     // Ripple effect
     const btn = e.currentTarget;
@@ -800,7 +800,7 @@ const ProductDetailsPage = () => {
                     style={{ minWidth: "11rem", flex: 1, padding: "0.9rem 1.5rem", fontSize: "0.9375rem" }}
                   >
                     <ShoppingBag size={18} />
-                    {stock <= 0 ? "Out of Stock" : "Add to Bag"}
+                    {stock <= 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
                   <button
                     type="button"
