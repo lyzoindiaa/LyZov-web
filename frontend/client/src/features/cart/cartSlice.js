@@ -14,10 +14,10 @@ export const fetchCart = createAsyncThunk("cart/fetch", async (_, { rejectWithVa
 export const addToCart = createAsyncThunk("cart/addItem", async (payload, { rejectWithValue }) => {
   try {
     const res = await cartService.addItem(payload);
-    toast.success("Added to bag");
+    toast.success("Added to cart");
     return res.data;
   } catch (err) {
-    const message = err.response?.data?.message || "Could not add item to bag";
+    const message = err.response?.data?.message || "Could not add item to cart";
     toast.error(message);
     return rejectWithValue(message);
   }
@@ -39,7 +39,7 @@ export const updateCartItem = createAsyncThunk(
 export const removeCartItem = createAsyncThunk("cart/removeItem", async (itemId, { rejectWithValue }) => {
   try {
     const res = await cartService.removeItem(itemId);
-    toast.info("Item removed from bag");
+    toast.info("Item removed from cart");
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
