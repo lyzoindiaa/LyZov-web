@@ -13,6 +13,10 @@ const {
   getAllOrders,
   updateOrderStatus,
   sendTrackingEmail,
+  getShipmentPlatforms,
+  previewShipmentEmail,
+  saveOrderShipment,
+  notifyOrderShipment,
   trackOrderPublic,
 } = require("../controllers/orderController");
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -49,6 +53,7 @@ router.post(
 
 // Admin & Seller order listing
 router.get("/", authorize("seller"), getAllOrders);
+router.get("/shipment/platforms", authorize("seller"), getShipmentPlatforms);
 
 router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
@@ -83,5 +88,33 @@ router.put(
 );
 
 router.post("/:id/send-tracking-email", authorize("seller"), sendTrackingEmail);
+router.post("/:id/shipment/preview-email", authorize("seller"), previewShipmentEmail);
+router.put(
+  "/:id/shipment",
+  authorize("seller"),
+  [
+    body("trackingNumber").trim().notEmpty().withMessage("Tracking number is required"),
+    body("shippingPlatform").optional().trim(),
+    body("trackingUrl").optional().trim(),
+    body("markAsShipped").optional().isBoolean(),
+  ],
+  validate,
+  saveOrderShipment
+);
+router.post(
+  "/:id/shipment/notify",
+  authorize("seller"),
+  [
+    body("trackingNumber").trim().notEmpty().withMessage("Tracking number is required"),
+    body("emailBody").trim().notEmpty().withMessage("Email body is required"),
+    body("emailSubject").optional().trim(),
+    body("shippingPlatform").optional().trim(),
+    body("trackingUrl").optional().trim(),
+    body("markAsShipped").optional().isBoolean(),
+    body("sendInAppNotification").optional().isBoolean(),
+  ],
+  validate,
+  notifyOrderShipment
+);
 
 module.exports = router;

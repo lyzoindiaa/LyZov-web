@@ -31,6 +31,12 @@ export const orderService = {
   getAllOrders: (params) => api.get("/orders", { params }).then((res) => res.data),
   updateOrderStatus: (id, payload) => api.put(`/orders/${id}/status`, payload).then((res) => res.data),
   sendTrackingEmail: (id) => api.post(`/orders/${id}/send-tracking-email`).then((res) => res.data),
+  getShipmentPlatforms: () => api.get("/orders/shipment/platforms").then((res) => res.data),
+  previewShipmentEmail: (id, payload) =>
+    api.post(`/orders/${id}/shipment/preview-email`, payload).then((res) => res.data),
+  saveOrderShipment: (id, payload) => api.put(`/orders/${id}/shipment`, payload).then((res) => res.data),
+  notifyOrderShipment: (id, payload) =>
+    api.post(`/orders/${id}/shipment/notify`, payload).then((res) => res.data),
 };
 
 export const addressService = {
