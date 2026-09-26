@@ -1021,6 +1021,18 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
   });
   await order.save();
 
+  const ctx = await loadCustomerContext(order);
+
+  if (sendInAppNotification && order.user) {
+    await Notification.create({
+      user: order.user,
+      title: "Your order has shipped",
+      message: `Order #${order.orderNumber} dispatched via ${platformLabel}. Tracking: ${order.trackingNumber}.`,
+      type: "order",
+      link: `/dashboard/orders/${order._id}`,
+    }).catch(() => {});
+  }
+
   let dispatchResult = null;
   let emailSent = false;
   let emailError = null;
