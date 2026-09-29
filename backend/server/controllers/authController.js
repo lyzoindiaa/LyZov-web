@@ -183,8 +183,9 @@ const googleCallback = async (req, res) => {
 // @access  Public
 const register = asyncHandler(async (req, res) => {
   const { name, email } = req.body;
+  const normalizedEmail = email?.toLowerCase()?.trim();
 
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     throw ApiError.conflict("An account with this email already exists");
   }
@@ -193,7 +194,7 @@ const register = asyncHandler(async (req, res) => {
   // User will set password later in profile settings if desired
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password: crypto.randomBytes(32).toString("hex"),
     authProvider: "local",
     profileComplete: false,
@@ -355,7 +356,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/resend-verification
 // @access  Public / Private
 const resendVerification = asyncHandler(async (req, res) => {
-  const email = req.body.email || req.user?.email;
+  const email = (req.body.email || req.user?.email)?.toLowerCase()?.trim();
   if (!email) {
     throw ApiError.badRequest("Email is required to resend verification");
   }
@@ -385,7 +386,7 @@ const resendVerification = asyncHandler(async (req, res) => {
 // @access  Public
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email?.toLowerCase()?.trim() });
 
   if (!user) {
     return sendSuccess(res, 200, "If that email exists, a reset link has been sent");
