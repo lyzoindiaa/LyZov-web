@@ -140,7 +140,12 @@ app.use("/api/settings", require("./routes/settingsRoutes"));
 app.use("/", seoRoutes);
 
 // ── Serve Frontend ──
-const frontendDist = path.join(__dirname, "../../frontend/client/dist");
+const candidateDirs = [
+  path.join(__dirname, "../../frontend/client/dist"),
+  path.join(process.cwd(), "frontend/client/dist"),
+  path.resolve("frontend/client/dist"),
+];
+const frontendDist = candidateDirs.find((dir) => fs.existsSync(path.join(dir, "index.html"))) || candidateDirs[0];
 const indexHtmlPath = path.join(frontendDist, "index.html");
 
 if (fs.existsSync(indexHtmlPath)) {
