@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "LyZov Gentlemen Fullstack E-Commerce Platform",
   "private": true,
-  "main": "api/index.js",
   "scripts": {
     "install:all": "npm install --prefix backend/server && npm install --include=dev --prefix frontend/client",
     "build:client": "npm run build --prefix frontend/client",
