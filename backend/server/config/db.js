@@ -5,6 +5,11 @@ const connectDB = async (retries = 5, delay = 5000) => {
     throw new Error("MONGO_URI is not configured in the backend environment");
   }
 
+  // Reuse existing connection if already connected
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const conn = await mongoose.connect(process.env.MONGO_URI, {
@@ -30,7 +35,10 @@ const connectDB = async (retries = 5, delay = 5000) => {
         );
       }
       if (attempt === retries) {
-        console.error("All MongoDB connection attempts exhausted. Exiting process.");
+        console.error("All MongoDB connection attempts exhausted.");
+        if (process.env.VERCEL) {
+          throw error;
+        }
         process.exit(1);
       }
       console.log(`Retrying MongoDB connection in ${delay / 1000}s...`);

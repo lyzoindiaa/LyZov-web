@@ -31,7 +31,7 @@ const RegisterPage = () => {
 
   const startGoogleLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL ||
-      (import.meta.env.MODE === "production" ? "https://lyzov.onrender.com/api" : "http://localhost:5000/api");
+      (import.meta.env.MODE === "production" ? "/api" : "http://localhost:5000/api");
     window.location.assign(`${apiUrl}/auth/google`);
   };
 

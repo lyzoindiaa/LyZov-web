@@ -55,6 +55,7 @@ app.use(
                 "https://res.cloudinary.com",
                 "https://staging-express.delhivery.com",
                 "https://track.delhivery.com",
+                "https://*.vercel.app",
               ],
               frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com", "https://accounts.google.com"],
               objectSrc: ["'none'"],
@@ -68,7 +69,18 @@ app.use(
 
 app.use(
   cors({
-    origin: [clientOrigin],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin === clientOrigin ||
+        origin.endsWith(".vercel.app") ||
+        origin === "http://localhost:5173" ||
+        origin === "http://localhost:5000"
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
