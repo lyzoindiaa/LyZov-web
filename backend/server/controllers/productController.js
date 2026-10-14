@@ -45,7 +45,11 @@ const resolveSlugFilters = async (query) => {
 const getProducts = asyncHandler(async (req, res) => {
   const resolvedQuery = await resolveSlugFilters(req.query);
 
-  const baseQuery = Product.find({ isActive: true })
+  delete resolvedQuery.__p;
+  const activeFilter = resolvedQuery.includeInactive === "true" ? {} : { isActive: { $ne: false } };
+  delete resolvedQuery.includeInactive;
+
+  const baseQuery = Product.find(activeFilter)
     .populate("brand", "name slug")
     .populate("category", "name slug level ancestors parent")
     .populate("categoryPath", "name slug level");
@@ -54,7 +58,7 @@ const getProducts = asyncHandler(async (req, res) => {
 
   const products = await features.query;
 
-  const countFeatures = new ApiFeatures(Product.find({ isActive: true }), resolvedQuery).search().filter();
+  const countFeatures = new ApiFeatures(Product.find(activeFilter), resolvedQuery).search().filter();
   const total = await countFeatures.query.clone().countDocuments();
 
   return sendSuccess(res, 200, "Products fetched successfully", products, {
@@ -74,7 +78,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     ? { $or: [{ slug: productIdentifier }, { _id: productIdentifier }] }
     : { slug: productIdentifier };
 
-  let product = await Product.findOne({ ...identifierQuery, isActive: true })
+  let product = await Product.findOne({ ...identifierQuery, isActive: { $ne: false } })
     .populate("brand", "name slug logo")
     .populate("category", "name slug level ancestors parent")
     .populate("categoryPath", "name slug level");
@@ -83,7 +87,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     // Check slugHistory for permanent 301 relocation
     const historicalProduct = await Product.findOne({
       slugHistory: productIdentifier.toLowerCase(),
-      isActive: true,
+      isActive: { $ne: false },
     })
       .populate("brand", "name slug logo")
       .populate("category", "name slug level ancestors parent")
@@ -93,7 +97,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
       const relatedProducts = await Product.find({
         categoryPath: historicalProduct.category,
         _id: { $ne: historicalProduct._id },
-        isActive: true,
+        isActive: { $ne: false },
       })
         .limit(8)
         .select("title slug price discountPrice images ratingsAverage");
@@ -114,7 +118,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
   const relatedProducts = await Product.find({
     $or: [{ categoryPath: categoryId }, { category: categoryId }],
     _id: { $ne: product._id },
-    isActive: true,
+    isActive: { $ne: false },
   })
     .limit(8)
     .select("title slug price discountPrice images ratingsAverage");
@@ -139,7 +143,7 @@ const getProductCollection = asyncHandler(async (req, res) => {
   }
 
   const limit = Number(req.query.limit) || 12;
-  const products = await Product.find({ ...filter, isActive: true })
+  const products = await Product.find({ ...filter, isActive: { $ne: false } })
     .limit(limit)
     .populate("brand", "name slug")
     .populate("category", "name slug");

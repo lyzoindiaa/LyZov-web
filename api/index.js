@@ -40,5 +40,9 @@ module.exports = async (req, res) => {
     console.error("Failed to restore original request URL:", error);
   }
 
+  if (req.query && req.query.__p) {
+    delete req.query.__p;
+  }
+
   return app(req, res);
 };

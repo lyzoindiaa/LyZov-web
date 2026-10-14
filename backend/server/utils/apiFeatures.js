@@ -34,12 +34,22 @@ class ApiFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ["page", "sort", "limit", "fields", "search"];
+    const excludedFields = ["page", "sort", "limit", "fields", "search", "__p", "includeInactive"];
     excludedFields.forEach((field) => delete queryObj[field]);
 
+    // Also remove any parameter starting with __ or utm_ or ref
+    Object.keys(queryObj).forEach((key) => {
+      if (key.startsWith("__") || key.startsWith("utm_") || key === "ref") {
+        delete queryObj[key];
+      }
+    });
+
     if (queryObj.category) {
-      queryObj.categoryPath = queryObj.category;
+      const catId = queryObj.category;
       delete queryObj.category;
+      this.query = this.query.find({
+        $or: [{ categoryPath: catId }, { category: catId }],
+      });
     }
     if (queryObj.brand) queryObj.brand = queryObj.brand;
 
