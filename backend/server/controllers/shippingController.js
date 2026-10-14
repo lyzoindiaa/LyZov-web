@@ -269,6 +269,17 @@ exports.trackOrder = async (req, res) => {
 
 exports.trackingWebhook = async (req, res) => {
   try {
+    const webhookSecret = process.env.DELHIVERY_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const incomingSecret =
+        req.headers["x-delhivery-secret"] ||
+        req.headers["x-webhook-secret"] ||
+        req.query.secret;
+      if (!incomingSecret || incomingSecret !== webhookSecret) {
+        return res.status(401).json({ success: false, message: "Unauthorized webhook" });
+      }
+    }
+
     const payload = req.body || {};
     
     // Extract waybill and raw status from possible Delhivery payload shapes

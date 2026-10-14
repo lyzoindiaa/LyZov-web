@@ -375,7 +375,7 @@ const orderConfirmationTemplate = ({ order, user }) => {
         <td width="50%" valign="top" style="padding-left: 12px;">
           <h4 style="margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: ${textMuted};">Payment Method</h4>
           <p style="margin: 0; font-size: 13px; color: ${textDark}; line-height: 1.5;">
-            ${order.paymentMethod === "cod" ? "Cash on Delivery (COD)" : "Prepaid (Stripe / Card)"}<br />
+            ${order.paymentMethod === "cod" ? "Cash on Delivery (COD)" : "Prepaid (Razorpay / Online)"}<br />
             Status: <span style="color: ${order.isPaid ? "#16A34A" : "#D97706"}; font-weight: 600;">${order.isPaid ? "Paid" : "Pending Payment on Delivery"}</span>
           </p>
         </td>

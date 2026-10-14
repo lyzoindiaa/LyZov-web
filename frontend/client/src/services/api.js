@@ -11,18 +11,101 @@ const api = axios.create({
 });
 
 let accessToken = null;
-let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshPromise = null;
 
-export const setAccessToken = (token) => {
+// Cross-tab synchronization via BroadcastChannel
+let authChannel = null;
+try {
+  if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+    authChannel = new BroadcastChannel("lyzov-auth");
+    authChannel.onmessage = (event) => {
+      const data = event.data;
+      if (!data) return;
+
+      if (data.type === "TOKEN_REFRESHED" && data.token) {
+        setAccessToken(data.token, false);
+      } else if (data.type === "LOGOUT") {
+        setAccessToken(null, false);
+        window.dispatchEvent(new CustomEvent("auth:logout"));
+      }
+    };
+  }
+} catch {
+  // Gracefully degrade if BroadcastChannel is restricted (e.g. sandbox iframe)
+  authChannel = null;
+}
+
+const broadcastAuthEvent = (payload) => {
+  try {
+    if (authChannel) {
+      authChannel.postMessage(payload);
+    }
+  } catch {
+    // Ignore broadcast errors
+  }
+};
+
+export const setAccessToken = (token, shouldBroadcast = true) => {
   accessToken = token;
+  if (shouldBroadcast && token) {
+    broadcastAuthEvent({ type: "TOKEN_REFRESHED", token });
+  } else if (shouldBroadcast && !token) {
+    broadcastAuthEvent({ type: "LOGOUT" });
+  }
 };
 
 export const getAccessToken = () => accessToken;
 
-const onRefreshed = (token) => {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
+/**
+ * Execute the actual refresh HTTP request with credentials.
+ */
+const executeRefreshCall = async () => {
+  try {
+    const { data } = await axios.post(
+      `${API_URL}/auth/refresh`,
+      {},
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    const newToken = data?.data?.accessToken;
+    if (!newToken) {
+      throw new Error("Invalid response from refresh endpoint");
+    }
+
+    setAccessToken(newToken, true);
+    return newToken;
+  } catch (err) {
+    setAccessToken(null, true);
+    window.dispatchEvent(new CustomEvent("auth:logout"));
+    throw err;
+  }
+};
+
+/**
+ * Single-flight token refresh with Web Locks cross-tab deduplication.
+ */
+export const performTokenRefresh = async () => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    // If Web Locks API is available, deduplicate concurrent refresh across tabs
+    if (typeof navigator !== "undefined" && navigator.locks && navigator.locks.request) {
+      return await navigator.locks.request("lyzov_refresh_lock", async () => {
+        return await executeRefreshCall();
+      });
+    }
+
+    return await executeRefreshCall();
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
 };
 
 api.interceptors.request.use((config) => {
@@ -43,30 +126,13 @@ api.interceptors.response.use(
       !originalRequest.url?.includes("/auth/login") &&
       !originalRequest.url?.includes("/auth/refresh")
     ) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          refreshSubscribers.push((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const { data } = await api.post("/auth/refresh");
-        const newToken = data.data.accessToken;
-        setAccessToken(newToken);
-        isRefreshing = false;
-        onRefreshed(newToken);
+        const newToken = await performTokenRefresh();
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        isRefreshing = false;
-        setAccessToken(null);
-        window.dispatchEvent(new CustomEvent("auth:logout"));
         return Promise.reject(refreshError);
       }
     }

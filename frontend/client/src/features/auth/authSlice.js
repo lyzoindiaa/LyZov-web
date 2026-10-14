@@ -31,6 +31,14 @@ export const logoutUser = createAsyncThunk("auth/logout", async () => {
   }
 });
 
+export const logoutAllDevices = createAsyncThunk("auth/logoutAll", async () => {
+  try {
+    await authService.logoutAll();
+  } finally {
+    setAccessToken(null);
+  }
+});
+
 export const fetchCurrentUser = createAsyncThunk("auth/me", async (_, { rejectWithValue }) => {
   try {
     const res = await authService.getMe();
@@ -88,6 +96,13 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
+        state.status = "idle";
+        state.bootstrapped = true;
+      })
+      .addCase(logoutAllDevices.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;

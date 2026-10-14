@@ -43,21 +43,39 @@ app.use(
         ? {
             directives: {
               defaultSrc: ["'self'"],
-              scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com", "https://accounts.google.com"],
+              scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://checkout.razorpay.com",
+                "https://accounts.google.com",
+              ],
               styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
               fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-              imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.stripe.com", "https://lh3.googleusercontent.com"],
+              imgSrc: [
+                "'self'",
+                "data:",
+                "blob:",
+                "https://res.cloudinary.com",
+                "https://*.razorpay.com",
+                "https://lh3.googleusercontent.com",
+              ],
               connectSrc: [
                 "'self'",
                 clientOrigin,
-                "https://api.stripe.com",
+                "https://api.razorpay.com",
+                "https://lumberjack.razorpay.com",
                 "https://accounts.google.com",
                 "https://res.cloudinary.com",
                 "https://staging-express.delhivery.com",
                 "https://track.delhivery.com",
                 "https://*.vercel.app",
               ],
-              frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com", "https://accounts.google.com"],
+              frameSrc: [
+                "'self'",
+                "https://api.razorpay.com",
+                "https://checkout.razorpay.com",
+                "https://accounts.google.com",
+              ],
               objectSrc: ["'none'"],
               upgradeInsecureRequests: [],
             },
@@ -67,19 +85,26 @@ app.use(
   })
 );
 
+const allowedOrigins = [
+  clientOrigin,
+  process.env.CLIENT_URL,
+  "https://lyzov.com",
+  "https://www.lyzov.com",
+  "http://localhost:5173",
+  "http://localhost:5000",
+].filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
       if (
         !origin ||
-        origin === clientOrigin ||
-        origin.endsWith(".vercel.app") ||
-        origin === "http://localhost:5173" ||
-        origin === "http://localhost:5000"
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
       ) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error("Blocked by CORS policy"));
     },
     credentials: true,
   })
@@ -88,6 +113,23 @@ app.use(
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+
+// Razorpay Webhook requires raw bytes to verify HMAC-SHA256 signature
+app.use(
+  "/api/payments/razorpay/webhook",
+  express.raw({ type: "application/json" }),
+  (req, res, next) => {
+    if (Buffer.isBuffer(req.body)) {
+      req.rawBody = req.body.toString("utf8");
+      try {
+        req.body = JSON.parse(req.rawBody);
+      } catch {
+        req.body = {};
+      }
+    }
+    next();
+  }
+);
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
@@ -116,6 +158,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/admin", adminAnalyticsRoutes);
 app.use("/api/seller", adminAnalyticsRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/brands", brandRoutes);

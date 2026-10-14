@@ -7,7 +7,6 @@ const Notification = require("../models/Notification");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
-const stripe = require("../config/stripe");
 const emailService = require("../services/emailService");
 const {
   loadCustomerContext,
@@ -25,6 +24,15 @@ const {
 } = require("../config/shippingPlatforms");
 const Shipment = require("../models/Shipment");
 const delhiveryService = require("../services/delhiveryService");
+const { restoreStockForItems, deductStockForItems } = require("../services/stockService");
+const { refundPayment } = require("../services/paymentService");
+const {
+  buildCheckoutSnapshot,
+  createOrderFromSnapshot,
+  afterOrderPlaced,
+  pickShippingAddress,
+  assertShippingAddress,
+} = require("../services/checkoutService");
 
 const TAX_RATE = Number(process.env.TAX_RATE) || 0; // 0 default for GST-inclusive catalog prices
 const FREE_SHIPPING_THRESHOLD = Number(process.env.FREE_SHIPPING_THRESHOLD) || 999;
@@ -50,285 +58,47 @@ const calculateTotals = (cart) => {
   return { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice };
 };
 
-/**
- * Helper to atomically deduct stock for an array of cart/order items.
- * If any item lacks sufficient stock, all previously deducted items in this batch are rolled back.
- */
-const deductStockForItems = async (items) => {
-  const deducted = [];
 
-  for (const item of items) {
-    const qty = Number(item.quantity);
-    let updatedProduct = null;
 
-    if (item.variantId) {
-      updatedProduct = await Product.findOneAndUpdate(
-        {
-          _id: item.product,
-          isActive: true,
-          "variants._id": item.variantId,
-          "variants.stock": { $gte: qty },
-        },
-        {
-          $inc: {
-            "variants.$.stock": -qty,
-            numSold: qty,
-          },
-        },
-        { new: true }
-      );
-    } else {
-      updatedProduct = await Product.findOneAndUpdate(
-        {
-          _id: item.product,
-          isActive: true,
-          stock: { $gte: qty },
-        },
-        {
-          $inc: {
-            stock: -qty,
-            numSold: qty,
-          },
-        },
-        { new: true }
-      );
-    }
-
-    if (!updatedProduct) {
-      // Rollback all items deducted in this transaction
-      for (const d of deducted) {
-        if (d.variantId) {
-          await Product.findOneAndUpdate(
-            { _id: d.product, "variants._id": d.variantId },
-            {
-              $inc: {
-                "variants.$.stock": d.quantity,
-                numSold: -d.quantity,
-              },
-            }
-          );
-        } else {
-          await Product.findByIdAndUpdate(d.product, {
-            $inc: {
-              stock: d.quantity,
-              numSold: -d.quantity,
-            },
-          });
-        }
-      }
-
-      throw ApiError.badRequest(
-        `Insufficient stock for item "${item.name || "selected product"}". Please update your cart.`
-      );
-    }
-
-    deducted.push({
-      product: item.product,
-      variantId: item.variantId || null,
-      quantity: qty,
-    });
-  }
-
-  return deducted;
-};
-
-/**
- * Helper to restore stock and decrement numSold when an order is cancelled or refunded.
- */
-const restoreStockForItems = async (items) => {
-  if (!items || !items.length) return;
-
-  for (const item of items) {
-    const qty = Number(item.quantity);
-    if (item.variantId) {
-      await Product.findOneAndUpdate(
-        { _id: item.product, "variants._id": item.variantId },
-        {
-          $inc: {
-            "variants.$.stock": qty,
-            numSold: -qty,
-          },
-        }
-      );
-    } else {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: {
-          stock: qty,
-          numSold: -qty,
-        },
-      });
-    }
-  }
-};
-
-// @desc    Create a Stripe payment intent for the current cart
+// @desc    Create a payment intent (deprecated - Stripe removed)
 // @route   POST /api/orders/create-payment-intent
 // @access  Private
 const createPaymentIntent = asyncHandler(async (req, res) => {
-  const cart = await Cart.findOne({ user: req.user._id });
-  if (!cart || cart.items.length === 0) {
-    throw ApiError.badRequest("Your cart is empty");
-  }
-
-  // Stock check before initiating payment flow
-  for (const item of cart.items) {
-    const product = await Product.findById(item.product);
-    if (!product || !product.isActive) {
-      throw ApiError.badRequest(`Product "${item.name}" is no longer available`);
-    }
-
-    let availableStock = product.stock;
-    if (item.variantId) {
-      const variant = product.variants.id(item.variantId);
-      if (!variant) {
-        throw ApiError.badRequest(`Variant for "${item.name}" is no longer available`);
-      }
-      availableStock = variant.stock;
-    }
-
-    if (availableStock < item.quantity) {
-      throw ApiError.badRequest(`Only ${availableStock} item(s) in stock for "${item.name}"`);
-    }
-  }
-
-  const { totalPrice } = calculateTotals(cart);
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(totalPrice * 100),
-    currency: "inr",
-    metadata: { userId: req.user._id.toString() },
-    automatic_payment_methods: { enabled: true },
-  });
-
-  return sendSuccess(res, 200, "Payment intent created", {
-    clientSecret: paymentIntent.client_secret,
-    totalPrice,
-  });
+  throw ApiError.badRequest("Stripe payments are no longer supported. Please use Razorpay via /api/payments/razorpay/order.");
 });
 
-// @desc    Place an order (after successful payment or COD)
+// @desc    Place a Cash on Delivery order
 // @route   POST /api/orders
 // @access  Private
 const createOrder = asyncHandler(async (req, res) => {
-  const { shippingAddress, paymentMethod, paymentIntentId } = req.body;
-
-  const cart = await Cart.findOne({ user: req.user._id });
-  if (!cart || cart.items.length === 0) {
-    throw ApiError.badRequest("Your cart is empty");
-  }
-
-  // Pre-validate Stripe payment if applicable
-  let paymentResult = {};
-  let isPaid = false;
+  const { shippingAddress, paymentMethod } = req.body;
 
   if (paymentMethod === "stripe") {
-    if (!paymentIntentId) throw ApiError.badRequest("Payment intent id is required");
-    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (intent.status !== "succeeded") {
-      throw ApiError.badRequest("Payment has not been completed");
-    }
-    if (intent.metadata?.userId && intent.metadata.userId !== req.user._id.toString()) {
-      throw ApiError.forbidden("Payment intent does not belong to the current authenticated user");
-    }
-    paymentResult = {
-      id: intent.id,
-      status: intent.status,
-      currency: intent.currency,
-      amount: intent.amount / 100,
-      amountReceived: (intent.amount_received || intent.amount) / 100,
-      updateTime: new Date().toISOString(),
-      email: req.user.email,
-    };
-    isPaid = true;
+    throw ApiError.badRequest("Stripe payments are no longer supported. Please use Razorpay or Cash on Delivery.");
   }
 
-  // Server-side coupon verification before placing order
-  if (cart.coupon?.code) {
-    const coupon = await Coupon.findOne({ code: cart.coupon.code.toUpperCase() });
-    if (!coupon || !coupon.isValid()) {
-      cart.coupon = { code: null, discountType: null, discountValue: 0 };
-      await cart.save();
-      throw ApiError.badRequest("The applied coupon is no longer valid or has expired.");
-    }
-    if (coupon.usersUsed.some((u) => u.toString() === req.user._id.toString())) {
-      cart.coupon = { code: null, discountType: null, discountValue: 0 };
-      await cart.save();
-      throw ApiError.badRequest("You have already used this coupon.");
-    }
-    if (cart.subtotal < coupon.minPurchaseAmount) {
-      cart.coupon = { code: null, discountType: null, discountValue: 0 };
-      await cart.save();
-      throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for coupon ${coupon.code}`);
-    }
+  if (paymentMethod !== "cod") {
+    throw ApiError.badRequest("Online payments must be initiated via /api/payments/razorpay/order.");
   }
 
-  // Atomically reserve/deduct stock for all cart items
-  const deductedItems = await deductStockForItems(cart.items);
+  const shipping = pickShippingAddress(shippingAddress);
+  assertShippingAddress(shipping);
 
-  let order;
-  try {
-    const { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice } = calculateTotals(cart);
+  const snapshot = await buildCheckoutSnapshot(req.user);
 
-    order = await Order.create({
-      user: req.user._id,
-      items: cart.items.map((item) => ({
-        product: item.product,
-        variantId: item.variantId || null,
-        name: item.name,
-        image: item.image,
-        price: item.price,
-        color: item.color,
-        size: item.size,
-        quantity: item.quantity,
-      })),
-      shippingAddress,
-      paymentMethod,
-      paymentResult,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      discountAmount,
-      couponCode: cart.coupon?.code || null,
-      totalPrice,
-      isPaid,
-      paidAt: isPaid ? new Date() : undefined,
-      statusHistory: [{ status: "pending", note: "Order placed" }],
-    });
-  } catch (err) {
-    // If order record creation fails, restore deducted stock
-    await restoreStockForItems(deductedItems);
-    throw ApiError.internal("Failed to create order: " + err.message);
-  }
-
-  if (cart.coupon?.code) {
-    await Coupon.findOneAndUpdate(
-      { code: cart.coupon.code },
-      { $inc: { usedCount: 1 }, $push: { usersUsed: req.user._id } }
-    );
-  }
-
-  cart.items = [];
-  cart.coupon = { code: null, discountType: null, discountValue: 0 };
-  await cart.save();
-
-  await Notification.create({
-    user: req.user._id,
-    title: "Order placed successfully",
-    message: `Your order ${order.orderNumber} has been placed and is being processed.`,
-    type: "order",
-    link: `/dashboard/orders/${order._id}`,
+  const order = await createOrderFromSnapshot({
+    user: req.user,
+    snapshot,
+    shippingAddress: shipping,
+    paymentMethod: "cod",
   });
 
-  // Non-blocking luxury email dispatches
-  emailService.sendOrderConfirmation({ order, user: req.user }).catch((err) =>
-    console.error("[EmailService] Order confirmation email error:", err.message)
-  );
-  emailService.sendSellerNewOrder({ order, user: req.user }).catch((err) =>
-    console.error("[EmailService] Seller order alert error:", err.message)
-  );
+  await afterOrderPlaced({ user: req.user, order });
 
-  return sendSuccess(res, 201, "Order placed successfully", order);
+  return sendSuccess(res, 201, "Order placed successfully with Cash on Delivery", order);
 });
+
+
 
 // @desc    Get logged-in user's orders
 // @route   GET /api/orders/my-orders
@@ -375,7 +145,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 // @route   PUT /api/orders/:id/cancel or POST /api/orders/:id/cancel-request
 // @access  Private
 const cancelOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  let order = await Order.findById(req.params.id);
 
   if (!order) throw ApiError.notFound("Order not found");
   
@@ -386,54 +156,80 @@ const cancelOrder = asyncHandler(async (req, res) => {
     throw ApiError.forbidden("You do not have access to this order");
   }
 
-  if (["cancelled", "refunded"].includes(order.orderStatus)) {
-    throw ApiError.badRequest("Order is already cancelled");
-  }
+  // Atomically claim cancellation to prevent concurrent race conditions
+  const claimedOrder = await Order.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      cancellationClaimedAt: null,
+      orderStatus: { $in: ["pending", "processing"] },
+    },
+    { $set: { cancellationClaimedAt: new Date() } },
+    { new: true }
+  );
 
-  if (["shipped", "delivered"].includes(order.orderStatus)) {
+  if (!claimedOrder) {
+    const existing = await Order.findById(req.params.id);
+    if (!existing) throw ApiError.notFound("Order not found");
+    if (existing.cancellationClaimedAt || ["cancelled", "refunded"].includes(existing.orderStatus)) {
+      throw ApiError.badRequest("Order is already cancelled or cancellation is in progress");
+    }
     throw ApiError.badRequest("Cannot cancel an order that has already shipped or delivered");
   }
 
-  // Cancel active shipment record (Delhivery API dispatch paused)
+  order = claimedOrder;
+
+  // Cancel active shipment record
   const shipment = await Shipment.findOne({
     order: order._id,
     status: { $nin: ["Cancelled", "Returned", "RTO"] },
   });
 
   if (shipment) {
-    /*
     if (shipment.waybillNumber) {
       try {
         await delhiveryService.cancelOrder(shipment.waybillNumber);
       } catch (delhiveryErr) {
-        console.error("[Delhivery] Failed to cancel waybill during order cancellation:", delhiveryErr.message);
+        console.error("[Delhivery] Cancellation API call failed:", delhiveryErr.message);
       }
     }
-    */
     shipment.status = "Cancelled";
     await shipment.save();
   }
 
-  // Restore inventory immediately upon cancellation
-  await restoreStockForItems(order.items);
-
   const reason = req.body.reason || (isAdminOrSeller && !isOwner ? "Cancelled by admin" : "Cancelled by customer");
 
-  // Refund if Stripe payment was made
-  if (order.paymentMethod === "stripe" && order.isPaid && order.paymentResult?.id) {
+  // Refund if online payment was made via Razorpay
+  if (order.paymentMethod === "razorpay" && order.isPaid && order.payment?.razorpayPaymentId) {
     try {
-      await stripe.refunds.create({
-        payment_intent: order.paymentResult.id,
+      const refund = await refundPayment({
+        paymentId: order.payment.razorpayPaymentId,
+        amountPaise: order.payment.amount,
+        reason,
+        orderId: order._id,
       });
       order.orderStatus = "refunded";
-      order.statusHistory.push({ status: "refunded", note: `Refund issued via Stripe: ${reason}` });
+      order.paymentStatus = "refunded";
+      if (!order.payment.refunds) order.payment.refunds = [];
+      order.payment.refunds.push({
+        refundId: refund?.id,
+        amount: order.payment.amount,
+        status: refund?.status || "processed",
+      });
+      order.statusHistory.push({ status: "refunded", note: `Refund issued via Razorpay: ${reason}` });
     } catch (err) {
-      throw ApiError.internal("Refund failed: " + err.message);
+      await Order.findByIdAndUpdate(order._id, { $set: { cancellationClaimedAt: null } });
+      throw ApiError.internal("Refund failed: " + (err?.error?.description || err.message));
     }
+  } else if (order.paymentMethod === "stripe" && order.isPaid) {
+    order.orderStatus = "cancelled";
+    order.statusHistory.push({ status: "cancelled", note: `Legacy Stripe order cancelled: ${reason} (Manual refund required if paid)` });
   } else {
     order.orderStatus = "cancelled";
     order.statusHistory.push({ status: "cancelled", note: reason });
   }
+
+  // Restore inventory AFTER refund succeeds
+  await restoreStockForItems(order.items);
 
   order.cancelReason = reason;
   await order.save();
@@ -453,16 +249,30 @@ const cancelOrder = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, "Order cancelled successfully", order);
 });
 
-// @desc    Admin cancel order (triggers Delhivery cancel if waybill exists)
+// @desc    Admin cancel order
 // @route   POST /api/orders/:id/admin-cancel
 // @access  Private/Admin
 const adminCancelOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) throw ApiError.notFound("Order not found");
+  const claimedOrder = await Order.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      cancellationClaimedAt: null,
+      orderStatus: { $in: ["pending", "processing"] },
+    },
+    { $set: { cancellationClaimedAt: new Date() } },
+    { new: true }
+  );
 
-  if (["cancelled", "refunded"].includes(order.orderStatus)) {
-    throw ApiError.badRequest("Order is already cancelled");
+  if (!claimedOrder) {
+    const existing = await Order.findById(req.params.id);
+    if (!existing) throw ApiError.notFound("Order not found");
+    if (existing.cancellationClaimedAt || ["cancelled", "refunded"].includes(existing.orderStatus)) {
+      throw ApiError.badRequest("Order is already cancelled or cancellation is in progress");
+    }
+    throw ApiError.badRequest("Cannot cancel an order that has already shipped or delivered");
   }
+
+  const order = claimedOrder;
 
   const shipment = await Shipment.findOne({
     order: order._id,
@@ -470,37 +280,49 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
   });
 
   if (shipment) {
-    /*
     if (shipment.waybillNumber) {
       try {
         await delhiveryService.cancelOrder(shipment.waybillNumber);
       } catch (delhiveryErr) {
-        console.error("[Delhivery] Failed to cancel waybill during admin order cancellation:", delhiveryErr.message);
+        console.error("[Delhivery] Admin cancellation API call failed:", delhiveryErr.message);
       }
     }
-    */
     shipment.status = "Cancelled";
     await shipment.save();
   }
 
-  await restoreStockForItems(order.items);
-
   const reason = req.body.reason || "Cancelled by admin";
 
-  if (order.paymentMethod === "stripe" && order.isPaid && order.paymentResult?.id) {
+  if (order.paymentMethod === "razorpay" && order.isPaid && order.payment?.razorpayPaymentId) {
     try {
-      await stripe.refunds.create({
-        payment_intent: order.paymentResult.id,
+      const refund = await refundPayment({
+        paymentId: order.payment.razorpayPaymentId,
+        amountPaise: order.payment.amount,
+        reason,
+        orderId: order._id,
       });
       order.orderStatus = "refunded";
-      order.statusHistory.push({ status: "refunded", note: `Refund issued via Stripe: ${reason}` });
+      order.paymentStatus = "refunded";
+      if (!order.payment.refunds) order.payment.refunds = [];
+      order.payment.refunds.push({
+        refundId: refund?.id,
+        amount: order.payment.amount,
+        status: refund?.status || "processed",
+      });
+      order.statusHistory.push({ status: "refunded", note: `Refund issued via Razorpay: ${reason}` });
     } catch (err) {
-      throw ApiError.internal("Refund failed: " + err.message);
+      await Order.findByIdAndUpdate(order._id, { $set: { cancellationClaimedAt: null } });
+      throw ApiError.internal("Refund failed: " + (err?.error?.description || err.message));
     }
+  } else if (order.paymentMethod === "stripe" && order.isPaid) {
+    order.orderStatus = "cancelled";
+    order.statusHistory.push({ status: "cancelled", note: `Legacy Stripe order cancelled: ${reason} (Manual refund required if paid)` });
   } else {
     order.orderStatus = "cancelled";
     order.statusHistory.push({ status: "cancelled", note: reason });
   }
+
+  await restoreStockForItems(order.items);
 
   order.cancelReason = reason;
   await order.save();
@@ -1139,19 +961,22 @@ const trackOrderPublic = asyncHandler(async (req, res) => {
     throw ApiError.notFound("No order found matching the provided order number");
   }
 
-  // Verify phone or email match
+  // Verify phone or email match (exact 10 digits for phone to prevent single-digit guess bypass)
   const customerEmail = (order.user?.email || order.shippingAddress?.email || "").toLowerCase();
-  const customerPhone = (order.shippingAddress?.phone || order.user?.phone || "").replace(/[^0-9]/g, "");
-  const inputPhone = cleanInput.replace(/[^0-9]/g, "");
+  const customerPhoneDigits = (order.shippingAddress?.phone || order.user?.phone || "").replace(/[^0-9]/g, "");
+  const inputPhoneDigits = cleanInput.replace(/[^0-9]/g, "");
 
   const emailMatches = customerEmail && customerEmail === cleanInput;
-  const phoneMatches = inputPhone && customerPhone && (customerPhone.endsWith(inputPhone) || inputPhone.endsWith(customerPhone));
+  const phoneMatches =
+    inputPhoneDigits.length >= 10 &&
+    customerPhoneDigits.length >= 10 &&
+    customerPhoneDigits.slice(-10) === inputPhoneDigits.slice(-10);
 
   if (!emailMatches && !phoneMatches) {
     throw ApiError.badRequest("The phone or email does not match our records for this order number.");
   }
 
-  // Return non-sensitive tracking summary
+  // Return non-sensitive tracking summary (PII like full customer phone omitted)
   return sendSuccess(res, 200, "Order tracking details retrieved", {
     orderNumber: order.orderNumber,
     orderStatus: order.orderStatus,
@@ -1175,7 +1000,6 @@ const trackOrderPublic = asyncHandler(async (req, res) => {
     shippingState: order.shippingAddress?.state,
     shippingPostalCode: order.shippingAddress?.postalCode,
     recipientName: order.shippingAddress?.fullName,
-    customerPhone: order.shippingAddress?.phone,
   });
 });
 

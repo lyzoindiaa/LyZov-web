@@ -48,7 +48,7 @@ export const policiesData = [
         listItems: [
           "Personal Identification Data: Name, email address, contact phone number, and delivery addresses provided during registration or checkout.",
           "Order & Transaction Details: Products purchased, variant selections, order history, timestamps, invoice amounts, and promotional codes applied.",
-          "Payment Information: Payment processing is handled directly by PCI-DSS certified payment gateways (e.g., Stripe, UPI providers). LyZov never stores your full credit card numbers, CVVs, or banking passwords on our servers.",
+          "Payment Information: Payment processing is handled directly by PCI-DSS certified payment gateways (e.g., Razorpay, UPI providers). LyZov never stores your full credit card numbers, CVVs, or banking passwords on our servers.",
           "Device & Technical Logs: IP address, browser type, operating system, device identifiers, referring URLs, and page interaction timestamps gathered automatically for security and diagnostic purposes.",
           "Customer Service Communications: Inquiries, return requests, and messages submitted through our support forms or dashboard concierge.",
         ],

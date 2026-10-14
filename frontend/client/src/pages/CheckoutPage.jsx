@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import {
@@ -17,16 +15,34 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { orderService, addressService } from "../services/cartService";
+import { orderService, addressService, paymentService } from "../services/cartService";
 import { resetCartLocal } from "../features/cart/cartSlice";
 import { formatCurrency } from "../utils/formatters";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import StripePaymentForm from "../components/checkout/StripePaymentForm";
 import { checkPincode } from "../services/shippingService";
 
-const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const existingScript = document.getElementById("razorpay-checkout-script");
+    if (existingScript) {
+      existingScript.onload = () => resolve(true);
+      existingScript.onerror = () => resolve(false);
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const TAX_RATE = 0.08;
 const FREE_SHIPPING_THRESHOLD = 999;
@@ -39,10 +55,7 @@ const CheckoutPage = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cod"); // "cod" | "stripe"
-  const [clientSecret, setClientSecret] = useState(null);
-  const [isLoadingPaymentIntent, setIsLoadingPaymentIntent] = useState(false);
-  const [paymentIntentError, setPaymentIntentError] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cod"); // "cod" | "razorpay"
   const [step, setStep] = useState("address");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [pincodeCheck, setPincodeCheck] = useState("");
@@ -55,6 +68,9 @@ const CheckoutPage = () => {
   } = useForm();
 
   useEffect(() => {
+    // Preload Razorpay checkout script
+    loadRazorpayScript();
+
     if (items.length === 0) {
       navigate("/cart");
       return;
@@ -83,21 +99,6 @@ const CheckoutPage = () => {
     return savedAddresses.find((a) => a._id === selectedAddressId);
   };
 
-  const fetchPaymentIntent = async () => {
-    setIsLoadingPaymentIntent(true);
-    setPaymentIntentError(null);
-    try {
-      const res = await orderService.createPaymentIntent();
-      setClientSecret(res.data.clientSecret);
-    } catch (err) {
-      const msg = err.response?.data?.message || "Could not initialize online payment gateway";
-      setPaymentIntentError(msg);
-      toast.error(msg);
-    } finally {
-      setIsLoadingPaymentIntent(false);
-    }
-  };
-
   const proceedToPayment = async (formData) => {
     let shippingAddress = getShippingAddress();
 
@@ -120,17 +121,10 @@ const CheckoutPage = () => {
     }
 
     setStep("payment");
-
-    if (selectedPaymentMethod === "stripe" && !clientSecret) {
-      fetchPaymentIntent();
-    }
   };
 
   const handleSelectPaymentMethod = (method) => {
     setSelectedPaymentMethod(method);
-    if (method === "stripe" && !clientSecret && !isLoadingPaymentIntent) {
-      fetchPaymentIntent();
-    }
   };
 
   const handlePlaceCodOrder = async () => {
@@ -146,17 +140,12 @@ const CheckoutPage = () => {
       const res = await orderService.createOrder({
         shippingAddress: address,
         paymentMethod: "cod",
-        items,
-        subtotal,
-        discountAmount,
-        taxPrice,
-        shippingPrice,
-        total,
       });
 
       dispatch(resetCartLocal());
       toast.success("Order placed successfully with Cash on Delivery!");
-      navigate(`/dashboard/orders/${res.data._id || res.data.order?._id}`);
+      const orderId = res.data?._id || res.data?.order?._id || res.data?.data?._id || res.data?.id;
+      navigate(`/dashboard/orders/${orderId}`);
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not place COD order");
     } finally {
@@ -164,27 +153,88 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePaymentSuccess = async (paymentIntentId) => {
+  const handlePlaceRazorpayOrder = async () => {
+    const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
+    if (!address) {
+      toast.error("Please select a valid delivery address");
+      setStep("address");
+      return;
+    }
+
     setIsPlacingOrder(true);
     try {
-      const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
-      const res = await orderService.createOrder({
+      const scriptReady = await loadRazorpayScript();
+      if (!scriptReady || !window.Razorpay) {
+        toast.error("Failed to load Razorpay payment gateway. Please check your connection or try COD.");
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const res = await paymentService.createRazorpayOrder({
         shippingAddress: address,
-        paymentMethod: "stripe",
-        paymentIntentId,
-        items,
-        subtotal,
-        discountAmount,
-        taxPrice,
-        shippingPrice,
-        total,
       });
-      dispatch(resetCartLocal());
-      toast.success("Payment confirmed & Order placed successfully!");
-      navigate(`/dashboard/orders/${res.data._id || res.data.order?._id}`);
+
+      const sessionData = res.data || res;
+
+      const options = {
+        key: sessionData.keyId,
+        amount: sessionData.amount,
+        currency: sessionData.currency || "INR",
+        name: "LyZov Gentlemen",
+        description: `Order #${sessionData.razorpayOrderId}`,
+        image: "/lyzov-logo-dark.png",
+        order_id: sessionData.razorpayOrderId,
+        prefill: {
+          name: sessionData.prefill?.name || address.fullName || "",
+          email: sessionData.prefill?.email || "",
+          contact: sessionData.prefill?.contact || address.phone || "",
+        },
+        theme: {
+          color: "#0f172a",
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPlacingOrder(false);
+            toast.info("Payment cancelled. You can retry whenever you are ready.");
+          },
+        },
+        handler: async (response) => {
+          setIsPlacingOrder(true);
+          try {
+            const verifyRes = await paymentService.verifyRazorpayPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            dispatch(resetCartLocal());
+            toast.success("Payment confirmed! Your order has been placed.");
+            const orderId =
+              verifyRes.data?.orderId ||
+              verifyRes.orderId ||
+              verifyRes.data?._id ||
+              verifyRes.data?.order?._id;
+            navigate(orderId ? `/dashboard/orders/${orderId}` : "/dashboard/orders");
+          } catch (err) {
+            toast.error(
+              err.response?.data?.message ||
+                "Payment was received, but order confirmation is taking longer than usual. Please check your orders page."
+            );
+            navigate("/dashboard/orders");
+          } finally {
+            setIsPlacingOrder(false);
+          }
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response) => {
+        setIsPlacingOrder(false);
+        toast.error(response.error?.description || "Payment failed. Please try again or switch to COD.");
+      });
+      rzp.open();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Could not place order");
-    } finally {
+      toast.error(err.response?.data?.message || "Could not initialize Razorpay payment");
       setIsPlacingOrder(false);
     }
   };
@@ -512,17 +562,17 @@ const CheckoutPage = () => {
                   </div>
                 </div>
 
-                {/* Online Payment (Stripe) Option */}
+                {/* Online Payment (Razorpay) Option */}
                 <div
-                  onClick={() => handleSelectPaymentMethod("stripe")}
+                  onClick={() => handleSelectPaymentMethod("razorpay")}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "0.75rem",
                     padding: "1rem",
                     borderRadius: "0.75rem",
-                    border: `1.5px solid ${selectedPaymentMethod === "stripe" ? "var(--accent)" : "var(--border)"}`,
-                    backgroundColor: selectedPaymentMethod === "stripe" ? "var(--accent-bg)" : "var(--surface)",
+                    border: `1.5px solid ${selectedPaymentMethod === "razorpay" ? "var(--accent)" : "var(--border)"}`,
+                    backgroundColor: selectedPaymentMethod === "razorpay" ? "var(--accent-bg)" : "var(--surface)",
                     cursor: "pointer",
                     transition: "all 0.18s",
                   }}
@@ -530,17 +580,17 @@ const CheckoutPage = () => {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    checked={selectedPaymentMethod === "stripe"}
-                    onChange={() => handleSelectPaymentMethod("stripe")}
+                    checked={selectedPaymentMethod === "razorpay"}
+                    onChange={() => handleSelectPaymentMethod("razorpay")}
                     style={{ marginTop: "0.25rem", accentColor: "var(--accent)" }}
                   />
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                       <QrCode size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Pay Online (UPI / Card)</span>
+                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Pay Online (UPI / Card / NetBanking)</span>
                     </div>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.4 }}>
-                      Instant payment via UPI QR, Cards, NetBanking via Stripe gateway.
+                      Instant payment via UPI QR, GPay, PhonePe, Cards, or NetBanking with Razorpay.
                     </p>
                   </div>
                 </div>
@@ -590,40 +640,47 @@ const CheckoutPage = () => {
                     marginBottom: "1.5rem",
                   }}
                 >
-                  {isLoadingPaymentIntent && (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 0", gap: "0.75rem" }}>
-                      <Loader2 className="animate-spin" size={28} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>Initializing secure payment gateway...</span>
-                    </div>
-                  )}
-
-                  {paymentIntentError && !isLoadingPaymentIntent && (
-                    <div style={{ padding: "1rem", borderRadius: "0.5rem", backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: "0.8125rem", marginBottom: "1rem" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-                        <AlertCircle size={16} /> Online Gateway Notice
-                      </div>
-                      <p>{paymentIntentError}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPaymentMethod("cod")}
-                        className="underline font-bold mt-2 inline-block"
-                        style={{ color: "#b91c1c" }}
-                      >
-                        Switch to Cash on Delivery (COD) instead →
-                      </button>
-                    </div>
-                  )}
-
-                  {clientSecret && !isLoadingPaymentIntent && (
-                    <div>
-                      <Elements stripe={stripePromise} options={{ clientSecret }}>
-                        <StripePaymentForm onSuccess={handlePaymentSuccess} isPlacingOrder={isPlacingOrder} />
-                      </Elements>
-                      <p style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "var(--ink-subtle)", textAlign: "center" }}>
-                        🔒 256-bit encrypted Stripe checkout. For simulation in test mode, you can use standard Stripe test cards or enable UPI simulation in Stripe Dashboard.
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem" }}>
+                    <ShieldCheck size={20} style={{ color: "var(--green)", marginTop: "0.15rem", flexShrink: 0 }} />
+                    <div style={{ fontSize: "0.8125rem", color: "var(--ink)" }}>
+                      <p style={{ fontWeight: 700 }}>Razorpay 100% Secure Checkout</p>
+                      <p style={{ color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.5 }}>
+                        Your payment is processed with 256-bit bank-grade encryption. LyZov never stores your card, PIN, or banking passwords.
                       </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
+                        {["UPI / QR", "Google Pay", "PhonePe", "Credit & Debit Cards", "NetBanking (50+ Banks)", "Wallets"].map((method) => (
+                          <span
+                            key={method}
+                            style={{
+                              fontSize: "0.6875rem",
+                              fontWeight: 600,
+                              backgroundColor: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              padding: "0.2rem 0.5rem",
+                              borderRadius: "0.375rem",
+                              color: "var(--ink)",
+                            }}
+                          >
+                            {method}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handlePlaceRazorpayOrder}
+                    isLoading={isPlacingOrder}
+                    disabled={isPlacingOrder}
+                    className="w-full mt-5"
+                    style={{ padding: "0.85rem", fontSize: "0.875rem", fontWeight: 700 }}
+                  >
+                    Pay {formatCurrency(total)} Online via Razorpay
+                  </Button>
+                  <p style={{ marginTop: "0.625rem", fontSize: "0.7rem", color: "var(--ink-subtle)", textAlign: "center" }}>
+                    🔒 Powered by Razorpay &middot; Instant Order Confirmation
+                  </p>
                 </div>
               )}
 

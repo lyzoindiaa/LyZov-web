@@ -17,6 +17,12 @@ export const wishlistService = {
   removeFromWishlist: (productId) => api.delete(`/wishlist/${productId}`).then((res) => res.data),
 };
 
+export const paymentService = {
+  createRazorpayOrder: (payload) => api.post("/payments/razorpay/order", payload).then((res) => res.data),
+  verifyRazorpayPayment: (payload) => api.post("/payments/razorpay/verify", payload).then((res) => res.data),
+  getSessionStatus: (sessionId) => api.get(`/payments/session/${sessionId}/status`).then((res) => res.data),
+};
+
 export const orderService = {
   createPaymentIntent: () => api.post("/orders/create-payment-intent").then((res) => res.data),
   createOrder: (payload) => api.post("/orders", payload).then((res) => res.data),

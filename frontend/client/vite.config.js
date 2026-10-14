@@ -19,7 +19,6 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-redux": ["@reduxjs/toolkit", "react-redux", "redux-persist"],
           "vendor-charts": ["chart.js", "react-chartjs-2"],
-          "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
           "vendor-motion": ["framer-motion"],
         },
       },

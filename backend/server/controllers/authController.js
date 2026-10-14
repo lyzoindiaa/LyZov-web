@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const User = require("../models/User");
+const Session = require("../models/Session");
 const Cart = require("../models/Cart");
 const Wishlist = require("../models/Wishlist");
 const asyncHandler = require("../utils/asyncHandler");
@@ -57,15 +58,15 @@ const isValidGoogleOAuthState = (state) => {
   }
 };
 
-const createSession = async (res, user) => {
+const createSession = async (res, user, req) => {
   const accessToken = generateAccessToken(user._id, user.role);
-  const refreshToken = generateRefreshToken(user._id);
+  const { rawToken } = await Session.createSession({ user, req });
 
-  user.refreshTokens.push({ token: refreshToken });
-  user.refreshTokens = user.refreshTokens.slice(-5);
   user.lastLoginAt = new Date();
   await user.save({ validateBeforeSave: false });
-  setAuthCookies(res, accessToken, refreshToken);
+  setAuthCookies(res, accessToken, rawToken);
+
+  return { accessToken, rawToken };
 };
 
 // @desc    Start Google OAuth authorization-code flow
@@ -165,7 +166,7 @@ const googleCallback = async (req, res) => {
     }
 
     if (!user.isActive) return redirectToLogin("account_deactivated");
-    await createSession(res, user);
+    await createSession(res, user, req);
     
     // Redirect to profile completion if not yet completed
     const redirectPath = user.profileComplete 
@@ -214,13 +215,7 @@ const register = asyncHandler(async (req, res) => {
   await emailService.sendWelcomeVerification({ user, verifyUrl });
 
   // Create session
-  const accessToken = generateAccessToken(user._id, user.role);
-  const refreshToken = generateRefreshToken(user._id);
-
-  user.refreshTokens.push({ token: refreshToken });
-  await user.save({ validateBeforeSave: false });
-
-  setAuthCookies(res, accessToken, refreshToken);
+  const { accessToken } = await createSession(res, user, req);
 
   // Return user info + signal frontend to redirect to complete-profile
   return sendSuccess(res, 201, "Account created successfully", {
@@ -251,20 +246,7 @@ const login = asyncHandler(async (req, res) => {
     throw ApiError.forbidden("Your account has been deactivated. Contact support.");
   }
 
-  const accessToken = generateAccessToken(user._id, user.role);
-  const refreshToken = generateRefreshToken(user._id);
-
-  user.refreshTokens.push({ token: refreshToken });
-  user.lastLoginAt = new Date();
-
-  // keep only last 5 refresh tokens per user
-  if (user.refreshTokens.length > 5) {
-    user.refreshTokens = user.refreshTokens.slice(-5);
-  }
-
-  await user.save({ validateBeforeSave: false });
-
-  setAuthCookies(res, accessToken, refreshToken);
+  const { accessToken } = await createSession(res, user, req);
 
   return sendSuccess(res, 200, "Logged in successfully", {
     user: user.toSafeObject(),
@@ -281,49 +263,70 @@ const refresh = asyncHandler(async (req, res) => {
     throw ApiError.unauthorized("No refresh token provided");
   }
 
-  let decoded;
-  try {
-    decoded = verifyRefreshToken(token);
-  } catch (err) {
-    throw ApiError.unauthorized("Invalid or expired refresh token");
+  const rotated = await Session.rotateSession({ rawToken: token, req });
+  if (!rotated) {
+    clearAuthCookies(res);
+    throw ApiError.unauthorized("Session expired or invalid. Please log in again.");
   }
 
-  const user = await User.findById(decoded.id);
-  if (!user) {
-    throw ApiError.unauthorized("User no longer exists");
+  const { user, newRawToken, isGraceHit } = rotated;
+  const accessToken = generateAccessToken(user._id, user.role);
+
+  if (!isGraceHit && newRawToken) {
+    setAuthCookies(res, accessToken, newRawToken);
+  } else {
+    setAuthCookies(res, accessToken, null);
   }
 
-  const tokenExists = user.refreshTokens.some((rt) => rt.token === token);
-  if (!tokenExists) {
-    // A stale token belongs to this device/session; do not invalidate other devices.
-    throw ApiError.unauthorized("Refresh token invalid. Please log in again.");
-  }
-
-  const newAccessToken = generateAccessToken(user._id, user.role);
-  const newRefreshToken = generateRefreshToken(user._id);
-
-  user.refreshTokens = user.refreshTokens.filter((rt) => rt.token !== token);
-  user.refreshTokens.push({ token: newRefreshToken });
-  await user.save({ validateBeforeSave: false });
-
-  setAuthCookies(res, newAccessToken, newRefreshToken);
-
-  return sendSuccess(res, 200, "Token refreshed", { accessToken: newAccessToken });
+  return sendSuccess(res, 200, "Token refreshed", { accessToken });
 });
 
 // @desc    Logout user
 // @route   POST /api/auth/logout
-// @access  Private
+// @access  Public (clears cookies and revokes session)
 const logout = asyncHandler(async (req, res) => {
   const token = req.cookies?.refreshToken;
 
-  if (token && req.user) {
-    req.user.refreshTokens = req.user.refreshTokens.filter((rt) => rt.token !== token);
-    await req.user.save({ validateBeforeSave: false });
+  if (token) {
+    await Session.revokeSession(token);
   }
 
   clearAuthCookies(res);
   return sendSuccess(res, 200, "Logged out successfully");
+});
+
+// @desc    Logout all sessions for current user
+// @route   POST /api/auth/logout-all
+// @access  Private
+const logoutAll = asyncHandler(async (req, res) => {
+  await Session.revokeAllUserSessions(req.user._id);
+  clearAuthCookies(res);
+  return sendSuccess(res, 200, "Logged out from all devices successfully");
+});
+
+// @desc    Get active sessions for current user
+// @route   GET /api/auth/sessions
+// @access  Private
+const getActiveSessions = asyncHandler(async (req, res) => {
+  const currentToken = req.cookies?.refreshToken;
+  const currentHash = currentToken ? Session.hashToken(currentToken) : null;
+
+  const sessions = await Session.find({
+    user: req.user._id,
+    revokedAt: null,
+    expiresAt: { $gt: new Date() },
+  }).sort("-lastUsedAt");
+
+  const sessionList = sessions.map((s) => ({
+    id: s._id,
+    userAgent: s.userAgent || "Unknown Device",
+    ip: s.ip ? s.ip.replace(/:\d+$/, "") : "Unknown IP",
+    createdAt: s.createdAt,
+    lastUsedAt: s.lastUsedAt,
+    isCurrent: currentHash ? s.tokenHash === currentHash || s.prevTokenHash === currentHash : false,
+  }));
+
+  return sendSuccess(res, 200, "Active sessions fetched", sessionList);
 });
 
 // @desc    Verify email
@@ -430,6 +433,8 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.passwordResetExpires = undefined;
   user.refreshTokens = [];
   await user.save();
+  await Session.revokeAllUserSessions(user._id);
+  clearAuthCookies(res);
 
   // Send confirmation notice
   await emailService.sendPasswordResetSuccess({ user });
@@ -456,4 +461,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getMe,
+  logoutAll,
+  getActiveSessions,
 };

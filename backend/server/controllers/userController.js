@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Session = require("../models/Session");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -265,6 +266,7 @@ const changePassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   user.refreshTokens = [];
   await user.save();
+  await Session.revokeAllUserSessions(user._id);
 
   return sendSuccess(res, 200, "Password changed successfully. Please log in again.");
 });
@@ -312,7 +314,12 @@ const updateUser = asyncHandler(async (req, res) => {
   if (!user) throw ApiError.notFound("User not found");
 
   if (role) user.role = role;
-  if (isActive !== undefined) user.isActive = isActive;
+  if (isActive !== undefined) {
+    user.isActive = isActive;
+    if (isActive === false) {
+      await Session.revokeAllUserSessions(user._id);
+    }
+  }
 
   await user.save({ validateBeforeSave: false });
 
@@ -326,6 +333,7 @@ const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) throw ApiError.notFound("User not found");
 
+  await Session.revokeAllUserSessions(user._id);
   await user.deleteOne();
 
   return sendSuccess(res, 200, "User deleted successfully");

@@ -20,31 +20,50 @@ const verifyRefreshToken = (token) => {
   return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 };
 
-const setAuthCookies = (res, accessToken, refreshToken) => {
-  const isCrossOrigin = process.env.NODE_ENV === "production" ||
+const getCookieOptions = (isRefresh = false) => {
+  const isCrossOrigin =
+    process.env.NODE_ENV === "production" ||
     Boolean(process.env.CLIENT_URL && process.env.CLIENT_URL !== "http://localhost:5173");
   const isSecure = process.env.NODE_ENV === "production" || isCrossOrigin;
   const sameSite = isSecure ? "none" : "lax";
 
-  res.cookie("accessToken", accessToken, {
+  const options = {
     httpOnly: true,
     secure: isSecure,
     sameSite,
-    maxAge: 15 * 60 * 1000, // 15 minutes to match access token lifespan
-  });
+  };
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-    path: "/api/auth/refresh",
-  });
+  if (isRefresh) {
+    options.path = "/api/auth";
+    options.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+  } else {
+    options.path = "/";
+    options.maxAge = 15 * 60 * 1000; // 15 mins
+  }
+
+  return options;
+};
+
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  if (accessToken) {
+    res.cookie("accessToken", accessToken, getCookieOptions(false));
+  }
+  if (refreshToken) {
+    res.cookie("refreshToken", refreshToken, getCookieOptions(true));
+  }
 };
 
 const clearAuthCookies = (res) => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+  const accessOpts = getCookieOptions(false);
+  delete accessOpts.maxAge;
+  res.clearCookie("accessToken", accessOpts);
+
+  const refreshOpts = getCookieOptions(true);
+  delete refreshOpts.maxAge;
+  res.clearCookie("refreshToken", refreshOpts);
+
+  // Clean up legacy refresh cookie path if present
+  res.clearCookie("refreshToken", { ...refreshOpts, path: "/api/auth/refresh" });
 };
 
 module.exports = {

@@ -54,9 +54,33 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["stripe", "cod"],
-      default: "stripe",
+      // "stripe" is LEGACY ONLY (historical orders). New orders can only be "razorpay" or "cod".
+      enum: ["razorpay", "cod", "stripe"],
+      default: "cod",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["cod_pending", "captured", "refund_pending", "refunded", "partially_refunded", "failed"],
+      default: "cod_pending",
+    },
+    payment: {
+      provider: { type: String, default: "" },
+      razorpayOrderId: { type: String },
+      razorpayPaymentId: { type: String },
+      method: { type: String, default: "" },
+      amount: { type: Number, default: 0 }, // paise
+      currency: { type: String, default: "INR" },
+      capturedAt: Date,
+      refunds: [
+        {
+          refundId: String,
+          amount: Number, // paise
+          status: String,
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+    },
+    // Legacy Stripe payload (read-only, kept so historical orders still render).
     paymentResult: {
       id: { type: String },
       status: { type: String },
@@ -66,6 +90,8 @@ const orderSchema = new mongoose.Schema(
       updateTime: { type: String },
       email: { type: String },
     },
+    // Set atomically by the winner of a cancel request so concurrent cancels can't double-restore stock/refund.
+    cancellationClaimedAt: { type: Date, default: null },
     itemsPrice: { type: Number, required: true, default: 0 },
     taxPrice: { type: Number, required: true, default: 0 },
     shippingPrice: { type: Number, required: true, default: 0 },
@@ -154,5 +180,8 @@ orderSchema.pre("validate", function (next) {
 
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });
+// A Razorpay payment/order can back at most one Order (blocks payment replay at the DB level).
+orderSchema.index({ "payment.razorpayPaymentId": 1 }, { unique: true, sparse: true });
+orderSchema.index({ "payment.razorpayOrderId": 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -12,6 +12,8 @@ const {
   forgotPassword,
   resetPassword,
   getMe,
+  logoutAll,
+  getActiveSessions,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 const validate = require("../middleware/validateMiddleware");
@@ -32,12 +34,22 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120, // generous for normal multi-tab app usage
+  message: { success: false, message: "Too many refresh attempts. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 router.post("/register", authLimiter, registerValidator, validate, register);
 router.post("/login", authLimiter, loginValidator, validate, login);
 router.get("/google", googleLogin);
 router.get("/google/callback", googleCallback);
-router.post("/refresh", refresh);
-router.post("/logout", protect, logout);
+router.post("/refresh", refreshLimiter, refresh);
+router.post("/logout", logout);
+router.post("/logout-all", protect, logoutAll);
+router.get("/sessions", protect, getActiveSessions);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", authLimiter, resendVerification);
 router.post("/forgot-password", authLimiter, forgotPasswordValidator, validate, forgotPassword);

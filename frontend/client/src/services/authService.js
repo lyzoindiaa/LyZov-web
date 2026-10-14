@@ -10,4 +10,6 @@ export const authService = {
     api.post(`/auth/reset-password/${token}`, { password }).then((res) => res.data),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`).then((res) => res.data),
   resendVerification: (email) => api.post("/auth/resend-verification", { email }).then((res) => res.data),
+  logoutAll: () => api.post("/auth/logout-all").then((res) => res.data),
+  getSessions: () => api.get("/auth/sessions").then((res) => res.data),
 };

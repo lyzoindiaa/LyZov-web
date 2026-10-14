@@ -45,7 +45,7 @@ router.post(
   requireProfileComplete,
   [
     body("shippingAddress").isObject().withMessage("Shipping address is required"),
-    body("paymentMethod").isIn(["stripe", "cod"]).withMessage("Invalid payment method"),
+    body("paymentMethod").isIn(["cod"]).withMessage("Invalid payment method. Online payments must be made via /api/payments/razorpay"),
   ],
   validate,
   createOrder
