@@ -9,14 +9,20 @@
       "includeFiles": "frontend/client/dist/**"
     }
   },
-  "rewrites": [
+  "headers": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/api",
-      "destination": "/api"
+      "source": "/(index.html)?",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__p=/api/:path*"
     },
     {
       "source": "/((?!assets/|.*\\..*).*)",
