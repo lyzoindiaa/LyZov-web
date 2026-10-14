@@ -21,9 +21,11 @@ module.exports = async (req, res) => {
     console.error("MongoDB serverless connection error:", error);
   }
 
-  // Restore original request URL if rewritten by Vercel
-  const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-matched-path"];
-  if (originalUri) {
+  // Restore original request URL if a proxy rewrote it.
+  // NOTE: do NOT use x-matched-path here: on Vercel it is the rewrite
+  // destination ("/api"), which would wipe out the real path (/api/auth/google).
+  const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-vercel-original-path"];
+  if (originalUri && String(originalUri).startsWith("/api")) {
     req.url = originalUri;
   }
 
