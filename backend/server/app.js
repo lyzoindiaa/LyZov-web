@@ -156,6 +156,11 @@ if (fs.existsSync(indexHtmlPath)) {
       return next();
     }
 
+    // Missing static files (hashed JS/CSS etc.) must 404, not return index.html
+    if (req.path.startsWith("/assets/") || path.extname(req.path)) {
+      return next();
+    }
+
     // Universal prerender for product pages
     if (req.path.startsWith("/product/")) {
       try {
