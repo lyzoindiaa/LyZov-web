@@ -14,17 +14,20 @@ class ApiFeatures {
         .filter(Boolean);
 
       const orConditions = [
-        { $text: { $search: searchPattern } },
+        { title: { $regex: escapedPattern, $options: "i" } },
+        { description: { $regex: escapedPattern, $options: "i" } },
         { lyId: { $regex: escapedPattern, $options: "i" } },
         { hsnNumber: { $regex: escapedPattern, $options: "i" } },
         { gstRate: { $regex: escapedPattern, $options: "i" } },
         { searchKeyword: { $regex: escapedPattern, $options: "i" } },
+        { tags: { $regex: escapedPattern, $options: "i" } },
       ];
 
       keywordParts.forEach((part) => {
         const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        orConditions.push({ title: { $regex: escapedPart, $options: "i" } });
         orConditions.push({ searchKeyword: { $regex: escapedPart, $options: "i" } });
-        orConditions.push({ tags: part.toLowerCase() });
+        orConditions.push({ tags: { $regex: escapedPart, $options: "i" } });
       });
 
       this.query = this.query.find({ $or: orConditions });
@@ -51,29 +54,48 @@ class ApiFeatures {
         $or: [{ categoryPath: catId }, { category: catId }],
       });
     }
-    if (queryObj.brand) queryObj.brand = queryObj.brand;
+
+    if (queryObj.brand) {
+      this.query = this.query.find({ brand: queryObj.brand });
+      delete queryObj.brand;
+    }
 
     if (queryObj.minPrice || queryObj.maxPrice) {
-      queryObj.price = {};
-      if (queryObj.minPrice) {
-        queryObj.price.$gte = Number(queryObj.minPrice);
-        delete queryObj.minPrice;
+      const priceFilter = {};
+      if (queryObj.minPrice !== undefined && queryObj.minPrice !== "") {
+        priceFilter.$gte = Number(queryObj.minPrice);
       }
-      if (queryObj.maxPrice) {
-        queryObj.price.$lte = Number(queryObj.maxPrice);
-        delete queryObj.maxPrice;
+      if (queryObj.maxPrice !== undefined && queryObj.maxPrice !== "") {
+        priceFilter.$lte = Number(queryObj.maxPrice);
+      }
+      delete queryObj.minPrice;
+      delete queryObj.maxPrice;
+      if (Object.keys(priceFilter).length > 0) {
+        this.query = this.query.find({ price: priceFilter });
       }
     }
 
     if (queryObj.minRating) {
-      queryObj.ratingsAverage = { $gte: Number(queryObj.minRating) };
+      const ratingVal = Number(queryObj.minRating);
       delete queryObj.minRating;
+      if (!Number.isNaN(ratingVal)) {
+        this.query = this.query.find({ ratingsAverage: { $gte: ratingVal } });
+      }
     }
 
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // Clean up empty strings or undefined
+    Object.keys(queryObj).forEach((key) => {
+      if (queryObj[key] === undefined || queryObj[key] === "") {
+        delete queryObj[key];
+      }
+    });
 
-    this.query = this.query.find(JSON.parse(queryStr));
+    if (Object.keys(queryObj).length > 0) {
+      let queryStr = JSON.stringify(queryObj);
+      queryStr = queryStr.replace(/(?<!\$)\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+      this.query = this.query.find(JSON.parse(queryStr));
+    }
+
     return this;
   }
 
