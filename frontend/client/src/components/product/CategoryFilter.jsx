@@ -1,90 +1,144 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { categoryService } from "../../services/categoryService";
 
-// Inline SVG icons for each category — no external image dependencies, always loads
+// Inline SVG icons for categories — no external image dependencies, always loads
 const CategoryIcon = ({ id, size = 28, color = "currentColor" }) => {
-  const icons = {
-    "ethnic-wear": (
+  const normId = String(id || "").toLowerCase();
+
+  if (normId.includes("god") || normId.includes("idol") || normId.includes("temple")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L8 6H4l2 5-4 3 4 1 1 7h10l1-7 4-1-4-3 2-5h-4L12 2z"/>
-        <path d="M9 13c0 1.657 1.343 3 3 3s3-1.343 3-3"/>
+        <path d="M12 2L9 8h6l-3-6z" />
+        <path d="M4 21V11l8-4 8 4v10" />
+        <path d="M9 21v-6h6v6" />
+        <circle cx="12" cy="11" r="1.5" />
       </svg>
-    ),
-    "western-dresses": (
+    );
+  }
+
+  if (normId.includes("fitness") || normId.includes("gripper") || normId.includes("gym")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 2h12l-2 6h2l-8 14L2 8h2L2 2"/>
-        <path d="M9.5 8h5"/>
+        <path d="M6 5v14M18 5v14M3 9v6M21 9v6M6 12h12" />
       </svg>
-    ),
-    "menswear": (
+    );
+  }
+
+  if (normId.includes("battery") || normId.includes("light") || normId.includes("diya") || normId.includes("sensor")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 2h10l2 6-3 1v13H8V9L5 8z"/>
-        <path d="M12 2v5M10 4l2-2 2 2"/>
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <circle cx="12" cy="12" r="4" />
       </svg>
-    ),
-    "footwear": (
+    );
+  }
+
+  if (normId.includes("car")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 11l2-8 5 3 4-3 7 2v2c0 0-2 1-3 4-1 3-2 3-5 3H5l-1 4H2"/>
-        <path d="M3 11h16"/>
+        <path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M7 17v2M17 17v2M5 11h14" />
       </svg>
-    ),
-    "home-decor": (
+    );
+  }
+
+  if (normId.includes("showpiece") || normId.includes("figurine") || normId.includes("decor")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
-        <path d="M9 21V12h6v9"/>
+        <path d="M6 3h12l4 6-10 13L2 9l4-6z" />
+        <path d="M11 3L8 9l4 13 4-13-3-6" />
+        <path d="M2 9h20" />
       </svg>
-    ),
-    "beauty": (
+    );
+  }
+
+  if (normId.includes("electronic")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2c-2 4-6 5-6 9a6 6 0 0012 0c0-4-4-5-6-9z"/>
-        <path d="M12 12v9M9 18h6"/>
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <rect x="9" y="9" width="6" height="6" />
+        <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
       </svg>
-    ),
-    "accessories": (
+    );
+  }
+
+  if (normId.includes("men")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-        <path d="M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+        <path d="M7 2h10l2 6-3 1v13H8V9L5 8z" />
+        <path d="M12 2v5M10 4l2-2 2 2" />
       </svg>
-    ),
-    "grocery": (
+    );
+  }
+
+  if (normId.includes("footwear")) {
+    return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-        <path d="M3 6h18"/>
-        <path d="M16 10a4 4 0 01-8 0"/>
+        <path d="M3 11l2-8 5 3 4-3 7 2v2c0 0-2 1-3 4-1 3-2 3-5 3H5l-1 4H2" />
+        <path d="M3 11h16" />
       </svg>
-    ),
-  };
-  return icons[id] || (
+    );
+  }
+
+  // Default accessories icon
+  return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="3"/>
-      <path d="M9 9h6M9 12h6M9 15h4"/>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      <path d="M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
     </svg>
   );
 };
 
-const categories = [
-  { id: "ethnic-wear",      name: "Ethnic Wear" },
-  { id: "western-dresses",  name: "Western Dresses" },
-  { id: "menswear",         name: "Menswear" },
-  { id: "footwear",         name: "Footwear" },
-  { id: "home-decor",       name: "Home Decor" },
-  { id: "beauty",           name: "Beauty" },
-  { id: "accessories",      name: "Accessories" },
-  { id: "grocery",          name: "Grocery" },
+const defaultCategories = [
+  { id: "accessories", name: "Accessories" },
+  { id: "accessories-showpiece-and-figurine-god-idol", name: "God Idol" },
+  { id: "accessories-fitness-accessories", name: "Fitness Accessories" },
+  { id: "electronics-battery-oprated", name: "Battery Operated" },
+  { id: "accessories-showpiece-and-figurine", name: "Showpiece & Figurine" },
+  { id: "accessories-car-accessories", name: "Car Accessories" },
+  { id: "electronics", name: "Electronics" },
+  { id: "men", name: "Men" },
 ];
 
 const CategoryFilter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [categories, setCategories] = useState(defaultCategories);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
+
+  useEffect(() => {
+    categoryService
+      .getCategories()
+      .then((res) => {
+        const raw = res?.data || [];
+        if (raw.length > 0) {
+          // Curate categories to show: show distinct categories that either have depth or are top-level
+          const displayCats = raw.map((c) => ({
+            id: c.slug || c._id,
+            name: c.name,
+            level: c.level || 1,
+          }));
+          // Sort to put subcategories like God Idol and Fitness Accessories up front
+          displayCats.sort((a, b) => (b.level || 1) - (a.level || 1));
+          setCategories(displayCats.slice(0, 8));
+        }
+      })
+      .catch(() => {
+        // Fall back to default store categories
+      });
+  }, []);
 
   const handleCategoryClick = (categoryId) => {
     if (selectedCategory === categoryId) {
       setSelectedCategory("");
-      setSearchParams({});
+      const next = new URLSearchParams(searchParams);
+      next.delete("category");
+      setSearchParams(next);
     } else {
       setSelectedCategory(categoryId);
-      setSearchParams({ category: categoryId });
+      const next = new URLSearchParams(searchParams);
+      next.set("category", categoryId);
+      setSearchParams(next);
     }
   };
 

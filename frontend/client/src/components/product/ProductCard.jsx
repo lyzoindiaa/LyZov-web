@@ -18,7 +18,7 @@ const ProductCard = ({ product }) => {
   const wishlistProducts = useSelector((state) => state.wishlist.products);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-  const isWished = wishlistProducts.some((p) => p._id === product._id);
+  const isWished = Boolean(wishlistProducts?.some?.((p) => (p?._id || p) === product._id));
   const productImages = product.images?.map(img => img.url) || [];
   const currentImage = productImages[currentImageIndex] || "";
   const finalPrice = product.discountPrice > 0 ? product.discountPrice : product.price;

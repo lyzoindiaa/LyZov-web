@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Brand = require("../models/Brand");
@@ -27,13 +28,27 @@ const resolveSlugFilters = async (query) => {
   const resolved = { ...query };
 
   if (resolved.category && !isValidObjectId(resolved.category)) {
-    const categoryDoc = await Category.findOne({ slug: resolved.category.toLowerCase() });
-    resolved.category = categoryDoc ? categoryDoc._id.toString() : "___no_match___";
+    const rawCat = String(resolved.category).trim();
+    const escaped = rawCat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const categoryDoc = await Category.findOne({
+      $or: [
+        { slug: rawCat.toLowerCase() },
+        { name: { $regex: new RegExp(`^${escaped}$`, "i") } },
+      ],
+    });
+    resolved.category = categoryDoc ? categoryDoc._id.toString() : new mongoose.Types.ObjectId().toString();
   }
 
   if (resolved.brand && !isValidObjectId(resolved.brand)) {
-    const brandDoc = await Brand.findOne({ slug: resolved.brand.toLowerCase() });
-    resolved.brand = brandDoc ? brandDoc._id.toString() : "___no_match___";
+    const rawBrand = String(resolved.brand).trim();
+    const escaped = rawBrand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const brandDoc = await Brand.findOne({
+      $or: [
+        { slug: rawBrand.toLowerCase() },
+        { name: { $regex: new RegExp(`^${escaped}$`, "i") } },
+      ],
+    });
+    resolved.brand = brandDoc ? brandDoc._id.toString() : new mongoose.Types.ObjectId().toString();
   }
 
   return resolved;

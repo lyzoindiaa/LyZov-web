@@ -7,16 +7,25 @@ dotenv.config();
 const app = require("../backend/server/app");
 const connectDB = require("../backend/server/config/db");
 
-let isConnecting = false;
+let cachedConn = null;
+
+const ensureDbConnected = async () => {
+  const mongoose = require("mongoose");
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+  if (!cachedConn) {
+    cachedConn = connectDB().catch((err) => {
+      cachedConn = null;
+      throw err;
+    });
+  }
+  return cachedConn;
+};
 
 module.exports = async (req, res) => {
   try {
-    const mongoose = require("mongoose");
-    if (mongoose.connection.readyState !== 1 && !isConnecting) {
-      isConnecting = true;
-      await connectDB();
-      isConnecting = false;
-    }
+    await ensureDbConnected();
   } catch (error) {
     console.error("MongoDB serverless connection error:", error);
   }
@@ -39,6 +48,8 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error("Failed to restore original request URL:", error);
   }
+
+  req.originalUrl = req.url;
 
   if (req.query && req.query.__p) {
     delete req.query.__p;
