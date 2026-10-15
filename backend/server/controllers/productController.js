@@ -61,6 +61,8 @@ const getProducts = asyncHandler(async (req, res) => {
   const resolvedQuery = await resolveSlugFilters(req.query);
 
   delete resolvedQuery.__p;
+  delete resolvedQuery.path;
+  delete resolvedQuery["path*"];
   const activeFilter = resolvedQuery.includeInactive === "true" ? {} : { isActive: { $ne: false } };
   delete resolvedQuery.includeInactive;
 

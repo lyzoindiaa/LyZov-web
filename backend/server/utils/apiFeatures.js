@@ -37,12 +37,22 @@ class ApiFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ["page", "sort", "limit", "fields", "search", "__p", "includeInactive"];
+    const excludedFields = [
+      "page",
+      "sort",
+      "limit",
+      "fields",
+      "search",
+      "__p",
+      "path",
+      "path*",
+      "includeInactive",
+    ];
     excludedFields.forEach((field) => delete queryObj[field]);
 
     // Also remove any parameter starting with __ or utm_ or ref
     Object.keys(queryObj).forEach((key) => {
-      if (key.startsWith("__") || key.startsWith("utm_") || key === "ref") {
+      if (key.startsWith("__") || key.startsWith("utm_") || key === "ref" || key === "_") {
         delete queryObj[key];
       }
     });
@@ -83,9 +93,19 @@ class ApiFeatures {
       }
     }
 
-    // Clean up empty strings or undefined
+    // Only allow known Product schema fields in the generic query object
+    const allowedFilterFields = new Set([
+      "isFeatured",
+      "isNewArrival",
+      "isTrending",
+      "color",
+      "tags",
+    ]);
+
     Object.keys(queryObj).forEach((key) => {
-      if (queryObj[key] === undefined || queryObj[key] === "") {
+      if (!allowedFilterFields.has(key)) {
+        delete queryObj[key];
+      } else if (queryObj[key] === undefined || queryObj[key] === "") {
         delete queryObj[key];
       }
     });

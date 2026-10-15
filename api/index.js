@@ -51,8 +51,10 @@ module.exports = async (req, res) => {
 
   req.originalUrl = req.url;
 
-  if (req.query && req.query.__p) {
+  if (req.query) {
     delete req.query.__p;
+    delete req.query.path;
+    delete req.query["path*"];
   }
 
   return app(req, res);
