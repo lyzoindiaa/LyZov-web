@@ -110,8 +110,12 @@ const createRazorpaySession = async ({ user, shippingAddress }) => {
       notes: { sessionId: session._id.toString(), userId: user._id.toString() },
     });
   } catch (err) {
+    const detail = err?.error?.description || err?.message || err?.error?.code || "";
     console.error("[Razorpay] order create failed:", err?.error || err?.message || err);
-    throw ApiError.internal("Could not start the payment. Please try again.");
+    const message = detail
+      ? `Could not start the payment: ${detail}`
+      : "Could not start the payment. Please try again.";
+    throw ApiError.internal(message);
   }
 
   session.razorpayOrderId = rzpOrder.id;
