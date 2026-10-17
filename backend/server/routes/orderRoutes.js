@@ -19,7 +19,7 @@ const {
   notifyOrderShipment,
   trackOrderPublic,
 } = require("../controllers/orderController");
-const { protect, authorize } = require("../middleware/authMiddleware");
+const { protect, authorize, disallowRoles } = require("../middleware/authMiddleware");
 const { requireProfileComplete } = require("../middleware/profileMiddleware");
 const validate = require("../middleware/validateMiddleware");
 
@@ -38,10 +38,16 @@ router.post(
 
 router.use(protect);
 
-router.post("/create-payment-intent", requireProfileComplete, createPaymentIntent);
+router.post(
+  "/create-payment-intent",
+  disallowRoles("admin", "seller"),
+  requireProfileComplete,
+  createPaymentIntent
+);
 
 router.post(
   "/",
+  disallowRoles("admin", "seller"),
   requireProfileComplete,
   [
     body("shippingAddress").isObject().withMessage("Shipping address is required"),

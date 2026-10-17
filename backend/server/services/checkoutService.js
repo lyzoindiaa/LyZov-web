@@ -83,6 +83,13 @@ const resetCartCoupon = async (cart) => {
  * re-validates stock, product availability and the coupon, and returns a frozen snapshot.
  */
 const buildCheckoutSnapshot = async (user) => {
+  if (user && (user.role === "admin" || user.role === "seller")) {
+    const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    throw ApiError.forbidden(
+      `${roleName} accounts cannot place orders. Please use a customer account.`
+    );
+  }
+
   const cart = await Cart.findOne({ user: user._id });
   if (!cart || cart.items.length === 0) {
     throw ApiError.badRequest("Your cart is empty");

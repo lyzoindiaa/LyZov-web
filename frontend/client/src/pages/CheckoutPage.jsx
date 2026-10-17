@@ -52,6 +52,8 @@ const CheckoutPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items, subtotal, coupon } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
+  const isAdminOrSeller = user?.role === "admin" || user?.role === "seller";
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
@@ -100,6 +102,13 @@ const CheckoutPage = () => {
   };
 
   const proceedToPayment = async (formData) => {
+    if (isAdminOrSeller) {
+      toast.error(
+        `${user?.role === "admin" ? "Admin" : "Seller"} accounts cannot place orders. Please use a customer account.`
+      );
+      return;
+    }
+
     let shippingAddress = getShippingAddress();
 
     if (showNewAddressForm) {
@@ -128,6 +137,13 @@ const CheckoutPage = () => {
   };
 
   const handlePlaceCodOrder = async () => {
+    if (isAdminOrSeller) {
+      toast.error(
+        `${user?.role === "admin" ? "Admin" : "Seller"} accounts cannot place orders. Please use a customer account.`
+      );
+      return;
+    }
+
     const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
     if (!address) {
       toast.error("Please select a valid delivery address");
@@ -154,6 +170,13 @@ const CheckoutPage = () => {
   };
 
   const handlePlaceRazorpayOrder = async () => {
+    if (isAdminOrSeller) {
+      toast.error(
+        `${user?.role === "admin" ? "Admin" : "Seller"} accounts cannot place orders. Please use a customer account.`
+      );
+      return;
+    }
+
     const address = getShippingAddress() || savedAddresses.find((a) => a._id === selectedAddressId);
     if (!address) {
       toast.error("Please select a valid delivery address");
@@ -334,6 +357,31 @@ const CheckoutPage = () => {
         </div>
       </div>
 
+      {isAdminOrSeller && (
+        <div
+          style={{
+            marginBottom: "1.5rem",
+            padding: "1rem 1.25rem",
+            borderRadius: "0.75rem",
+            backgroundColor: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "0.75rem",
+          }}
+        >
+          <AlertCircle size={20} style={{ color: "var(--error)", flexShrink: 0, marginTop: "0.15rem" }} />
+          <div>
+            <h3 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--error)", margin: 0 }}>
+              {user?.role === "admin" ? "Admin" : "Seller"} Account Restriction
+            </h3>
+            <p style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.5 }}>
+              You are currently logged in with an <strong>{user?.role === "admin" ? "Admin" : "Seller"}</strong> account. Admin and seller accounts cannot place customer orders. Please log in with a customer account to purchase.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px]">
         {/* Left Step Form */}
         <div>
@@ -472,7 +520,7 @@ const CheckoutPage = () => {
                         Cancel
                       </button>
                     )}
-                    <button type="submit" className="btn-accent flex-1">
+                    <button type="submit" disabled={isAdminOrSeller} className="btn-accent flex-1">
                       Continue to Payment
                     </button>
                   </div>
@@ -482,6 +530,7 @@ const CheckoutPage = () => {
               {!showNewAddressForm && savedAddresses.length > 0 && (
                 <button
                   type="button"
+                  disabled={isAdminOrSeller}
                   onClick={handleSubmit(proceedToPayment)}
                   className="btn-accent w-full mt-2"
                   style={{ padding: "0.85rem" }}
@@ -623,7 +672,7 @@ const CheckoutPage = () => {
                     type="button"
                     onClick={handlePlaceCodOrder}
                     isLoading={isPlacingOrder}
-                    disabled={isPlacingOrder}
+                    disabled={isPlacingOrder || isAdminOrSeller}
                     className="w-full mt-4"
                     style={{ padding: "0.85rem", fontSize: "0.875rem", fontWeight: 700 }}
                   >
@@ -672,7 +721,7 @@ const CheckoutPage = () => {
                     type="button"
                     onClick={handlePlaceRazorpayOrder}
                     isLoading={isPlacingOrder}
-                    disabled={isPlacingOrder}
+                    disabled={isPlacingOrder || isAdminOrSeller}
                     className="w-full mt-5"
                     style={{ padding: "0.85rem", fontSize: "0.875rem", fontWeight: 700 }}
                   >
