@@ -71,4 +71,20 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { protect, authorize, optionalAuth };
+const disallowRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      throw ApiError.unauthorized("Not authorized. Please log in.");
+    }
+    const userRole = req.user.role;
+    if (roles.includes(userRole)) {
+      const roleName = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+      throw ApiError.forbidden(
+        `${roleName} accounts cannot place orders. Please use a customer account.`
+      );
+    }
+    next();
+  };
+};
+
+module.exports = { protect, authorize, optionalAuth, disallowRoles };

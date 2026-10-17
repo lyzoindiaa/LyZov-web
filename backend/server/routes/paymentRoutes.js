@@ -6,7 +6,7 @@ const {
   getPaymentSessionStatus,
   handleRazorpayWebhook,
 } = require("../controllers/paymentController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, disallowRoles } = require("../middleware/authMiddleware");
 const { requireProfileComplete } = require("../middleware/profileMiddleware");
 const validate = require("../middleware/validateMiddleware");
 
@@ -20,6 +20,7 @@ router.use(protect);
 
 router.post(
   "/razorpay/order",
+  disallowRoles("admin", "seller"),
   requireProfileComplete,
   [body("shippingAddress").isObject().withMessage("Valid shipping address is required")],
   validate,
@@ -28,6 +29,7 @@ router.post(
 
 router.post(
   "/razorpay/verify",
+  disallowRoles("admin", "seller"),
   requireProfileComplete,
   [
     body("razorpay_order_id").trim().notEmpty().withMessage("Razorpay order ID is required"),
