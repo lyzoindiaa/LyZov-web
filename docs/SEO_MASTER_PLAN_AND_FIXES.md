@@ -18,7 +18,7 @@ When searching for LyZov or relevant products on search engines (Google, Bing), 
 4. **Missing Entity & Global Structured Data (JSON-LD)**:
    - The main HTML template lacked Schema.org `Organization`, `WebSite`, and `SitelinksSearchBox` structured data.
 5. **Brand Name Inconsistencies**:
-   - Mixed occurrences of "LyZov Store" instead of unified "LyZov" branding.
+   - Mixed legacy branding instead of unified "LyZov" identity.
 
 ---
 
@@ -36,8 +36,7 @@ When searching for LyZov or relevant products on search engines (Google, Bing), 
   - Inject accessible semantic markup inside `index.html` detailing core categories, brand proposition, and crawlable links.
 - [x] **Search Console Verification Hooks**:
   - Add Google Search Console (`google-site-verification`) tag into `index.html`.
-- [x] **Unified Branding**:
-  - Replace all occurrences of "LyZov Store" with "LyZov".
+- Unified brand identity across all application layers (standardized to "LyZov").
 
 ### Phase 2: On-Page SEO & Category Architecture
 - **Targeted Long-Tail Keywords**:
