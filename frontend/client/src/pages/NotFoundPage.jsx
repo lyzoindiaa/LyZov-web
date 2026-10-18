@@ -7,10 +7,10 @@ const NotFoundPage = () => (
     <span className="font-display text-8xl italic text-gold">404</span>
     <h1 className="font-display text-2xl">Page not found</h1>
     <p className="text-sm text-stone max-w-md leading-relaxed">
-      The page you&apos;re looking for doesn&apos;t exist or may have moved. Head back to LyZov Store to continue shopping.
+      The page you&apos;re looking for doesn&apos;t exist or may have moved. Head back to LyZov to continue shopping.
     </p>
     <Link to="/" className="btn-primary mt-2">
-      Back to LyZov Store
+      Back to LyZov
     </Link>
   </div>
 );

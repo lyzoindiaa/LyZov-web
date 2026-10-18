@@ -149,7 +149,7 @@ const LoginPage = () => {
           >
             Welcome back to
             <br />
-            <span style={{ color: "#F59E0B" }}>LyZov Store.</span>
+            <span style={{ color: "#F59E0B" }}>LyZov.</span>
           </h2>
           <p
             style={{

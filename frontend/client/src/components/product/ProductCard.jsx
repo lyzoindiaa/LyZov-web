@@ -254,7 +254,7 @@ const ProductCard = ({ product }) => {
         <div className="flex flex-col gap-1">
           {/* Brand */}
           <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)" }} className="sm:text-[10px]">
-            {product.brand?.name || "LyZov Store"}
+            {product.brand?.name || "LyZov"}
           </p>
 
           {/* Title */}

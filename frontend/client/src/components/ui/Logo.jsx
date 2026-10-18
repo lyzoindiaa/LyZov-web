@@ -41,7 +41,7 @@ const Logo = ({
   const image = (
     <img
       src={currentSrc}
-      alt="LyZov Store — Premium Lifestyle Shopping"
+      alt="LyZov — Premium Lifestyle Shopping"
       width={Math.round(height * 3.2)}
       height={height}
       className={imgClass}
@@ -59,7 +59,7 @@ const Logo = ({
     <Link
       to={to}
       className={`logo-wrap ${className}`}
-      aria-label="LyZov Store — Go to homepage"
+      aria-label="LyZov — Go to homepage"
       style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}
     >
       {image}

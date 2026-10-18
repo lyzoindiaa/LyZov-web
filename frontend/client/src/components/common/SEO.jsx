@@ -55,7 +55,7 @@ const SEO = ({
   useEffect(() => {
     // 1. Update Document Title
     if (title) {
-      document.title = title.includes("LyZov") ? title : `${title} | LyZov Store`;
+      document.title = title.includes("LyZov") ? title : `${title} | LyZov`;
     }
 
     // 2. Update Standard Meta Description

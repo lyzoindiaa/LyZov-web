@@ -3,7 +3,7 @@ import { settingsService } from "../../services/settingsService";
 
 const DevelopmentBanner = () => {
   const [isDevMode, setIsDevMode] = useState(true);
-  const [message, setMessage] = useState("LyZov Store is currently in development");
+  const [message, setMessage] = useState("LyZov is currently in development");
 
   useEffect(() => {
     let isMounted = true;

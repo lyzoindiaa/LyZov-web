@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Project Name:** LyZov Store - UI/UX Modernization 2024  
+**Project Name:** LyZov - UI/UX Modernization 2024  
 **Goal:** Transform website UI to be modern, engaging, and equally beautiful in both dark and light modes  
 **Timeline:** 6 weeks (phased approach)  
 **Team:** Single developer  

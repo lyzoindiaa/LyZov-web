@@ -26,13 +26,13 @@ module.exports = async (req, res) => {
   try {
     const parsed = new URL(req.url, "http://localhost");
     const originalPath = parsed.searchParams.get("__p");
-    if (originalPath && originalPath.startsWith("/api")) {
+    if (originalPath && originalPath.startsWith("/")) {
       parsed.searchParams.delete("__p");
       const qs = parsed.searchParams.toString();
       req.url = originalPath + (qs ? `?${qs}` : "");
     } else {
       const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-vercel-original-path"];
-      if (originalUri && String(originalUri).startsWith("/api")) {
+      if (originalUri && String(originalUri).startsWith("/")) {
         req.url = originalUri;
       }
     }

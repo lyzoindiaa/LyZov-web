@@ -156,7 +156,7 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
         },
         seller: {
           "@type": "Organization",
-          name: "LyZov Store",
+          name: "LyZov",
         },
       },
       ...(product.ratingsCount > 0

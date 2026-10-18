@@ -113,7 +113,7 @@ const ContactPage = ({ isDashboard = false }) => {
       {!isDashboard && (
         <SEO
           title="Contact Us — LyZov Customer Support"
-          description="Get in touch with the LyZov Store team for order inquiries, support, or partnership opportunities. Fast response guaranteed."
+          description="Get in touch with the LyZov team for order inquiries, support, or partnership opportunities. Fast response guaranteed."
           canonicalUrl={`${window.location.origin}/contact`}
         />
       )}

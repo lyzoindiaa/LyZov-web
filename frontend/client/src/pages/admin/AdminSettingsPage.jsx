@@ -5,7 +5,7 @@ import { settingsService } from "../../services/settingsService";
 import Button from "../../components/ui/Button";
 
 const MESSAGE_PRESETS = [
-  { label: "Default Development", text: "LyZov Store is currently in development" },
+  { label: "Default Development", text: "LyZov is currently in development" },
   { label: "Maintenance Break", text: "Store under maintenance. We'll be back online shortly!" },
   { label: "New Collection Drop", text: "New Collection Dropping Soon! Stay Tuned for updates." },
   { label: "System Upgrade", text: "System upgrade in progress. Order processing will resume in 30 mins." },
@@ -13,7 +13,7 @@ const MESSAGE_PRESETS = [
 
 const AdminSettingsPage = () => {
   const [isDevMode, setIsDevMode] = useState(true);
-  const [messageInput, setMessageInput] = useState("LyZov Store is currently in development");
+  const [messageInput, setMessageInput] = useState("LyZov is currently in development");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -24,7 +24,7 @@ const AdminSettingsPage = () => {
       const res = await settingsService.getSettings();
       if (res?.data) {
         setIsDevMode(res.data.isDevelopmentMode ?? true);
-        setMessageInput(res.data.developmentMessage || "LyZov Store is currently in development");
+        setMessageInput(res.data.developmentMessage || "LyZov is currently in development");
         setLastUpdated(res.data.updatedAt);
       }
     } catch (err) {
@@ -140,7 +140,7 @@ const AdminSettingsPage = () => {
             rows={3}
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            placeholder="e.g. LyZov Store is currently under maintenance..."
+            placeholder="e.g. LyZov is currently under maintenance..."
             className="w-full rounded-xl border border-border bg-[var(--bg-subtle)] p-3.5 text-sm font-medium text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none resize-none"
           />
 
@@ -173,7 +173,7 @@ const AdminSettingsPage = () => {
           {isDevMode ? (
             <div className="overflow-hidden rounded-xl border border-amber-300 bg-[#C5A059] py-2 px-4 text-white text-xs font-bold tracking-wide uppercase shadow-sm">
               <div className="flex items-center justify-between gap-4">
-                <span className="truncate">🚧 {messageInput || "LyZov Store is currently in development"}</span>
+                <span className="truncate">🚧 {messageInput || "LyZov is currently in development"}</span>
                 <span className="shrink-0 text-[10px] opacity-80 uppercase tracking-widest">[Marquee Active]</span>
               </div>
             </div>

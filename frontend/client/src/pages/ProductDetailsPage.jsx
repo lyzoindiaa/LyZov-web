@@ -328,7 +328,7 @@ const ProductDetailsPage = () => {
           },
           seller: {
             "@type": "Organization",
-            name: "LyZov Store",
+            name: "LyZov",
           },
         },
         ...(product.ratingsCount > 0
@@ -659,7 +659,7 @@ const ProductDetailsPage = () => {
                 className="badge badge-accent hover:opacity-80 transition-opacity"
                 style={{ marginBottom: "0.5rem", textDecoration: "none", display: "inline-block" }}
               >
-                {product.brand?.name || "LyZov Store"}
+                {product.brand?.name || "LyZov"}
               </Link>
               <h1
                 style={{

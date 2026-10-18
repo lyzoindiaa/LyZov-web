@@ -76,7 +76,7 @@ const Hero = () => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <span className="hero-badge">
-              <Sparkles size={13} /> Welcome to LyZov Store
+              <Sparkles size={13} /> Welcome to LyZov
             </span>
 
             <h1 className="hero-title">

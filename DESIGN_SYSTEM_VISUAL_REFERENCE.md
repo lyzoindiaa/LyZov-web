@@ -252,11 +252,11 @@ Touch-friendly items
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ L🟡 Categories    Help & Support    My Account          │
-│ LyZov Store                                             │
+│ LyZov                                                   │
 │ Your destination for  [f] [t] [in] [▶️]               │
 │ quality products...                                     │
 │ ──────────────────────────────────────────────────────  │
-│ © 2024 LyZov Store · All rights reserved               │
+│ © 2024 LyZov · All rights reserved                     │
 └──────────────────────────────────────────────────────────┘
 
 Top Border: 2px solid #D97706 (light) / #FBBF24 (dark)

@@ -183,7 +183,7 @@ const RegisterPage = () => {
               Create an account
             </h1>
             <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-              Join LyZov Store — track orders, save favorites, shop smarter
+              Join LyZov — track orders, save favorites, shop smarter
             </p>
           </div>
 

@@ -112,7 +112,7 @@ const ShopPage = () => {
     pageTitle = `Results for "${searchParam}" - Shop`;
   }
 
-  const pageDescription = `Explore ${pageTitle} at LyZov Store. Premium fitness equipment, handcrafted idols, and lifestyle apparel with Pan-India delivery.`;
+  const pageDescription = `Explore ${pageTitle} at LyZov. Premium fitness equipment, handcrafted idols, and lifestyle apparel with Pan-India delivery.`;
 
   return (
     <div className="container-page py-8 lg:py-12">

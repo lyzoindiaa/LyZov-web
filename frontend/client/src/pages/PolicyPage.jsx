@@ -83,7 +83,7 @@ const PolicyPage = () => {
     <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", paddingBottom: "5rem" }}>
       <SEO
         title={`${activePolicy.title} — Official Store Policy | LyZov`}
-        description={`Read the official ${activePolicy.title} for LyZov Store. Learn about terms, conditions, timelines, and customer rights.`}
+        description={`Read the official ${activePolicy.title} for LyZov. Learn about terms, conditions, timelines, and customer rights.`}
         canonicalUrl={`${window.location.origin}/policies/${activePolicy.slug}`}
       />
       {/* ── Policy Header Hero ── */}

@@ -8,7 +8,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     developmentMessage: {
       type: String,
-      default: "LyZov Store is currently in development",
+      default: "LyZov is currently in development",
       trim: true,
     },
     updatedBy: {
@@ -27,7 +27,7 @@ siteSettingsSchema.statics.getSettings = async function () {
   if (!settings) {
     settings = await this.create({
       isDevelopmentMode: true,
-      developmentMessage: "LyZov Store is currently in development",
+      developmentMessage: "LyZov is currently in development",
     });
   }
   return settings;

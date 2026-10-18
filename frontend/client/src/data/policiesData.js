@@ -112,7 +112,7 @@ export const policiesData = [
         callout: {
           title: "LyZov Privacy & Grievance Cell",
           email: "lyzovindia@gmail.com",
-          address: "LyZov Store Headquarters, India",
+          address: "LyZov Headquarters, India",
           sla: "Responses are provided within 48 business hours.",
         },
       },

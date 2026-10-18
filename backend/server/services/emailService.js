@@ -379,7 +379,7 @@ class EmailService {
 
     return this.dispatch({
       to: sellerEmail,
-      recipientName: "LyZov Store Operations",
+      recipientName: "LyZov Operations",
       template: "seller_new_order",
       subject,
       text,

@@ -553,7 +553,7 @@ const Navbar = () => {
               autoFocus
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search products across LyZov Store..."
+              placeholder="Search products across LyZov..."
               style={{ flex: 1, background: "transparent", fontSize: "0.875rem", color: "var(--ink)", outline: "none", border: "none" }}
             />
             {searchTerm && (

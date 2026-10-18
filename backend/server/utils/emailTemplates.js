@@ -96,7 +96,7 @@ const baseEmailWrapper = ({ title, preheader, content, clientUrl }) => {
                 <a href="${url}/contact" style="color: #CBD5E1; font-size: 12px; margin: 0 10px;">Support</a>
               </div>
               <p style="margin: 0; font-size: 11px; color: #475569;">
-                &copy; ${new Date().getFullYear()} LyZov Store. All rights reserved.
+                &copy; ${new Date().getFullYear()} LyZov. All rights reserved.
               </p>
             </td>
           </tr>
@@ -416,7 +416,7 @@ const sellerNewOrderTemplate = ({ order, user }) => {
       New Order Received: #${order.orderNumber}
     </h2>
     <p style="margin: 0 0 20px; font-size: 14px; color: ${textMuted};">
-      A new customer order has been placed on the LyZov Store.
+      A new customer order has been placed on LyZov.
     </p>
 
     <div style="background-color: #F8FAFC; border-radius: 6px; padding: 16px; margin-bottom: 24px; font-size: 13px; line-height: 1.6;">
@@ -729,7 +729,7 @@ const testEmailTemplate = ({ sellerName, serverTimestamp }) => {
   `;
 
   return {
-    subject: "LyZov Store — SMTP Configuration Test",
+    subject: "LyZov — SMTP Configuration Test",
     text: `SMTP configuration test passed for LyZov at ${serverTimestamp || new Date().toISOString()}.`,
     html: baseEmailWrapper({
       title: "SMTP Test — LyZov",

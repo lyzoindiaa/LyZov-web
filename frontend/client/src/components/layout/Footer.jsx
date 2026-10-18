@@ -191,7 +191,7 @@ const Footer = () => {
             color: "var(--ink-subtle)",
           }}
         >
-          <p>© {new Date().getFullYear()} LyZov Store. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} LyZov. All rights reserved.</p>
           <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
             <Link to="/privacy-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Privacy Policy</Link>
             <Link to="/terms-and-conditions" className="nav-link" style={{ fontSize: "0.75rem" }}>Terms & Conditions</Link>

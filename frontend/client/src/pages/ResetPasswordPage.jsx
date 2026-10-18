@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -71,7 +71,7 @@ const ResetPasswordPage = () => {
               Set a New Password
             </h1>
             <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.6 }}>
-              Choose a strong password to keep your LyZov Store account secure.
+              Choose a strong password to keep your LyZov account secure.
             </p>
           </div>
 

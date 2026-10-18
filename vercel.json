@@ -21,6 +21,18 @@
   ],
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/index?__p=/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/index?__p=/robots.txt"
+    },
+    {
+      "source": "/product/:slug*",
+      "destination": "/api/index?__p=/product/:slug*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index?__p=/api/:path*"
     },

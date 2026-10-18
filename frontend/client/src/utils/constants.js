@@ -1,5 +1,5 @@
 /**
- * LyZov Store — Shared App Constants
+ * LyZov — Shared App Constants
  *
  * WHATSAPP_SUPPORT_NUMBER:
  *   Set VITE_WHATSAPP_NUMBER in your .env file (or Render/Vercel env vars)

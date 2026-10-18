@@ -1,4 +1,4 @@
-# 🎨 LyZov Store - UI/UX Modernization Plan
+# 🎨 LyZov - UI/UX Modernization Plan
 
 ## Executive Summary
 Comprehensive modernization of the website UI to be visually stunning, engaging, and optimized for both **Dark Mode** and **Light Mode**. Focus on contemporary design patterns, enhanced visual hierarchy, better contrast, and improved user experience.

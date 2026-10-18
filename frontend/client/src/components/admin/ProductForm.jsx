@@ -1375,7 +1375,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               <div className="bg-slate-50 dark:bg-black/40 p-4 rounded-lg border border-slate-200 dark:border-zinc-800 font-sans max-w-xl">
                 <div className="text-[12px] text-[#202124] dark:text-[#bdc1c6] flex items-center gap-1.5 mb-1">
                   <span className="w-4 h-4 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-[9px] font-bold">L</span>
-                  <span>LyZov Store</span>
+                  <span>LyZov</span>
                   <span className="text-slate-400">›</span>
                   <span className="truncate">product › {formValues.slug || "product-url-slug"}</span>
                 </div>
@@ -1386,7 +1386,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
                   {formValues.metaDescription?.trim() ||
                     (formValues.shortDescription?.trim() || formValues.description?.trim()
                       ? `${(formValues.shortDescription || formValues.description).replace(/<[^>]*>?/gm, "").slice(0, 150)} — Shop genuine products with Pan-India delivery on LyZov.`
-                      : "Shop premium quality products online at LyZov Store. Fast delivery across India and hassle-free support.")}
+                      : "Shop premium quality products online at LyZov. Fast delivery across India and hassle-free support.")}
                 </div>
               </div>
             </div>
