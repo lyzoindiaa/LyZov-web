@@ -15,9 +15,11 @@ import Button from "../components/ui/Button";
 
 const parseGstRate = (rateStr) => {
   if (!rateStr) return 0;
-  if (typeof rateStr === "number") return rateStr / 100;
+  if (typeof rateStr === "number") return rateStr > 1 ? rateStr / 100 : rateStr;
   const match = String(rateStr).match(/\d+(\.\d+)?/);
-  return match ? parseFloat(match[0]) / 100 : 0;
+  if (!match) return 0;
+  const num = parseFloat(match[0]);
+  return num > 1 ? num / 100 : num;
 };
 
 const FREE_SHIPPING_THRESHOLD = 999;
