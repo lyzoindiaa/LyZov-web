@@ -3,9 +3,10 @@ const ApiError = require("../utils/ApiError");
 
 let client = null;
 
-const getKeyId = () => (process.env.RAZORPAY_KEY_ID || "").trim();
-const getKeySecret = () => (process.env.RAZORPAY_KEY_SECRET || "").trim();
-const getWebhookSecret = () => (process.env.RAZORPAY_WEBHOOK_SECRET || "").trim();
+const cleanEnv = (val) => (val || "").trim().replace(/^["']|["']$/g, "").trim();
+const getKeyId = () => cleanEnv(process.env.RAZORPAY_KEY_ID);
+const getKeySecret = () => cleanEnv(process.env.RAZORPAY_KEY_SECRET);
+const getWebhookSecret = () => cleanEnv(process.env.RAZORPAY_WEBHOOK_SECRET);
 
 const isLiveKey = (keyId = getKeyId()) => /^rzp_live_/.test(keyId);
 const isTestKey = (keyId = getKeyId()) => /^rzp_test_/.test(keyId);

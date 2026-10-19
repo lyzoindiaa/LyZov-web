@@ -145,7 +145,7 @@ const ProductDetailsPage = () => {
     product.discountPrice > 0
       ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
       : 0;
-  const isWished = wishlistProducts.some((p) => p._id === product._id);
+  const isWished = Boolean(wishlistProducts?.some?.((p) => (p?._id || p) === product._id));
   const stock = selectedVariant ? selectedVariant.stock : product.stock;
 
   const handleAddToCart = (e) => {
