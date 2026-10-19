@@ -39,12 +39,12 @@ const MiniCart = () => {
               className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5"
             >
               <h3 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)" }}>
-                Your Bag ({items.length})
+                Your Cart ({items.length})
               </h3>
               <button
                 onClick={() => dispatch(closeMiniCart())}
                 className="btn-icon"
-                aria-label="Close bag"
+                aria-label="Close cart"
               >
                 <X size={18} />
               </button>
@@ -66,7 +66,7 @@ const MiniCart = () => {
                 >
                   <ShoppingBag size={24} />
                 </div>
-                <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)" }}>Your bag is currently empty</p>
+                <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)" }}>Your cart is currently empty</p>
                 <Link
                   to="/shop"
                   onClick={() => dispatch(closeMiniCart())}
@@ -169,7 +169,7 @@ const MiniCart = () => {
                     className="btn-accent w-full block text-center"
                     style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
                   >
-                    View Bag & Checkout
+                    Proceed to Checkout
                   </Link>
                 </div>
               </>

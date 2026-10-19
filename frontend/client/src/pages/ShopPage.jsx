@@ -124,7 +124,7 @@ const ShopPage = () => {
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div id="shop-products-grid">
-          <span className="eyebrow">Store Collection</span>
+          <span className="eyebrow">Curated Collection</span>
           <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em", marginTop: "0.25rem" }}>
             {filters.search ? `Results for "${filters.search}"` : "All Products"}
           </h1>

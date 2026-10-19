@@ -14,7 +14,6 @@ export const fetchCart = createAsyncThunk("cart/fetch", async (_, { rejectWithVa
 export const addToCart = createAsyncThunk("cart/addItem", async (payload, { rejectWithValue }) => {
   try {
     const res = await cartService.addItem(payload);
-    toast.success("Added to cart");
     return res.data;
   } catch (err) {
     const message = err.response?.data?.message || "Could not add item to cart";

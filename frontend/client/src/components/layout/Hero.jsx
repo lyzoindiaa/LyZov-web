@@ -85,8 +85,7 @@ const Hero = () => {
             </h1>
 
             <p className="hero-subtitle">
-              From pro-grade workout gear to sacred handcrafted idols and everyday lifestyle picks —
-              LyZov brings you quality you can trust, fair prices, and delivery straight to your door.
+              Discover quality-checked products across fitness, home, spiritual essentials, lifestyle, and more on LyZov. Delivered safely across India with direct pricing.
             </p>
 
             <div className="hero-cta-row">

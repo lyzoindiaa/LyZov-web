@@ -37,10 +37,10 @@ const WhyLyZov = () => (
             marginTop: "0.5rem",
           }}
         >
-          More than a store — a shopping experience you can trust
+          A modern shopping experience you can trust
         </h2>
         <p style={{ fontSize: "0.9375rem", color: "var(--ink-muted)", lineHeight: 1.7, marginTop: "0.75rem" }}>
-          LyZov brings together the best of fitness, spirituality, and lifestyle — so you find exactly what you need, without the guesswork.
+          Discover quality-checked products across fitness, home, spiritual essentials, lifestyle, and more on LyZov. Delivered safely across India with direct pricing.
         </p>
       </div>
 

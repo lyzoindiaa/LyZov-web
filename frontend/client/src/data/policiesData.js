@@ -71,7 +71,7 @@ export const policiesData = [
         id: "cookies-and-tracking",
         heading: "4. Cookies & Tracking Technologies",
         paragraphs: [
-          "LyZov uses essential cookies and local storage tokens to keep you logged in, remember items in your shopping bag, and preserve your theme preferences (Dark / Light mode).",
+          "LyZov uses essential cookies and local storage tokens to keep you logged in, remember items in your shopping cart, and preserve your theme preferences (Dark / Light mode).",
           "We do not use invasive third-party tracking or behavioral profiling scripts. You can configure your browser to reject cookies, although doing so may restrict certain functionalities such as persistent cart storage.",
         ],
       },

@@ -33,10 +33,10 @@ export default {
         },
         // Fallbacks
         ivory:   "#FFFFFF",
-        charcoal:"#111827",
+        charcoal:"#0A0A0A",
         stone:   "#6B7280",
         hairline:"#E5E7EB",
-        "hairline-dark": "#E5E7EB",
+        "hairline-dark": "#202020",
         gold: {
           DEFAULT: "#D97706",
           light:   "#FEF3C7",

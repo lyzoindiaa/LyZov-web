@@ -66,7 +66,7 @@ const CartPage = () => {
           >
             <ShoppingBag size={28} />
           </div>
-          <h2 className="empty-state-title">Sign in to view your bag</h2>
+          <h2 className="empty-state-title">Sign in to view your cart</h2>
           <p className="empty-state-desc">Access your saved items, cart, and exclusive member discounts.</p>
           <Link to="/login" className="btn-primary mt-2">
             Sign In to Continue
@@ -94,7 +94,7 @@ const CartPage = () => {
           >
             <ShoppingBag size={32} />
           </div>
-          <h2 className="empty-state-title">Your shopping bag is empty</h2>
+          <h2 className="empty-state-title">Your shopping cart is empty</h2>
           <p className="empty-state-desc">Explore our latest arrivals and premium curated collections.</p>
           <Link to="/shop" className="btn-accent mt-3">
             Start Shopping Now <ArrowRight size={14} />
@@ -109,7 +109,7 @@ const CartPage = () => {
       <div className="mb-8">
         <span className="eyebrow">Shopping Cart</span>
         <h1 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em", marginTop: "0.25rem" }}>
-          Your Bag ({items.length} {items.length === 1 ? "item" : "items"})
+          Your Cart ({items.length} {items.length === 1 ? "item" : "items"})
         </h1>
       </div>
 
