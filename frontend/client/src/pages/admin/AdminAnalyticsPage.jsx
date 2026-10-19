@@ -11,7 +11,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { IndianRupee, ShoppingBag, Package, Users } from "lucide-react";
+import { IndianRupee, ShoppingBag, Package, Users, Wrench, ExternalLink } from "lucide-react";
 import { adminService } from "../../services/cartService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
@@ -119,6 +119,52 @@ const AdminAnalyticsPage = () => {
       <div>
         <span className="eyebrow">Overview</span>
         <h1 className="mt-1 font-display text-3xl tracking-tightest">Analytics</h1>
+      </div>
+
+      {/* External Seller Tools Quick Banner */}
+      <div
+        className="card-surface p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        style={{
+          borderLeft: "4px solid var(--accent)",
+          background: "linear-gradient(90deg, var(--accent-bg) 0%, var(--surface) 100%)",
+        }}
+      >
+        <div className="flex items-center gap-3.5">
+          <div
+            style={{
+              width: "2.75rem",
+              height: "2.75rem",
+              borderRadius: "0.75rem",
+              backgroundColor: "var(--accent)",
+              color: "#000000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Wrench size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 style={{ fontSize: "0.9375rem", fontWeight: 800, color: "var(--ink)" }}>LyZov Seller Toolkit</h2>
+              <span className="badge badge-accent" style={{ fontSize: "0.625rem", padding: "0.1rem 0.4rem" }}>tools.lyzov.com</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.15rem" }}>
+              Access HSN lookup, GST calculators, and seller productivity tools.
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://tools.lyzov.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-accent flex items-center gap-1.5 shrink-0"
+          style={{ padding: "0.5rem 1rem", fontSize: "0.8125rem", fontWeight: 700 }}
+        >
+          <span>Open tools.lyzov.com</span>
+          <ExternalLink size={14} />
+        </a>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

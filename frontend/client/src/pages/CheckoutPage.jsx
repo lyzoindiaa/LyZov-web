@@ -44,7 +44,13 @@ const loadRazorpayScript = () => {
   });
 };
 
-const TAX_RATE = 0.08;
+const parseGstRate = (rateStr) => {
+  if (!rateStr) return 0;
+  if (typeof rateStr === "number") return rateStr / 100;
+  const match = String(rateStr).match(/\d+(\.\d+)?/);
+  return match ? parseFloat(match[0]) / 100 : 0;
+};
+
 const FREE_SHIPPING_THRESHOLD = 999;
 const FLAT_SHIPPING_RATE = 49;
 
@@ -92,7 +98,14 @@ const CheckoutPage = () => {
         ? coupon.discountValue
         : 0;
   const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
-  const taxPrice = Math.round(discountedSubtotal * TAX_RATE * 100) / 100;
+  const discountFactor = subtotal > 0 ? discountedSubtotal / subtotal : 1;
+  const taxPrice = Math.round(
+    items.reduce((sum, item) => {
+      const rate = parseGstRate(item.gstRate || item.product?.gstRate);
+      const itemTotal = (item.price || 0) * (item.quantity || 1);
+      return sum + itemTotal * discountFactor * rate;
+    }, 0) * 100
+  ) / 100;
   const shippingPrice = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_RATE;
   const total = discountedSubtotal + taxPrice + shippingPrice;
 
@@ -804,7 +817,7 @@ const CheckoutPage = () => {
                 </div>
               )}
               <div className="price-row">
-                <span>Estimated Tax</span>
+                <span>Estimated GST</span>
                 <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(taxPrice)}</span>
               </div>
               <div className="price-row">

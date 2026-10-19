@@ -17,6 +17,7 @@ import {
   Mail,
   UserCheck,
   Settings,
+  Wrench,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -123,8 +124,41 @@ const AdminLayout = () => {
         </div>
 
         {/* Sidebar Footer */}
-        <div style={{ paddingTop: "1rem", marginTop: "1.5rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-          <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-subtle)", marginBottom: "0.25rem", paddingLeft: "0.875rem" }}>
+        <div style={{ paddingTop: "1rem", marginTop: "1.5rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {/* External Seller Tools Card */}
+          <div style={{ padding: "0.75rem", borderRadius: "0.75rem", backgroundColor: "var(--accent-bg)", border: "1px solid var(--accent-light-bg)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+              <span style={{ fontSize: "10px", fontWeight: 800, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Seller Utilities</span>
+              <span style={{ fontSize: "9px", padding: "0.1rem 0.35rem", borderRadius: "9999px", backgroundColor: "var(--accent)", color: "#000", fontWeight: 800 }}>TOOLS</span>
+            </div>
+            <p style={{ fontSize: "11px", color: "var(--ink-muted)", marginBottom: "0.5rem", lineHeight: 1.4 }}>
+              HSN lookup, calculators & seller tools.
+            </p>
+            <a
+              href="https://tools.lyzov.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.35rem",
+                width: "100%",
+                padding: "0.45rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "var(--accent)",
+                color: "#000000",
+                fontSize: "11px",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              <span>tools.lyzov.com</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+
+          <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-subtle)", marginTop: "0.25rem", paddingLeft: "0.875rem" }}>
             Account
           </p>
 
@@ -219,8 +253,27 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          {/* Right: Actions (Theme Toggle, Live Store, User Profile) */}
+          {/* Right: Actions (Theme Toggle, Live Store, Seller Tools, User Profile) */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+            {/* External Seller Tools Link */}
+            <a
+              href="https://tools.lyzov.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-accent hidden md:inline-flex items-center gap-1.5"
+              style={{
+                padding: "0.45rem 0.85rem",
+                fontSize: "0.75rem",
+                borderRadius: "0.625rem",
+                fontWeight: 700,
+              }}
+              title="Open LyZov Seller Tools (tools.lyzov.com)"
+            >
+              <Wrench size={13} />
+              <span>tools.lyzov.com</span>
+              <ExternalLink size={12} />
+            </a>
+
             {/* View Live Store */}
             <Link
               to="/"

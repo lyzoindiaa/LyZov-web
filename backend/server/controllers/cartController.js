@@ -18,6 +18,7 @@ const getOrCreateCart = async (userId) => {
 // @access  Private
 const getCart = asyncHandler(async (req, res) => {
   const cart = await getOrCreateCart(req.user._id);
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
   return sendSuccess(res, 200, "Cart fetched successfully", cart);
 });
 
@@ -74,6 +75,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
       color,
       size,
       quantity: Number(quantity),
+      gstRate: product.gstRate || null,
     });
   }
 
