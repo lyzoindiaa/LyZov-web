@@ -153,7 +153,7 @@ const AdminLayout = () => {
                 textDecoration: "none",
               }}
             >
-              <span>tools.lyzov.com</span>
+              <span>Explore Tools</span>
               <ExternalLink size={12} />
             </a>
           </div>
@@ -168,7 +168,7 @@ const AdminLayout = () => {
             style={{ color: "var(--ink)" }}
           >
             <ExternalLink size={15} />
-            <span>Store Front</span>
+            <span>View Live Website</span>
           </Link>
 
           <button
@@ -270,7 +270,7 @@ const AdminLayout = () => {
               title="Open LyZov Seller Tools (tools.lyzov.com)"
             >
               <Wrench size={13} />
-              <span>tools.lyzov.com</span>
+              <span>Explore Tools</span>
               <ExternalLink size={12} />
             </a>
 
@@ -285,7 +285,7 @@ const AdminLayout = () => {
               }}
             >
               <ExternalLink size={13} />
-              <span>View Store</span>
+              <span>View Live Website</span>
             </Link>
 
             {/* Universal Theme Toggle in Admin */}

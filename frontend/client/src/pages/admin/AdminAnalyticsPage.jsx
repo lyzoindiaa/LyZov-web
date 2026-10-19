@@ -162,7 +162,7 @@ const AdminAnalyticsPage = () => {
           className="btn-accent flex items-center gap-1.5 shrink-0"
           style={{ padding: "0.5rem 1rem", fontSize: "0.8125rem", fontWeight: 700 }}
         >
-          <span>Open tools.lyzov.com</span>
+          <span>Explore Tools</span>
           <ExternalLink size={14} />
         </a>
       </div>
