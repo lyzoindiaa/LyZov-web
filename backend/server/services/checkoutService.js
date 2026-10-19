@@ -65,9 +65,11 @@ const calculateDiscount = (subtotal, coupon) => {
 
 const parseGstRate = (rateStr) => {
   if (!rateStr) return 0;
-  if (typeof rateStr === "number") return rateStr / 100;
+  if (typeof rateStr === "number") return rateStr > 1 ? rateStr / 100 : rateStr;
   const match = String(rateStr).match(/\d+(\.\d+)?/);
-  return match ? parseFloat(match[0]) / 100 : 0;
+  if (!match) return 0;
+  const num = parseFloat(match[0]);
+  return num > 1 ? num / 100 : num;
 };
 
 const calculateTotals = (items = [], coupon = null) => {
@@ -269,12 +271,15 @@ const afterOrderPlaced = async ({ user, order }) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  emailService.sendOrderConfirmation({ order, user }).catch((err) =>
-    console.error("[EmailService] Order confirmation email error:", err.message)
-  );
-  emailService.sendSellerNewOrder({ order, user }).catch((err) =>
-    console.error("[EmailService] Seller order alert error:", err.message)
-  );
+  // Await email dispatch via Promise.allSettled so serverless runtimes (Vercel) do not freeze before sockets finish
+  await Promise.allSettled([
+    emailService.sendOrderConfirmation({ order, user }).catch((err) =>
+      console.error("[EmailService] Order confirmation email error:", err.message)
+    ),
+    emailService.sendSellerNewOrder({ order, user }).catch((err) =>
+      console.error("[EmailService] Seller order alert error:", err.message)
+    ),
+  ]);
 };
 
 module.exports = {

@@ -242,7 +242,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  emailCustomerOrderCancelled(order, order.cancelReason).catch((err) =>
+  await emailCustomerOrderCancelled(order, order.cancelReason).catch((err) =>
     console.error("[EmailService] Order cancellation email error:", err.message)
   );
 
@@ -335,7 +335,7 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  emailCustomerOrderCancelled(order, reason).catch((err) =>
+  await emailCustomerOrderCancelled(order, reason).catch((err) =>
     console.error("[EmailService] Admin cancellation email error:", err.message)
   );
 
@@ -476,7 +476,7 @@ const approveReturn = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  emailCustomerOrderStatusUpdate(order, {
+  await emailCustomerOrderStatusUpdate(order, {
     newStatus: order.orderStatus,
     note: `Return approved. Courier reverse pickup AWB: ${waybillNumber}`,
   }).catch((err) => console.error("[EmailService] Return approval email error:", err.message));
@@ -565,13 +565,15 @@ const processExchange = asyncHandler(async (req, res) => {
     link: `/dashboard/orders/${replacementOrder._id}`,
   }).catch(() => {});
 
-  emailCustomerOrderConfirmation(replacementOrder).catch((err) =>
-    console.error("[EmailService] Replacement order confirmation email error:", err.message)
-  );
-  emailCustomerOrderStatusUpdate(order, {
-    newStatus: order.orderStatus,
-    note: `Exchange processed. Replacement order ${replacementOrder.orderNumber} is being prepared.`,
-  }).catch((err) => console.error("[EmailService] Exchange processed email error:", err.message));
+  await Promise.allSettled([
+    emailCustomerOrderConfirmation(replacementOrder).catch((err) =>
+      console.error("[EmailService] Replacement order confirmation email error:", err.message)
+    ),
+    emailCustomerOrderStatusUpdate(order, {
+      newStatus: order.orderStatus,
+      note: `Exchange processed. Replacement order ${replacementOrder.orderNumber} is being prepared.`,
+    }).catch((err) => console.error("[EmailService] Exchange processed email error:", err.message)),
+  ]);
 
   return sendSuccess(res, 200, "Exchange processed and replacement order created", {
     originalOrder: order,
@@ -698,11 +700,11 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     const emailNote = note || "";
 
     if (["cancelled", "refunded"].includes(statusToSend)) {
-      emailCustomerOrderCancelled(order, emailNote || order.cancelReason || statusToSend).catch((err) =>
+      await emailCustomerOrderCancelled(order, emailNote || order.cancelReason || statusToSend).catch((err) =>
         console.error("[EmailService] Order cancellation email error:", err.message)
       );
     } else {
-      emailCustomerOrderStatusUpdate(order, {
+      await emailCustomerOrderStatusUpdate(order, {
         newStatus: statusToSend,
         note: emailNote,
         trackingNumber: finalTracking,

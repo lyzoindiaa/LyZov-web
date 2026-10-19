@@ -22,10 +22,10 @@ class EmailService {
     }
 
     try {
-      // Configure Gmail SMTP or custom host
+      // Configure Gmail SMTP or custom host (Port 465 SSL direct is fastest & unblocked on cloud)
       const host = process.env.SMTP_HOST || "smtp.gmail.com";
-      const port = Number(process.env.SMTP_PORT) || 587;
-      const secure = process.env.SMTP_SECURE === "true";
+      const port = Number(process.env.SMTP_PORT) || 465;
+      const secure = process.env.SMTP_SECURE !== undefined ? process.env.SMTP_SECURE === "true" : port === 465;
 
       this.transporter = nodemailer.createTransport({
         host,

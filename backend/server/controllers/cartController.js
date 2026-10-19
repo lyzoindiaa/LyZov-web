@@ -19,6 +19,16 @@ const getOrCreateCart = async (userId) => {
 const getCart = asyncHandler(async (req, res) => {
   const cart = await getOrCreateCart(req.user._id);
   await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
+  let needsSave = false;
+  for (const item of cart.items) {
+    if (!item.gstRate && item.product && item.product.gstRate) {
+      item.gstRate = item.product.gstRate;
+      needsSave = true;
+    }
+  }
+  if (needsSave) {
+    await cart.save();
+  }
   return sendSuccess(res, 200, "Cart fetched successfully", cart);
 });
 
@@ -65,6 +75,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
 
   if (existingItem) {
     existingItem.quantity = requestedTotalQty;
+    if (product.gstRate) existingItem.gstRate = product.gstRate;
   } else {
     cart.items.push({
       product: product._id,
@@ -80,6 +91,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
 
   return sendSuccess(res, 200, "Item added to cart", cart);
 });
@@ -122,7 +134,11 @@ const updateCartItem = asyncHandler(async (req, res) => {
   }
 
   item.quantity = newQty;
+  if (product.gstRate) {
+    item.gstRate = product.gstRate;
+  }
   await cart.save();
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
 
   return sendSuccess(res, 200, "Cart item updated", cart);
 });
@@ -140,6 +156,7 @@ const removeCartItem = asyncHandler(async (req, res) => {
 
   cart.items.pull(req.params.itemId);
   await cart.save();
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
 
   return sendSuccess(res, 200, "Item removed from cart", cart);
 });
@@ -184,6 +201,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   };
 
   await cart.save();
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
 
   return sendSuccess(res, 200, "Coupon applied successfully", cart);
 });
@@ -195,6 +213,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
   const cart = await getOrCreateCart(req.user._id);
   cart.coupon = { code: null, discountType: null, discountValue: 0 };
   await cart.save();
+  await cart.populate("items.product", "gstRate price discountPrice title stock isActive");
 
   return sendSuccess(res, 200, "Coupon removed", cart);
 });

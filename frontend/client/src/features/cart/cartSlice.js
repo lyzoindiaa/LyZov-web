@@ -92,10 +92,34 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     const applyCartData = (state, action) => {
-      state.items = action.payload.items || [];
-      state.coupon = action.payload.coupon || { code: null, discountType: null, discountValue: 0 };
-      state.subtotal = action.payload.subtotal || 0;
-      state.totalItems = action.payload.totalItems || 0;
+      const incomingItems = action.payload?.items || [];
+      const prevItems = state.items || [];
+      state.items = incomingItems.map((newItem) => {
+        const existing = prevItems.find(
+          (oldItem) => String(oldItem._id) === String(newItem._id)
+        );
+        const resolvedGstRate =
+          newItem.gstRate ||
+          (typeof newItem.product === "object" && newItem.product !== null ? newItem.product?.gstRate : null) ||
+          existing?.gstRate ||
+          (typeof existing?.product === "object" && existing?.product !== null ? existing?.product?.gstRate : null) ||
+          null;
+        const resolvedProduct =
+          typeof newItem.product === "object" && newItem.product !== null
+            ? newItem.product
+            : typeof existing?.product === "object" && existing?.product !== null
+            ? existing.product
+            : newItem.product;
+
+        return {
+          ...newItem,
+          gstRate: resolvedGstRate,
+          product: resolvedProduct,
+        };
+      });
+      state.coupon = action.payload?.coupon || { code: null, discountType: null, discountValue: 0 };
+      state.subtotal = action.payload?.subtotal || 0;
+      state.totalItems = action.payload?.totalItems || 0;
       state.status = "succeeded";
     };
 
