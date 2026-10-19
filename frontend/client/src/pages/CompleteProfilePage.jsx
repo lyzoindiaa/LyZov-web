@@ -104,7 +104,7 @@ const CompleteProfilePage = () => {
                     style={{ padding: "0.45rem 1rem", borderRadius: "9999px", border: "none", cursor: "pointer", backgroundColor: "var(--surface)", color: "var(--ink)" }}
                 >
                     <ArrowLeft size={14} />
-                    <span>Back to Store</span>
+                    <span>Back to Home</span>
                 </button>
                 <ThemeToggle size={16} />
             </div>

@@ -135,8 +135,8 @@ const LandingPage = () => {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       <SEO
-        title="LyZov — Premium Fitness, Spiritual & Lifestyle Shopping"
-        description="Shop at LyZov for premium gym equipment, handcrafted God idols, and lifestyle essentials. Curated quality, Pan-India delivery, and hassle-free support."
+        title="LyZov — India's Trusted Online Shopping Platform"
+        description="Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery."
         canonicalUrl={window.location.origin}
       />
       {/* ── Top Hero Banner (Shown on default home view) ── */}

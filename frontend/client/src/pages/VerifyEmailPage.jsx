@@ -95,7 +95,7 @@ const VerifyEmailPage = () => {
           style={{ padding: "0.45rem 0.95rem", borderRadius: "9999px" }}
         >
           <ArrowLeft size={14} />
-          <span>Return to Store</span>
+          <span>Return to Home</span>
         </Link>
         <ThemeToggle size={16} />
       </div>

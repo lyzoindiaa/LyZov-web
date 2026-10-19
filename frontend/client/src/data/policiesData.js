@@ -35,7 +35,7 @@ export const policiesData = [
         id: "introduction",
         heading: "1. Introduction & Scope",
         paragraphs: [
-          "Welcome to LyZov ('LyZov', 'we', 'us', or 'our'). This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you visit our website, use our mobile or desktop interfaces, and purchase our premium workout equipment, spiritual idols, and lifestyle accessories.",
+          "Welcome to LyZov ('LyZov', 'we', 'us', or 'our'). This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you visit our website, use our mobile or desktop interfaces, and purchase our curated products.",
           "By accessing or using our services, you consent to the collection and use of information in accordance with this policy. If you do not agree with any part of this policy, please refrain from using our services.",
         ],
       },
@@ -71,7 +71,7 @@ export const policiesData = [
         id: "cookies-and-tracking",
         heading: "4. Cookies & Tracking Technologies",
         paragraphs: [
-          "LyZov uses essential cookies and local storage tokens to keep you logged in, remember items in your shopping bag, and preserve your theme preferences (Dark / Light mode).",
+          "LyZov uses essential cookies and local storage tokens to keep you logged in, remember items in your shopping cart, and preserve your theme preferences (Dark / Light mode).",
           "We do not use invasive third-party tracking or behavioral profiling scripts. You can configure your browser to reject cookies, although doing so may restrict certain functionalities such as persistent cart storage.",
         ],
       },
@@ -158,14 +158,14 @@ export const policiesData = [
         heading: "2. User Eligibility & Account Responsibilities",
         paragraphs: [
           "To purchase items on LyZov, you must be at least 18 years of age or possess legal parental/guardian consent. When registering an account, you agree to provide truthful, accurate, and complete information.",
-          "You are solely responsible for maintaining the confidentiality of your account credentials and password. Any actions executed through your account remain your responsibility. If you suspect unauthorized access, notify us immediately at lyzovindia@gmail.comlyzov.com.",
+          "You are solely responsible for maintaining the confidentiality of your account credentials and password. Any actions executed through your account remain your responsibility. If you suspect unauthorized access, notify us immediately at lyzovindia@gmail.com.",
         ],
       },
       {
         id: "products-and-pricing",
         heading: "3. Product Descriptions & Pricing",
         paragraphs: [
-          "We take utmost care to present product dimensions, materials, colors, and craftsmanship as accurately as possible. However, due to individual display monitor settings and natural material variations in handcrafted idols and gym gear, subtle variances may occur.",
+          "We take utmost care to present product dimensions, materials, colors, and craftsmanship as accurately as possible. However, due to individual display monitor settings and natural material variations across items, subtle variances may occur.",
           "All prices are quoted in Indian Rupees (INR) and are inclusive of GST unless explicitly stated otherwise. We reserve the right to correct typographical pricing errors. In the event an item is erroneously listed at an incorrect price, we will notify you before processing or issue a full cancellation and refund.",
         ],
       },
@@ -265,7 +265,7 @@ export const policiesData = [
         listItems: [
           "Item must be in unused, unwashed, and original condition with brand tags intact.",
           "Original packaging, protective bubble wraps, boxes, manuals, and accessories must be included.",
-          "For spiritual idols & murtis, items must not have been consecrated, washed, or altered in rituals.",
+          "Items must not have been used, washed, installed, or altered from their original received condition.",
           "The return package must include the original invoice or order packaging slip.",
         ],
       },

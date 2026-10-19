@@ -22,6 +22,7 @@ const cartItemSchema = new mongoose.Schema(
       min: [1, "Quantity must be at least 1"],
       default: 1,
     },
+    gstRate: { type: String, default: null },
   },
   { _id: true }
 );

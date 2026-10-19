@@ -98,7 +98,7 @@ const LoginPage = () => {
           style={{ padding: "0.45rem 1rem", borderRadius: "9999px" }}
         >
           <ArrowLeft size={14} />
-          <span>Back to Store</span>
+          <span>Back to Home</span>
         </Link>
         <ThemeToggle size={16} />
       </div>
@@ -135,7 +135,7 @@ const LoginPage = () => {
               marginBottom: "1.5rem",
             }}
           >
-            <Sparkles size={11} /> LyZov Premium Store
+            <Sparkles size={11} /> LyZov Official
           </div>
           <h2
             style={{
@@ -160,7 +160,7 @@ const LoginPage = () => {
               marginBottom: "3rem",
             }}
           >
-            Sign in to track orders, manage your wishlist, and enjoy a seamless shopping experience — fitness gear, spiritual idols, and lifestyle essentials all in one place.
+            Sign in to track orders, manage your wishlist, and enjoy a seamless shopping experience with curated, quality-checked products delivered safely across India.
           </p>
 
           {/* Trust bullets */}

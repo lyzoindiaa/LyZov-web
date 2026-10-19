@@ -185,7 +185,13 @@ function App() {
         <Route path="/admin/*" element={<Navigate to="/seller" replace />} />
       </Routes>
 
-      <ToastContainer position="bottom-right" autoClose={3000} theme={theme === "dark" ? "dark" : "light"} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        pauseOnHover
+        pauseOnFocusLoss={false}
+        theme={theme === "dark" ? "dark" : "light"}
+      />
     </>
   );
 }

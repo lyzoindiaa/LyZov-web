@@ -246,7 +246,7 @@ const Navbar = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <Tag size={15} style={{ color: "var(--accent)" }} />
                           <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Store Departments
+                            Product Categories
                           </span>
                         </div>
                         <Link
@@ -586,7 +586,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <MobileNavLink to="/">Home Storefront</MobileNavLink>
+                <MobileNavLink to="/">Home</MobileNavLink>
                 <MobileNavLink to="/?sort=popular">Featured Picks</MobileNavLink>
                 <MobileNavLink to="/shop" accent>All Products Catalog</MobileNavLink>
 

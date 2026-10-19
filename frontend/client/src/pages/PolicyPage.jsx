@@ -82,7 +82,7 @@ const PolicyPage = () => {
   return (
     <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", paddingBottom: "5rem" }}>
       <SEO
-        title={`${activePolicy.title} — Official Store Policy | LyZov`}
+        title={`${activePolicy.title} — Official Policy | LyZov`}
         description={`Read the official ${activePolicy.title} for LyZov. Learn about terms, conditions, timelines, and customer rights.`}
         canonicalUrl={`${window.location.origin}/policies/${activePolicy.slug}`}
       />

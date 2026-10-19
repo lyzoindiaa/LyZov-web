@@ -85,7 +85,6 @@ const ProductCard = ({ product }) => {
     }
     if (isOutOfStock) return;
     dispatch(addToCart({ productId: product._id, quantity: 1 }));
-    toast.success(`${product.title || product.name} added to cart!`);
   };
 
   return (

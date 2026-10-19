@@ -63,11 +63,29 @@ const calculateDiscount = (subtotal, coupon) => {
   return round2(Math.min(discount, subtotal));
 };
 
-const calculateTotals = (subtotal, coupon = null) => {
+const parseGstRate = (rateStr) => {
+  if (!rateStr) return 0;
+  if (typeof rateStr === "number") return rateStr / 100;
+  const match = String(rateStr).match(/\d+(\.\d+)?/);
+  return match ? parseFloat(match[0]) / 100 : 0;
+};
+
+const calculateTotals = (items = [], coupon = null) => {
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const itemsPrice = round2(subtotal);
   const discountAmount = calculateDiscount(itemsPrice, coupon);
   const discountedSubtotal = Math.max(itemsPrice - discountAmount, 0);
-  const taxPrice = round2(discountedSubtotal * TAX_RATE);
+
+  // Dynamically calculate GST based on stored product gstRate
+  let taxPrice = 0;
+  const discountFactor = itemsPrice > 0 ? discountedSubtotal / itemsPrice : 1;
+  for (const item of items) {
+    const rate = parseGstRate(item.gstRate);
+    const itemTotal = item.price * item.quantity;
+    taxPrice += itemTotal * discountFactor * rate;
+  }
+  taxPrice = round2(taxPrice);
+
   const shippingPrice = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_RATE;
   const totalPrice = round2(discountedSubtotal + taxPrice + shippingPrice);
   return { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice };
@@ -134,6 +152,7 @@ const buildCheckoutSnapshot = async (user) => {
       color: cartItem.color || "",
       size: cartItem.size || "",
       quantity: qty,
+      gstRate: product.gstRate || cartItem.gstRate || null,
     });
   }
 
@@ -156,7 +175,7 @@ const buildCheckoutSnapshot = async (user) => {
     }
   }
 
-  const totals = calculateTotals(subtotal, coupon);
+  const totals = calculateTotals(items, coupon);
   return { cart, items, coupon, couponCode: coupon?.code || null, ...totals };
 };
 
