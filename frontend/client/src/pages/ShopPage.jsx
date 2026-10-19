@@ -112,7 +112,7 @@ const ShopPage = () => {
     pageTitle = `Results for "${searchParam}" - Shop`;
   }
 
-  const pageDescription = `Explore ${pageTitle} at LyZov. Premium fitness equipment, handcrafted idols, and lifestyle apparel with Pan-India delivery.`;
+  const pageDescription = `Explore ${pageTitle} on LyZov. Discover curated, quality-checked products with direct pricing and safe Pan-India delivery.`;
 
   return (
     <div className="container-page py-8 lg:py-12">
@@ -238,7 +238,7 @@ const ShopPage = () => {
               className="absolute left-0 top-0 h-full w-full max-w-xs overflow-y-auto p-5 border-r"
             >
               <div className="flex items-center justify-between mb-4">
-                <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Filter Store</span>
+                <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Filter Products</span>
                 <button
                   onClick={() => setIsFilterOpen(false)}
                   className="btn-icon"

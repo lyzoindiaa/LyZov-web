@@ -14,7 +14,7 @@ const trustItems = [
   { icon: Truck, title: "Free Shipping", sub: "On orders above ₹999" },
   { icon: ShieldCheck, title: "Quality Guaranteed", sub: "Every item hand-inspected" },
   { icon: RotateCcw, title: "Easy Returns", sub: "7-day replacement support" },
-  { icon: Award, title: "Best Value", sub: "Direct store pricing, no markups" },
+  { icon: Award, title: "Best Value", sub: "Direct pricing, no markups" },
 ];
 
 // Statistics displayed in the hero section
@@ -30,29 +30,29 @@ const stats = [
 // Cards include: Gym Equipment, God Idols & Murtis, and Puja & Home Decor
 const showcaseCards = [
   {
-    to: "/shop?category=equipment",
+    to: "/shop?sort=popular",
     img: gymImg,
-    alt: "Gym and fitness gear",
-    badge: "Fitness",
-    title: "Gym Equipment",
+    alt: "Popular and trending products",
+    badge: "Trending",
+    title: "Popular Collection",
     aspect: "4/5",
     objectPosition: "center center",
   },
   {
-    to: "/shop?category=spiritual",
+    to: "/shop?sort=newest",
     img: spiritualImg,
-    alt: "Handcrafted Lord Ganesha and god idols",
-    badge: "Handcrafted",
-    title: "God Idols & Murtis",
+    alt: "Curated new arrivals",
+    badge: "Curated",
+    title: "New Arrivals",
     aspect: "4/5",
     objectPosition: "center center",
   },
   {
-    to: "/shop?category=accessories",
+    to: "/shop?sort=rating",
     img: decorImg,
-    alt: "Brass diyas and spiritual home decor",
-    badge: "Spiritual",
-    title: "Puja & Home Decor",
+    alt: "Top customer rated selections",
+    badge: "Top Rated",
+    title: "Featured Picks",
     aspect: "16/7",
     wide: true,
     objectPosition: "center center",
@@ -85,7 +85,7 @@ const Hero = () => {
             </h1>
 
             <p className="hero-subtitle">
-              Discover quality-checked products across fitness, home, spiritual essentials, lifestyle, and more on LyZov. Delivered safely across India with direct pricing.
+              Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery.
             </p>
 
             <div className="hero-cta-row">

@@ -85,13 +85,13 @@ const baseEmailWrapper = ({ title, preheader, content, clientUrl }) => {
           <tr>
             <td style="background-color: #0F172A; padding: 28px 24px; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-top: 1px solid #1E293B;">
               <p style="margin: 0 0 12px; font-size: 12px; color: #94A3B8; line-height: 1.6;">
-                Premium Fitness Gear &bull; Handcrafted Sacred Art &bull; Everyday Essentials
+                Curated Quality Products &bull; Secure Shopping &bull; Safe Pan-India Delivery
               </p>
               <p style="margin: 0 0 16px; font-size: 11px; color: #64748B;">
                 Delivering safely across India with insured shipping & quality checks.
               </p>
               <div style="margin-bottom: 16px;">
-                <a href="${url}/shop" style="color: #CBD5E1; font-size: 12px; margin: 0 10px;">Store</a>
+                <a href="${url}/shop" style="color: #CBD5E1; font-size: 12px; margin: 0 10px;">Shop</a>
                 <a href="${url}/dashboard/orders" style="color: #CBD5E1; font-size: 12px; margin: 0 10px;">Orders</a>
                 <a href="${url}/contact" style="color: #CBD5E1; font-size: 12px; margin: 0 10px;">Support</a>
               </div>

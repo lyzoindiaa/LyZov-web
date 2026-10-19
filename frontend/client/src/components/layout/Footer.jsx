@@ -4,12 +4,12 @@ import Logo from "../ui/Logo";
 
 const footerColumns = [
   {
-    title: "Categories",
+    title: "Explore",
     links: [
-      { label: "Gym & Workout Gear", to: "/shop?category=equipment" },
-      { label: "God Idols & Murtis", to: "/shop?category=spiritual" },
-      { label: "Accessories & Decor", to: "/shop?category=accessories" },
       { label: "All Products", to: "/shop" },
+      { label: "Featured Collection", to: "/shop?sort=popular" },
+      { label: "New Arrivals", to: "/shop?sort=newest" },
+      { label: "Top Rated", to: "/shop?sort=rating" },
     ],
   },
   {
@@ -125,7 +125,7 @@ const Footer = () => {
           {/* Brand column */}
           <div className="sm:col-span-2 lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <p style={{ maxWidth: "24rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.7 }}>
-              Discover quality-checked products across fitness, home, spiritual essentials, lifestyle, and more on LyZov. Delivered safely across India with direct pricing.
+              Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery.
             </p>
             <div style={{ display: "flex", gap: "0.625rem", paddingTop: "0.5rem" }}>
               {[

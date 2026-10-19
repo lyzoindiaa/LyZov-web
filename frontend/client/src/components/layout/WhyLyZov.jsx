@@ -19,7 +19,7 @@ const reasons = [
   {
     icon: Sparkles,
     title: "Premium, Fair Pricing",
-    description: "Direct-from-store prices on fitness gear, spiritual idols, and lifestyle essentials.",
+    description: "Direct, transparent pricing on curated, quality-checked products.",
   },
 ];
 
@@ -40,7 +40,7 @@ const WhyLyZov = () => (
           A modern shopping experience you can trust
         </h2>
         <p style={{ fontSize: "0.9375rem", color: "var(--ink-muted)", lineHeight: 1.7, marginTop: "0.75rem" }}>
-          Discover quality-checked products across fitness, home, spiritual essentials, lifestyle, and more on LyZov. Delivered safely across India with direct pricing.
+          Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery.
         </p>
       </div>
 

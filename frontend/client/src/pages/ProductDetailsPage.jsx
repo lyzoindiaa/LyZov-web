@@ -120,7 +120,7 @@ const ProductDetailsPage = () => {
       <div className="container-page py-24 text-center">
         <div className="empty-state card-surface max-w-md mx-auto">
           <h2 className="empty-state-title">Unable to load product</h2>
-          <p className="empty-state-desc">The store service is unavailable. Please try again in a moment.</p>
+          <p className="empty-state-desc">The product service is temporarily unavailable. Please try again in a moment.</p>
           <button type="button" className="btn-primary mt-3" onClick={() => window.location.reload()}>
             Try Again
           </button>

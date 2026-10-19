@@ -70,7 +70,7 @@ const RegisterPage = () => {
           style={{ padding: "0.45rem 1rem", borderRadius: "9999px" }}
         >
           <ArrowLeft size={14} />
-          <span>Back to Store</span>
+          <span>Back to Home</span>
         </Link>
         <ThemeToggle size={16} />
       </div>
