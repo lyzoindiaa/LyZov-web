@@ -271,12 +271,15 @@ const afterOrderPlaced = async ({ user, order }) => {
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
 
-  emailService.sendOrderConfirmation({ order, user }).catch((err) =>
-    console.error("[EmailService] Order confirmation email error:", err.message)
-  );
-  emailService.sendSellerNewOrder({ order, user }).catch((err) =>
-    console.error("[EmailService] Seller order alert error:", err.message)
-  );
+  // Await email dispatch via Promise.allSettled so serverless runtimes (Vercel) do not freeze before sockets finish
+  await Promise.allSettled([
+    emailService.sendOrderConfirmation({ order, user }).catch((err) =>
+      console.error("[EmailService] Order confirmation email error:", err.message)
+    ),
+    emailService.sendSellerNewOrder({ order, user }).catch((err) =>
+      console.error("[EmailService] Seller order alert error:", err.message)
+    ),
+  ]);
 };
 
 module.exports = {
