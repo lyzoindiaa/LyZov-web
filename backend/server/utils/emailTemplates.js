@@ -823,6 +823,90 @@ const googleWelcomeWithTempPasswordTemplate = ({ name, tempPassword, changePassw
   };
 };
 
+// 12. Seller Invitation Email Template
+const sellerInvitationTemplate = ({ sellerName, businessName, email, tempPassword, loginUrl }) => {
+  const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
+  const url = loginUrl || `${clientUrl}/login`;
+
+  const content = `
+    <!-- Luxury Gold Badge / Icon -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, ${primaryGold} 0%, #A37F35 100%); line-height: 68px; font-size: 32px; text-align: center; color: #FFFFFF; box-shadow: 0 4px 14px rgba(197, 160, 89, 0.35);">
+        &#128188;
+      </div>
+    </div>
+
+    <h2 style="text-align: center; margin: 0 0 8px; font-size: 24px; color: ${textDark}; font-weight: 700;">
+      Welcome to LyZov Marketplace
+    </h2>
+    <p style="text-align: center; margin: 0 0 24px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
+      Dear <strong>${sellerName || "Partner"}</strong>, you have been invited as an official Seller on <strong>LyZov Gentlemen</strong>${businessName ? ` for <strong>${businessName}</strong>` : ""}.
+    </p>
+
+    <!-- Credentials Card -->
+    <div style="background-color: #FAF5EB; border: 1px solid #E8D5B5; border-left: 4px solid ${primaryGold}; border-radius: 8px; padding: 22px 24px; margin-bottom: 28px;">
+      <p style="margin: 0 0 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #78350F;">
+        &#128274; Your Merchant Credentials
+      </p>
+
+      <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 14px; margin-bottom: 14px;">
+        <tr>
+          <td style="color: ${textMuted}; width: 35%; font-weight: 600;">Login Portal:</td>
+          <td style="color: ${textDark}; font-weight: 600;"><a href="${url}" style="color: ${primaryGold};">${url}</a></td>
+        </tr>
+        <tr>
+          <td style="color: ${textMuted}; font-weight: 600;">Email:</td>
+          <td style="color: ${textDark}; font-weight: 700;">${email}</td>
+        </tr>
+      </table>
+
+      <div style="background-color: #FFFFFF; border: 1.5px dashed ${primaryGold}; border-radius: 6px; padding: 14px 20px; text-align: center;">
+        <span style="font-size: 12px; text-transform: uppercase; color: ${textMuted}; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Temporary Password</span>
+        <span style="font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: #1E293B; user-select: all;">
+          ${tempPassword}
+        </span>
+      </div>
+
+      <p style="margin: 12px 0 0; font-size: 12px; color: #92400E; text-align: center;">
+        Please log in and update your password in Profile &rarr; Security as soon as you access your portal.
+      </p>
+    </div>
+
+    <!-- CTA Button -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 28px;">
+      <tr>
+        <td align="center">
+          <a href="${url}" class="btn-gold" target="_blank">
+            Access Seller Portal &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Next Steps -->
+    <div style="background-color: #F8FAFC; border-radius: 8px; padding: 18px 22px; margin-bottom: 24px;">
+      <p style="margin: 0 0 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: ${textMuted};">
+        Next Steps to Start Selling:
+      </p>
+      <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: ${textDark}; line-height: 2;">
+        <li>Log in with your temporary password</li>
+        <li>Complete your Business &amp; KYC Profile (PAN, Aadhaar, Bank Details)</li>
+        <li>Once verified, upload your catalog and start receiving orders!</li>
+      </ol>
+    </div>
+  `;
+
+  return {
+    subject: `Welcome to LyZov — Merchant Invitation for ${businessName || sellerName || "Seller"}`,
+    text: `Welcome to LyZov Gentlemen!\n\nYou have been invited as a Seller${businessName ? ` for ${businessName}` : ""}.\n\nLogin Portal: ${url}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and update your password immediately.`,
+    html: baseEmailWrapper({
+      title: "Seller Invitation — LyZov Marketplace",
+      preheader: `Welcome to LyZov! Your merchant credentials for ${businessName || sellerName} are inside.`,
+      content,
+    }),
+  };
+};
+
 module.exports = {
   welcomeVerificationTemplate,
   verificationSuccessTemplate,
@@ -836,4 +920,6 @@ module.exports = {
   customerSupportInquiryTemplate,
   testEmailTemplate,
   googleWelcomeWithTempPasswordTemplate,
+  sellerInvitationTemplate,
 };
+

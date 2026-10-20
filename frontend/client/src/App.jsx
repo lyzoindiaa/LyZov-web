@@ -7,6 +7,13 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicLayout from "./components/layout/PublicLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
+import SuperAdminRoute from "./routes/SuperAdminRoute";
+
+import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
+import AdminDashboardPage from "./pages/superadmin/AdminDashboardPage";
+import AdminSellersPage from "./pages/superadmin/AdminSellersPage";
+import AdminSellerDetailsPage from "./pages/superadmin/AdminSellerDetailsPage";
+import AdminCustomersPage from "./pages/superadmin/AdminCustomersPage";
 
 import LandingPage from "./pages/LandingPage";
 import ShopPage from "./pages/ShopPage";
@@ -180,9 +187,20 @@ function App() {
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
-        {/* ── Backward-Compatible /admin Redirects ── */}
-        <Route path="/admin" element={<Navigate to="/seller" replace />} />
-        <Route path="/admin/*" element={<Navigate to="/seller" replace />} />
+        {/* ── Super Admin Console ── */}
+        <Route
+          path="/admin"
+          element={
+            <SuperAdminRoute>
+              <SuperAdminLayout />
+            </SuperAdminRoute>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="sellers" element={<AdminSellersPage />} />
+          <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
+          <Route path="customers" element={<AdminCustomersPage />} />
+        </Route>
       </Routes>
 
       <ToastContainer

@@ -5,9 +5,12 @@ export const useAuth = () => {
   return {
     user,
     isAuthenticated,
-    isSeller: user?.role === "seller" || user?.role === "admin",
-    isAdmin: user?.role === "seller" || user?.role === "admin",
+    isSeller: user?.role === "seller",
+    isAdmin: user?.role === "admin",
+    canAccessSeller: user?.role === "seller" || user?.role === "admin",
+    isCustomer: !user?.role || user?.role === "customer",
     status,
     bootstrapped,
   };
 };
+

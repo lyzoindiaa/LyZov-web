@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Search, ShoppingBag, Heart, User, Menu, X,
   ChevronDown, LogOut, LayoutDashboard, Settings,
-  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart, Mail, Truck
+  Tag, SunMedium, MoonStar, FolderPlus, PackagePlus, ShoppingCart, Mail, Truck, Crown
 } from "lucide-react";
 import { toggleMobileMenu, closeMobileMenu, toggleTheme, setSearchDraft } from "../../features/ui/uiSlice";
 import { openMiniCart } from "../../features/cart/cartSlice";
@@ -90,8 +90,9 @@ const Navbar = () => {
   const { totalItems } = useSelector((s) => s.cart);
   const { isAuthenticated, user } = useSelector((s) => s.auth);
 
-  const isSeller = isAuthenticated && (user?.role === "seller" || user?.role === "admin");
-  const isAdmin = isSeller;
+  const isAdmin = isAuthenticated && user?.role === "admin";
+  const isSeller = isAuthenticated && user?.role === "seller";
+  const canAccessSeller = isAdmin || isSeller;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -197,7 +198,16 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <nav className="hidden lg:flex items-center gap-6">
-            {isSeller ? (
+            {isAdmin ? (
+              <>
+                <Link to="/admin" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                  <Crown size={14} className="text-amber-500" /> Admin Console
+                </Link>
+                <Link to="/admin/sellers" className="nav-link-animated">Sellers</Link>
+                <Link to="/admin/customers" className="nav-link-animated">Customers</Link>
+                <Link to="/seller" className="nav-link-animated" style={{ color: "var(--ink-muted)" }}>Seller Hub</Link>
+              </>
+            ) : isSeller ? (
               <>
                 <Link to="/seller/categories" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <FolderPlus size={14} /> Manage Categories
@@ -485,6 +495,14 @@ const Navbar = () => {
                       <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</p>
                       <p style={{ fontSize: "11px", color: "var(--ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
                     </div>
+                    {isAdmin && (
+                      <>
+                        <DropItem to="/admin" icon={Crown} accent>{"Super Admin Console"}</DropItem>
+                        <DropItem to="/admin/sellers" icon={FolderPlus}>{"Manage Sellers"}</DropItem>
+                        <DropItem to="/admin/customers" icon={LayoutDashboard}>{"Manage Customers"}</DropItem>
+                        <DropItem to="/seller" icon={Settings}>{"Seller Hub"}</DropItem>
+                      </>
+                    )}
                     {isSeller && (
                       <>
                         <DropItem to="/seller/categories" icon={FolderPlus} accent>{"Manage Categories"}</DropItem>
@@ -492,7 +510,7 @@ const Navbar = () => {
                         <DropItem to="/seller" icon={Settings}>{"Seller Overview"}</DropItem>
                       </>
                     )}
-                    {!isSeller && (
+                    {!isAdmin && !isSeller && (
                       <>
                         <DropItem to="/dashboard" icon={LayoutDashboard}>{"My Dashboard"}</DropItem>
                         <DropItem to="/dashboard/orders" icon={Tag}>{"My Orders"}</DropItem>
@@ -577,7 +595,14 @@ const Navbar = () => {
           </form>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            {isSeller ? (
+            {isAdmin ? (
+              <>
+                <MobileNavLink to="/admin" accent>Admin Console</MobileNavLink>
+                <MobileNavLink to="/admin/sellers">Manage Sellers</MobileNavLink>
+                <MobileNavLink to="/admin/customers">Manage Customers</MobileNavLink>
+                <MobileNavLink to="/seller">Seller Hub</MobileNavLink>
+              </>
+            ) : isSeller ? (
               <>
                 <MobileNavLink to="/seller/categories" accent>Manage Categories</MobileNavLink>
                 <MobileNavLink to="/seller/products">Manage Products</MobileNavLink>
