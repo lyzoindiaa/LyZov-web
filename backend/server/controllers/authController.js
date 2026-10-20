@@ -168,10 +168,15 @@ const googleCallback = async (req, res) => {
     if (!user.isActive) return redirectToLogin("account_deactivated");
     await createSession(res, user, req);
     
-    // Redirect to profile completion if not yet completed
-    const redirectPath = user.profileComplete 
-      ? "/dashboard"
-      : "/complete-profile";
+    // Redirect based on user role
+    let redirectPath = "/dashboard";
+    if (user.role === "admin") {
+      redirectPath = "/admin";
+    } else if (user.role === "seller") {
+      redirectPath = "/seller";
+    } else if (!user.profileComplete) {
+      redirectPath = "/complete-profile";
+    }
     return res.redirect(`${getFrontendUrl()}${redirectPath}`);
   } catch (error) {
     console.error("Google OAuth callback failed:", error.message);

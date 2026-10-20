@@ -44,7 +44,10 @@ const DashboardLayout = () => {
   const cartItems = useSelector((state) => state.cart.items ?? []);
   const wishlist = useSelector((state) => state.wishlist.products ?? []);
 
-  if (user?.role === "seller" || user?.role === "admin") {
+  if (user?.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+  if (user?.role === "seller") {
     return <Navigate to="/seller" replace />;
   }
 

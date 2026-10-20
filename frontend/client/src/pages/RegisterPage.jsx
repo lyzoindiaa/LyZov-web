@@ -23,8 +23,13 @@ const RegisterPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const isSeller = user?.role === "seller" || user?.role === "admin";
-      navigate(isSeller ? "/seller" : "/complete-profile", { replace: true });
+      if (user?.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (user?.role === "seller") {
+        navigate("/seller", { replace: true });
+      } else {
+        navigate("/complete-profile", { replace: true });
+      }
     }
     return () => dispatch(clearAuthError());
   }, [isAuthenticated, user?.role, navigate, dispatch]);

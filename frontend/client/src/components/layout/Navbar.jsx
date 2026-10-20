@@ -205,7 +205,6 @@ const Navbar = () => {
                 </Link>
                 <Link to="/admin/sellers" className="nav-link-animated">Sellers</Link>
                 <Link to="/admin/customers" className="nav-link-animated">Customers</Link>
-                <Link to="/seller" className="nav-link-animated" style={{ color: "var(--ink-muted)" }}>Seller Hub</Link>
               </>
             ) : isSeller ? (
               <>
@@ -500,7 +499,6 @@ const Navbar = () => {
                         <DropItem to="/admin" icon={Crown} accent>{"Super Admin Console"}</DropItem>
                         <DropItem to="/admin/sellers" icon={FolderPlus}>{"Manage Sellers"}</DropItem>
                         <DropItem to="/admin/customers" icon={LayoutDashboard}>{"Manage Customers"}</DropItem>
-                        <DropItem to="/seller" icon={Settings}>{"Seller Hub"}</DropItem>
                       </>
                     )}
                     {isSeller && (
@@ -600,7 +598,6 @@ const Navbar = () => {
                 <MobileNavLink to="/admin" accent>Admin Console</MobileNavLink>
                 <MobileNavLink to="/admin/sellers">Manage Sellers</MobileNavLink>
                 <MobileNavLink to="/admin/customers">Manage Customers</MobileNavLink>
-                <MobileNavLink to="/seller">Seller Hub</MobileNavLink>
               </>
             ) : isSeller ? (
               <>

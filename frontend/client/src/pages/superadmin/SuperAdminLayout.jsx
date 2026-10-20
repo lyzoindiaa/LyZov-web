@@ -109,15 +109,6 @@ const SuperAdminLayout = () => {
           </p>
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             <Link
-              to="/seller"
-              className="sidebar-nav-item"
-              style={{ color: "var(--ink-muted)" }}
-            >
-              <ShoppingBag size={16} />
-              <span>Seller Hub (Products)</span>
-              <ExternalLink size={12} style={{ marginLeft: "auto", opacity: 0.6 }} />
-            </Link>
-            <Link
               to="/"
               className="sidebar-nav-item"
               style={{ color: "var(--ink-muted)" }}
