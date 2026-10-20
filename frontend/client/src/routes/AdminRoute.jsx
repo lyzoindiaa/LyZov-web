@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, canAccessSeller, bootstrapped } = useAuth();
+  const { isAuthenticated, isSeller, isAdmin, bootstrapped } = useAuth();
 
   if (!bootstrapped) {
     return (
@@ -19,7 +19,12 @@ const AdminRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!canAccessSeller) {
+  // Admin has dedicated console at /admin
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (!isSeller) {
     return <Navigate to="/" replace />;
   }
 
