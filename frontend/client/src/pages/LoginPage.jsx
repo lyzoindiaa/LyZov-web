@@ -27,8 +27,12 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const isSeller = user?.role === "seller" || user?.role === "admin";
-    const targetPath = isSeller ? "/seller" : fromRef.current || "/dashboard";
+    let targetPath = fromRef.current || "/dashboard";
+    if (user?.role === "admin") {
+      targetPath = "/admin";
+    } else if (user?.role === "seller") {
+      targetPath = "/seller";
+    }
     navigate(targetPath, { replace: true });
   }, [isAuthenticated, user?.role, navigate]);
 
@@ -65,10 +69,14 @@ const LoginPage = () => {
       const result = await dispatch(loginUser({ email: data.email, password: data.password }));
       if (result.payload) {
         toast.success("Logged in successfully!");
-        const isSeller = result.payload.role === "seller" || result.payload.role === "admin";
-        // Check if profile is complete for non-seller roles
-        const needsProfileCompletion = !isSeller && !result.payload.profileComplete;
-        const targetPath = needsProfileCompletion ? "/complete-profile" : (isSeller ? "/seller" : fromRef.current || "/dashboard");
+        let targetPath = fromRef.current || "/dashboard";
+        if (result.payload.role === "admin") {
+          targetPath = "/admin";
+        } else if (result.payload.role === "seller") {
+          targetPath = "/seller";
+        } else if (!result.payload.profileComplete) {
+          targetPath = "/complete-profile";
+        }
         navigate(targetPath, { replace: true });
       }
     } catch (err) {

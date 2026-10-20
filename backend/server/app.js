@@ -22,6 +22,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const userRoutes = require("./routes/userRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoute");
+const adminRoutes = require("./routes/adminRoutes");
 const emailRoutes = require("./routes/emailSenderRoute");
 const supportRoutes = require("./routes/supportRoutes");
 const sellerEmailRoutes = require("./routes/sellerEmailRoutes");
@@ -155,7 +156,6 @@ app.get("/api/health", (req, res) => {
 });
 
 
-app.use("/api/admin", adminAnalyticsRoutes);
 app.use("/api/seller", adminAnalyticsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/payments", require("./routes/paymentRoutes"));
@@ -175,6 +175,7 @@ app.use("/api/email", emailRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/seller/emails", sellerEmailRoutes);
 app.use("/api/admin/emails", sellerEmailRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/customer/emails", customerEmailRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/settings", require("./routes/settingsRoutes"));

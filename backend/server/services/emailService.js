@@ -565,8 +565,37 @@ class EmailService {
       metadata: { authProvider: "google", hasTempPassword: true },
     });
   }
+
+  /**
+   * Send seller invitation email containing temporary credentials and portal link.
+   */
+  async sendSellerInvitation({ seller, businessName, temporaryPassword, loginUrl }) {
+    const { subject, text, html } = templates.sellerInvitationTemplate({
+      sellerName: seller.name,
+      businessName: businessName || seller.sellerProfile?.businessName,
+      email: seller.email,
+      tempPassword: temporaryPassword,
+      loginUrl,
+    });
+
+    return this.dispatch({
+      to: seller.email,
+      recipientName: seller.name,
+      template: "seller_invitation",
+      subject,
+      text,
+      html,
+      relatedUser: seller._id,
+      metadata: {
+        role: "seller",
+        businessName: businessName || seller.sellerProfile?.businessName,
+        invitedByAdmin: true,
+      },
+    });
+  }
 }
 
 const emailService = new EmailService();
 
 module.exports = emailService;
+
