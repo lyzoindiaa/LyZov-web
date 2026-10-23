@@ -214,9 +214,40 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
+      {/* Multi-Seller Package Tracking */}
+      {order.subOrders && order.subOrders.length > 1 && (
+        <div className="card-surface p-4 border border-hairline flex flex-col gap-3 dark:border-hairline-dark">
+          <div className="flex items-center gap-2">
+            <Package size={16} className="text-amber-500" />
+            <span className="text-xs font-bold uppercase tracking-wider text-stone">
+              Multi-Package Delivery ({order.subOrders.length} Shipments)
+            </span>
+          </div>
+          <div className="flex flex-col divide-y divide-hairline dark:divide-hairline-dark">
+            {order.subOrders.map((sub, sIdx) => (
+              <div key={sub._id || sIdx} className="py-2.5 flex items-center justify-between text-xs">
+                <div>
+                  <strong className="text-stone-800 dark:text-stone-200">
+                    Package #{sIdx + 1} ({sub.subOrderNumber || `Sub-Order ${sIdx + 1}`})
+                  </strong>
+                  {sub.trackingNumber && (
+                    <span className="block text-stone mt-0.5">
+                      AWB: <span className="font-mono text-amber-500 font-bold">{sub.trackingNumber}</span>
+                    </span>
+                  )}
+                </div>
+                <Badge tone={statusTones[sub.orderStatus] || "neutral"}>
+                  {sub.orderStatus}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Items Section */}
       <div className="card-surface flex flex-col divide-y divide-hairline p-5 dark:divide-hairline-dark">
-        {order.items.map((item, i) => (
+        {(order.items || order.orderItems || []).map((item, i) => (
           <div key={i} className="flex gap-4 py-4 first:pt-0 last:pb-0">
             <img src={item.image} alt={item.name} className="h-20 w-16 rounded-lg object-cover" />
             <div className="flex flex-1 justify-between">

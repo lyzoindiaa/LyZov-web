@@ -37,10 +37,11 @@ const footerColumns = [
       { label: "My Orders", to: "/dashboard/orders" },
       { label: "Wishlist", to: "/dashboard/wishlist" },
       { label: "Saved Addresses", to: "/dashboard/addresses" },
-      // Sign-in link is temporarily hidden while Google-only authentication is integrated.
+      { label: "Sell on LyZov", to: "/seller/register" },
     ],
   },
 ];
+
 
 
 const Footer = () => {

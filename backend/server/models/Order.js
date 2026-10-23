@@ -17,6 +17,12 @@ const orderItemSchema = new mongoose.Schema(
     color: { type: String, default: "" },
     size: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
   },
   { _id: false }
 );
@@ -48,6 +54,16 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
     items: [orderItemSchema],
+    hasSubOrders: {
+      type: Boolean,
+      default: false,
+    },
+    subOrders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SubOrder",
+      },
+    ],
     shippingAddress: {
       type: shippingAddressSchema,
       required: true,

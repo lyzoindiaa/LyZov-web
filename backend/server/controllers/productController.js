@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Brand = require("../models/Brand");
+const User = require("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -66,10 +67,23 @@ const getProducts = asyncHandler(async (req, res) => {
   const activeFilter = resolvedQuery.includeInactive === "true" ? {} : { isActive: { $ne: false } };
   delete resolvedQuery.includeInactive;
 
+  if (resolvedQuery.seller) {
+    activeFilter.seller = resolvedQuery.seller;
+    delete resolvedQuery.seller;
+  }
+  if (resolvedQuery.moderationStatus) {
+    activeFilter.moderationStatus = resolvedQuery.moderationStatus;
+    delete resolvedQuery.moderationStatus;
+  } else if (!resolvedQuery.includeUnmoderated) {
+    activeFilter.moderationStatus = { $ne: "rejected" };
+  }
+  delete resolvedQuery.includeUnmoderated;
+
   const baseQuery = Product.find(activeFilter)
     .populate("brand", "name slug")
     .populate("category", "name slug level ancestors parent")
-    .populate("categoryPath", "name slug level");
+    .populate("categoryPath", "name slug level")
+    .populate("seller", "name sellerProfile.businessName sellerProfile.storeSlug sellerProfile.kycStatus");
 
   const features = new ApiFeatures(baseQuery, resolvedQuery).search().filter().sort().limitFields().paginate();
 
@@ -98,7 +112,8 @@ const getProductBySlug = asyncHandler(async (req, res) => {
   let product = await Product.findOne({ ...identifierQuery, isActive: { $ne: false } })
     .populate("brand", "name slug logo")
     .populate("category", "name slug level ancestors parent")
-    .populate("categoryPath", "name slug level");
+    .populate("categoryPath", "name slug level")
+    .populate("seller", "name email phone sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus");
 
   if (!product) {
     // Check slugHistory for permanent 301 relocation
@@ -210,6 +225,8 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const productData = {
     ...req.body,
+    seller: req.user?.role === "admin" && req.body.seller ? req.body.seller : req.user?._id,
+    moderationStatus: req.body.moderationStatus || "approved",
     mpn: req.body.mpn?.trim() || "",
     searchKeyword: normalizedKeywords,
     tags: keywordTags,
@@ -257,6 +274,15 @@ const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
     throw ApiError.notFound("Product not found");
+  }
+
+  // Enforce tenancy / ownership
+  if (
+    product.seller &&
+    req.user.role === "seller" &&
+    product.seller.toString() !== req.user._id.toString()
+  ) {
+    throw ApiError.forbidden("You do not have permission to modify another seller's product.");
   }
 
   const uploadedImages = [];
@@ -364,6 +390,14 @@ const deleteProductImage = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw ApiError.notFound("Product not found");
 
+  if (
+    product.seller &&
+    req.user.role === "seller" &&
+    product.seller.toString() !== req.user._id.toString()
+  ) {
+    throw ApiError.forbidden("You do not have permission to modify another seller's product.");
+  }
+
   const image = product.images.id(req.params.imageId);
   if (!image) throw ApiError.notFound("Image not found");
 
@@ -383,6 +417,14 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Product not found");
   }
 
+  if (
+    product.seller &&
+    req.user.role === "seller" &&
+    product.seller.toString() !== req.user._id.toString()
+  ) {
+    throw ApiError.forbidden("You do not have permission to delete another seller's product.");
+  }
+
   for (const image of product.images) {
     await deleteFromCloudinary(image.publicId);
   }
@@ -390,6 +432,58 @@ const deleteProduct = asyncHandler(async (req, res) => {
   await product.deleteOne();
 
   return sendSuccess(res, 200, "Product deleted successfully");
+});
+
+// @desc    Get public seller store profile and their active products
+// @route   GET /api/products/store/:storeSlug
+// @access  Public
+const getSellerStorefront = asyncHandler(async (req, res) => {
+  const { storeSlug } = req.params;
+  const seller = await User.findOne({
+    role: "seller",
+    isActive: true,
+    "sellerProfile.storeSlug": storeSlug.toLowerCase().trim(),
+  }).select("name email createdAt sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus");
+
+  if (!seller) {
+    throw ApiError.notFound("Seller store not found or is currently inactive.");
+  }
+
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 12;
+
+  const filter = {
+    seller: seller._id,
+    isActive: true,
+    moderationStatus: "approved",
+  };
+
+  const total = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
+    .populate("brand", "name slug")
+    .populate("category", "name slug")
+    .sort("-createdAt")
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return sendSuccess(res, 200, "Seller store fetched successfully", {
+    seller: {
+      id: seller._id,
+      name: seller.name,
+      businessName: seller.sellerProfile?.businessName || seller.name,
+      storeSlug: seller.sellerProfile?.storeSlug,
+      storeBio: seller.sellerProfile?.storeBio || "",
+      kycVerified: seller.sellerProfile?.kycStatus === "verified",
+      memberSince: seller.createdAt,
+    },
+    products,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  });
 });
 
 module.exports = {
@@ -400,4 +494,5 @@ module.exports = {
   updateProduct,
   deleteProductImage,
   deleteProduct,
+  getSellerStorefront,
 };

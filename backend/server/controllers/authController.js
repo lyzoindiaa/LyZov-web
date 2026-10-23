@@ -454,8 +454,63 @@ const getMe = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, "Current user fetched", { user: req.user.toSafeObject() });
 });
 
+// @desc    Register a new seller account directly
+// @route   POST /api/auth/seller/register
+// @access  Public
+const registerSeller = asyncHandler(async (req, res) => {
+  const { name, email, password, phone, businessName, storeBio } = req.body;
+  const normalizedEmail = email?.toLowerCase()?.trim();
+
+  if (!name || !name.trim()) throw ApiError.badRequest("Name is required");
+  if (!normalizedEmail) throw ApiError.badRequest("Email is required");
+  if (!password || password.length < 8) {
+    throw ApiError.badRequest("Password must be at least 8 characters");
+  }
+
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw ApiError.conflict("An account with this email already exists");
+  }
+
+  const user = await User.create({
+    name: name.trim(),
+    email: normalizedEmail,
+    password,
+    phone: phone ? phone.trim() : "",
+    role: "seller",
+    authProvider: "local",
+    profileComplete: false,
+    isEmailVerified: false,
+    sellerProfile: {
+      businessName: businessName ? businessName.trim() : name.trim(),
+      storeBio: storeBio ? storeBio.trim() : "",
+      kycStatus: "pending",
+      onboardingSource: "self",
+    },
+  });
+
+  await Cart.create({ user: user._id, items: [] });
+  await Wishlist.create({ user: user._id, products: [] });
+
+  const verificationToken = user.generateEmailVerificationToken();
+  await user.save({ validateBeforeSave: false });
+
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const verifyUrl = `${clientUrl}/verify-email/${verificationToken}`;
+  await emailService.sendWelcomeVerification({ user, verifyUrl });
+
+  const { accessToken } = await createSession(res, user, req);
+
+  return sendSuccess(res, 201, "Seller account registered successfully", {
+    user: user.toSafeObject(),
+    accessToken,
+    redirectTo: "/seller/profile",
+  });
+});
+
 module.exports = {
   register,
+  registerSeller,
   login,
   googleLogin,
   googleCallback,

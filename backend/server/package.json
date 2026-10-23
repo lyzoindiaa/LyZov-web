@@ -10,6 +10,7 @@
     "build": "npm install --prefix ../../frontend/client && npm run build --prefix ../../frontend/client",
     "seed": "node utils/seeder.js",
     "seed:add": "node utils/addProducts.js",
+    "seed:admin": "node utils/seed_admin.js",
     "migrate:product-indexes": "node utils/migrateProductIndexes.js"
   },
   "dependencies": {

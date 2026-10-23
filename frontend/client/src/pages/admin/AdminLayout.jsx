@@ -18,6 +18,7 @@ import {
   UserCheck,
   Settings,
   Wrench,
+  Wallet,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Award },
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },
+  { label: "Payouts & Escrow", to: "/seller/payouts", icon: Wallet },
   { label: "Profile & KYC", to: "/seller/profile", icon: UserCheck },
   { label: "Email Logs", to: "/seller/emails", icon: Mail },
   { label: "Store Settings", to: "/seller/settings", icon: Settings },
@@ -50,6 +52,7 @@ const AdminLayout = () => {
   else if (currentPath.includes("/categories")) activeTitle = "Categories Management";
   else if (currentPath.includes("/brands")) activeTitle = "Brands Management";
   else if (currentPath.includes("/orders")) activeTitle = "Orders Management";
+  else if (currentPath.includes("/payouts")) activeTitle = "Seller Financials & Payouts";
   else if (currentPath.includes("/profile")) activeTitle = "Seller Profile & KYC";
   else if (currentPath.includes("/emails")) activeTitle = "Email Communications";
   else if (currentPath.includes("/settings")) activeTitle = "Store Settings & Maintenance";

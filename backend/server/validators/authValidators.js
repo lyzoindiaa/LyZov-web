@@ -28,9 +28,29 @@ const resetPasswordValidator = [
     .withMessage("Password must contain at least one number"),
 ];
 
+const registerSellerValidator = [
+  body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Name is required")
+    .isLength({ min: 2, max: 60 })
+    .withMessage("Name must be between 2 and 60 characters"),
+  body("email").trim().isEmail().withMessage("Please provide a valid email").toLowerCase(),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+  body("businessName")
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("Business name cannot exceed 100 characters"),
+];
+
 module.exports = {
   registerValidator,
   loginValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
+  registerSellerValidator,
 };
+

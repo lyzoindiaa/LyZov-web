@@ -14,6 +14,9 @@ import AdminDashboardPage from "./pages/superadmin/AdminDashboardPage";
 import AdminSellersPage from "./pages/superadmin/AdminSellersPage";
 import AdminSellerDetailsPage from "./pages/superadmin/AdminSellerDetailsPage";
 import AdminCustomersPage from "./pages/superadmin/AdminCustomersPage";
+import AdminProductModerationPage from "./pages/superadmin/AdminProductModerationPage";
+import AdminMarketplacePayoutsPage from "./pages/superadmin/AdminMarketplacePayoutsPage";
+import SellerPayoutsPage from "./pages/admin/SellerPayoutsPage";
 
 import LandingPage from "./pages/LandingPage";
 import ShopPage from "./pages/ShopPage";
@@ -29,6 +32,8 @@ import ContactPage from "./pages/ContactPage";
 import PolicyPage from "./pages/PolicyPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import TrackOrderPage from "./pages/TrackOrderPage";
+import SellerStorefrontPage from "./pages/SellerStorefrontPage";
+import SellerRegisterPage from "./pages/SellerRegisterPage";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import OrdersPage from "./pages/dashboard/OrdersPage";
@@ -94,6 +99,7 @@ function App() {
         {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/seller/register" element={<SellerRegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
@@ -112,6 +118,7 @@ function App() {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/products" element={<ShopPage />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
+          <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route
@@ -122,6 +129,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
 
           {/* ── Public Track Order ── */}
           <Route path="/track" element={<TrackOrderPage />} />
@@ -182,6 +190,7 @@ function App() {
           <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
+          <Route path="payouts" element={<SellerPayoutsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="emails" element={<AdminEmailsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
@@ -199,6 +208,8 @@ function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="sellers" element={<AdminSellersPage />} />
           <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
+          <Route path="moderation" element={<AdminProductModerationPage />} />
+          <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
         </Route>
       </Routes>

@@ -4,6 +4,10 @@ const Session = require("../models/Session");
 const Cart = require("../models/Cart");
 const Wishlist = require("../models/Wishlist");
 const Address = require("../models/Address");
+const Product = require("../models/Product");
+const Payout = require("../models/Payout");
+const SubOrder = require("../models/SubOrder");
+const { generateSignedKycUrl } = require("../services/kycDocumentService");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -150,22 +154,18 @@ const getSellerById = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Seller not found");
   }
 
-  const safeSeller = seller.toSafeObject();
+  const safeSeller = seller.toSafeObject({ revealKyc: true });
 
-  // Explicitly ensure decrypted KYC fields are accessible for admin verification
-  if (seller.sellerProfile?.panNumber) {
-    try {
-      safeSeller.sellerProfile.panNumber = decrypt(seller.sellerProfile.panNumber);
-    } catch {
-      safeSeller.sellerProfile.panNumber = seller.sellerProfile.panNumber;
-    }
+  // Attach signed URLs for admin KYC review if documents are uploaded
+  if (seller.sellerProfile?.panDocument?.publicId) {
+    safeSeller.sellerProfile.panDocument.signedUrl = generateSignedKycUrl(
+      seller.sellerProfile.panDocument.publicId
+    );
   }
-  if (seller.sellerProfile?.aadhaarNumber) {
-    try {
-      safeSeller.sellerProfile.aadhaarNumber = decrypt(seller.sellerProfile.aadhaarNumber);
-    } catch {
-      safeSeller.sellerProfile.aadhaarNumber = seller.sellerProfile.aadhaarNumber;
-    }
+  if (seller.sellerProfile?.aadhaarDocument?.publicId) {
+    safeSeller.sellerProfile.aadhaarDocument.signedUrl = generateSignedKycUrl(
+      seller.sellerProfile.aadhaarDocument.publicId
+    );
   }
 
   return sendSuccess(res, 200, "Seller details fetched successfully", { seller: safeSeller });
@@ -208,6 +208,11 @@ const inviteSeller = asyncHandler(async (req, res) => {
       businessName: businessName ? businessName.trim() : "",
       storeBio: storeBio ? storeBio.trim() : "",
       kycStatus: "pending",
+      onboardingSource: "invite",
+      commissionRate:
+        typeof req.body.commissionRate === "number" && req.body.commissionRate >= 0
+          ? req.body.commissionRate
+          : 10,
     },
   });
 
@@ -479,6 +484,195 @@ const updateCustomerStatus = asyncHandler(async (req, res) => {
   );
 });
 
+// @desc    Get signed URL for seller KYC document
+// @route   GET /api/admin/sellers/:id/kyc-document/:docType
+// @access  Private/Admin
+const getSellerKycDocument = asyncHandler(async (req, res) => {
+  const { id, docType } = req.params;
+  const seller = await User.findOne({ _id: id, role: "seller" });
+  if (!seller) throw ApiError.notFound("Seller not found");
+
+  const doc =
+    docType === "pan"
+      ? seller.sellerProfile?.panDocument
+      : docType === "aadhaar"
+        ? seller.sellerProfile?.aadhaarDocument
+        : null;
+
+  if (!doc || (!doc.publicId && !doc.url)) {
+    throw ApiError.notFound(`No ${docType.toUpperCase()} document uploaded for this seller`);
+  }
+
+  const signedUrl = doc.publicId
+    ? generateSignedKycUrl(doc.publicId)
+    : doc.url;
+
+  return sendSuccess(res, 200, "Signed document URL generated", {
+    docType,
+    signedUrl,
+    expiresInSeconds: 600,
+  });
+});
+
+// @desc    Get all marketplace payouts (filtered for seller, global for admin)
+// @route   GET /api/admin/payouts
+// @access  Private/Admin/Seller
+const getMarketplacePayouts = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const filter = {};
+  if (req.query.status) filter.status = req.query.status;
+
+  if (req.user.role === "seller") {
+    filter.seller = req.user._id;
+  } else if (req.query.seller) {
+    filter.seller = req.query.seller;
+  }
+
+  const total = await Payout.countDocuments(filter);
+  const payouts = await Payout.find(filter)
+    .populate("seller", "name email phone sellerProfile.businessName sellerProfile.bankDetails")
+    .populate("subOrder", "subOrderNumber orderStatus totalPrice commissionAmount sellerEarnings")
+    .populate("parentOrder", "orderNumber paymentMethod paymentStatus")
+    .sort("-createdAt")
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  // Financial aggregation
+  const summaryFilter = req.user.role === "seller"
+    ? { seller: req.user._id }
+    : (req.query.seller && mongoose.isValidObjectId(req.query.seller) ? { seller: new mongoose.Types.ObjectId(req.query.seller) } : {});
+
+  let escrowBalance = 0;
+  let eligibleBalance = 0;
+  let paidBalance = 0;
+  let totalGross = 0;
+  let totalCommission = 0;
+
+  try {
+    const metrics = await Payout.aggregate([
+      { $match: summaryFilter },
+      {
+        $group: {
+          _id: "$status",
+          totalNet: { $sum: "$netAmount" },
+          totalGross: { $sum: "$grossAmount" },
+          totalCommission: { $sum: "$commissionAmount" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    metrics.forEach((m) => {
+      totalGross += m.totalGross || 0;
+      totalCommission += m.totalCommission || 0;
+      if (m._id === "pending") escrowBalance += m.totalNet || 0;
+      else if (m._id === "eligible") eligibleBalance += m.totalNet || 0;
+      else if (m._id === "completed") paidBalance += m.totalNet || 0;
+    });
+  } catch (err) {
+    console.error("[getMarketplacePayouts] Aggregation error:", err.message);
+  }
+
+  return sendSuccess(res, 200, "Marketplace payouts fetched", payouts, {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit) || 1,
+    financials: {
+      escrowBalance,
+      eligibleBalance,
+      paidBalance,
+      totalGross,
+      totalCommission,
+    },
+  });
+});
+
+// @desc    Release seller payout
+// @route   POST /api/admin/payouts/:id/release
+// @access  Private/Admin
+const releaseSellerPayout = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { transactionReference, notes } = req.body;
+
+  const payout = await Payout.findById(id);
+  if (!payout) throw ApiError.notFound("Payout record not found");
+
+  if (payout.status === "completed") {
+    throw ApiError.badRequest("This payout has already been released and completed.");
+  }
+
+  payout.status = "completed";
+  payout.paidAt = new Date();
+  payout.transactionReference = transactionReference || `TXN-${Date.now()}`;
+  payout.notes = notes || "";
+  payout.processedBy = req.user._id;
+  await payout.save();
+
+  if (payout.subOrder) {
+    await SubOrder.findByIdAndUpdate(payout.subOrder, {
+      $set: { payoutStatus: "paid" },
+    });
+  }
+
+  return sendSuccess(res, 200, "Seller payout released successfully", { payout });
+});
+
+// @desc    Get products awaiting moderation
+// @route   GET /api/admin/products/moderation
+// @access  Private/Admin
+const getProductModerationQueue = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const filter = {};
+  if (req.query.status) {
+    filter.moderationStatus = req.query.status;
+  } else {
+    filter.moderationStatus = { $in: ["pending_approval", "rejected"] };
+  }
+
+  const total = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
+    .populate("seller", "name email sellerProfile.businessName sellerProfile.storeSlug")
+    .populate("category", "name slug")
+    .populate("brand", "name slug")
+    .sort("-createdAt")
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return sendSuccess(res, 200, "Moderation queue fetched", products, {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit) || 1,
+  });
+});
+
+// @desc    Approve or reject a product
+// @route   PUT /api/admin/products/:id/moderation
+// @access  Private/Admin
+const moderateProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status, feedback } = req.body;
+
+  if (!["approved", "rejected", "pending_approval"].includes(status)) {
+    throw ApiError.badRequest("Invalid moderation status. Must be approved, rejected, or pending_approval.");
+  }
+
+  const product = await Product.findById(id);
+  if (!product) throw ApiError.notFound("Product not found");
+
+  product.moderationStatus = status;
+  if (feedback !== undefined) product.moderationFeedback = String(feedback).trim();
+  if (status === "rejected") {
+    product.isActive = false;
+  }
+  await product.save();
+
+  return sendSuccess(res, 200, `Product moderation updated to ${status}`, { product });
+});
+
 module.exports = {
   getAdminOverview,
   getSellers,
@@ -490,4 +684,9 @@ module.exports = {
   resendSellerInvite,
   getCustomers,
   updateCustomerStatus,
+  getSellerKycDocument,
+  getMarketplacePayouts,
+  releaseSellerPayout,
+  getProductModerationQueue,
+  moderateProduct,
 };
