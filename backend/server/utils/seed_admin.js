@@ -1,4 +1,5 @@
 // Seed script to provision marketplace accounts and configure admin credentials.
+// Supports custom CLI overrides: node utils/seed_admin.js --email <email> --password <password>
 const dotenv = require("dotenv");
 const path = require("path");
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
