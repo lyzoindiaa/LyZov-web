@@ -26,15 +26,22 @@ const LoginPage = () => {
   const fromRef = useRef(location.state?.from?.pathname || null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    let targetPath = fromRef.current || "/dashboard";
-    if (user?.role === "admin") {
-      targetPath = "/admin";
-    } else if (user?.role === "seller") {
-      targetPath = "/seller";
+    if (!isAuthenticated || !user) return;
+    const fromPath = fromRef.current && fromRef.current !== "/login" ? fromRef.current : null;
+    let targetPath = fromPath;
+    if (!targetPath) {
+      if (user.role === "admin") {
+        targetPath = "/admin";
+      } else if (user.role === "seller") {
+        targetPath = "/seller";
+      } else if (!user.profileComplete) {
+        targetPath = "/complete-profile";
+      } else {
+        targetPath = "/dashboard";
+      }
     }
     navigate(targetPath, { replace: true });
-  }, [isAuthenticated, user?.role, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   // Clear any stale auth error only when this page unmounts
   useEffect(() => {
@@ -67,17 +74,25 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     try {
       const result = await dispatch(loginUser({ email: data.email, password: data.password }));
-      if (result.payload) {
+      if (loginUser.fulfilled.match(result)) {
         toast.success("Logged in successfully!");
-        let targetPath = fromRef.current || "/dashboard";
-        if (result.payload.role === "admin") {
-          targetPath = "/admin";
-        } else if (result.payload.role === "seller") {
-          targetPath = "/seller";
-        } else if (!result.payload.profileComplete) {
-          targetPath = "/complete-profile";
+        const loggedInUser = result.payload;
+        const fromPath = fromRef.current && fromRef.current !== "/login" ? fromRef.current : null;
+        let targetPath = fromPath;
+        if (!targetPath) {
+          if (loggedInUser?.role === "admin") {
+            targetPath = "/admin";
+          } else if (loggedInUser?.role === "seller") {
+            targetPath = "/seller";
+          } else if (!loggedInUser?.profileComplete) {
+            targetPath = "/complete-profile";
+          } else {
+            targetPath = "/dashboard";
+          }
         }
         navigate(targetPath, { replace: true });
+      } else {
+        toast.error(result.payload || "Login failed. Please check your credentials.");
       }
     } catch (err) {
       toast.error("Login failed. Please check your credentials.");

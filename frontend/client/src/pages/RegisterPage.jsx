@@ -44,9 +44,11 @@ const RegisterPage = () => {
     try {
       // Only send name and email (no password)
       const result = await dispatch(registerUser({ name: data.name, email: data.email }));
-      if (result.payload) {
+      if (registerUser.fulfilled.match(result)) {
         toast.success("Account created! Redirecting to complete your profile...");
         navigate("/complete-profile", { replace: true });
+      } else {
+        toast.error(result.payload || "Registration failed. Please try again.");
       }
     } catch (err) {
       toast.error(error || "Registration failed. Please try again.");

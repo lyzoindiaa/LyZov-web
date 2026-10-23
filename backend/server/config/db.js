@@ -15,6 +15,7 @@ const connectDB = async (retries = 5, delay = 5000) => {
       const conn = await mongoose.connect(process.env.MONGO_URI, {
         autoIndex: process.env.NODE_ENV !== "production",
         serverSelectionTimeoutMS: 10000,
+        family: 4,
       });
       console.log(`MongoDB Connected: ${conn.connection.host}`);
 
