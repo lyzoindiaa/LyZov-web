@@ -1,7 +1,7 @@
 # LyZov Multi-Seller Marketplace — Architecture & Testing Specification
 
 > **Branch:** `feat/multi-seller-marketplace`  
-> **Status:** Fully Implemented & Verified (17/17 Automated Tests Passing)  
+> **Status:** Fully Implemented & Verified (20/20 Automated Tests Passing)  
 > **Target Audience:** Engineering, QA, System Architects, and Platform Administrators
 
 ---
@@ -267,3 +267,73 @@ node --test tests/test_cancel_exchange_flow.js tests/test_multi_seller_marketpla
 2. Notice master Order remains `processing` because Seller B has not dispatched yet.
 3. Seller B marks Sub-Order 2 as `shipped` with tracking number `AWB-TEST-02`.
 4. Refresh master Order: It has automatically updated to `shipped`!
+
+#### Step 7: Seller Financials & Escrow Ledger
+1. Log in as Seller A and navigate to `http://localhost:5173/seller/payouts`.
+2. Notice the **Escrow Balance** reflects the earnings held during the 7-day customer return window.
+3. Verify the SubOrder ledger entry with Gross Amount, Platform Commission (-10%), Net Earnings, and settlement bank snapshot.
+4. Log in as SuperAdmin and navigate to `http://localhost:5173/admin/payouts`.
+5. Click **"Release"** on an eligible payout, enter bank UTR (`UTR-HDFC-998877`), and click **"Confirm Disbursement"**.
+6. Refresh Seller A's portal: The payout is now marked as **"Disbursed"** with the UTR number recorded.
+
+#### Step 8: Product Moderation Workflow
+1. As a seller with `pending_approval` catalog items, submit a new product.
+2. Log in as SuperAdmin and navigate to `http://localhost:5173/admin/moderation`.
+3. View the pending product with store attribution and pricing.
+4. Test **"Reject"**: Input rejection feedback ("Please upload images on pure white background"). Verify status becomes `rejected` and feedback is visible to the seller.
+5. Click **"Approve"**: The product is marked `approved` and immediately becomes active in the customer shop.
+
+#### Step 9: Customer Product Reviews & Verified Buyer Badging
+1. As a customer who purchased the product, navigate to `http://localhost:5173/product/:slug`.
+2. Click the **"Customer Reviews"** tab.
+3. Inspect the rating breakdown (5-star to 1-star bar chart distribution and average score).
+4. Click **"Write a Review"**.
+5. Select a star rating (1–5), enter headline, comment, and optional photos, then submit.
+6. The new review appears with the **"Verified Buyer"** badge.
+7. Click the **"Helpful"** button to upvote the review in real-time.
+
+---
+
+## 8. Financials & Escrow Engine Architecture
+
+```
+[Customer Checkout] ──> [Atomic SubOrder] ──> [Payout Ledger Created]
+                                                     │
+                                           ┌─────────┴─────────┐
+                                           ▼                   ▼
+                                      Status: pending     EligibleAt: +7 Days
+                                      (Escrow Hold)       (Return Window)
+                                           │                   │
+                                           ▼ (7 Days Passed)   ▼
+                                      Status: eligible
+                                           │
+                                           ▼ (Admin Disburses with UTR)
+                                      Status: completed
+                                      (Funds in Merchant Bank Account)
+```
+
+- **Seller Dashboard Route:** `/seller/payouts` (`SellerPayoutsPage.jsx`)
+- **SuperAdmin Console Route:** `/admin/payouts` (`AdminMarketplacePayoutsPage.jsx`)
+- **Backend API:** `GET /api/admin/payouts` (Tenant-scoped for sellers, platform-wide for admin) & `POST /api/admin/payouts/:id/release` (Admin only).
+
+---
+
+## 9. SuperAdmin Product Moderation Architecture
+
+- **Console Route:** `/admin/moderation` (`AdminProductModerationPage.jsx`)
+- **API Endpoints:**
+  - `GET /api/admin/products/moderation?status=pending_approval`
+  - `PUT /api/admin/products/:id/moderation` (`{ status: 'approved' | 'rejected', feedback: '...' }`)
+- **Governance:** Protects catalog quality, verifies pricing compliance, and ensures clean imagery across all merchant submissions.
+
+---
+
+## 10. Product Review & Verified Buyer Engine
+
+- **Model:** `Review.js` with auto recalculation hook for `ratingsAverage` and `ratingsCount`.
+- **API Endpoints:**
+  - `GET /api/reviews/product/:productId` (Returns reviews + rating distribution breakdown + average rating).
+  - `POST /api/reviews` (Validates against paid/delivered orders for verified buyer badge, supports photo attachments).
+  - `PUT /api/reviews/:id/helpful` (Atomically increments helpful vote counter).
+- **Frontend Component:** `ProductDetailsPage.jsx` with rating distribution histogram, "Write a Review" modal, interactive star picker, and verified purchase badges.
+

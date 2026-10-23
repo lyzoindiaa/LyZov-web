@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Review = require("../models/Review");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
@@ -12,20 +13,49 @@ const { uploadToCloudinary } = require("../config/cloudinary");
 const getProductReviews = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
+  const productId = req.params.productId;
 
-  const reviews = await Review.find({ product: req.params.productId, isApproved: true })
+  const reviews = await Review.find({ product: productId, isApproved: true })
     .populate("user", "name avatar")
     .sort("-createdAt")
     .skip((page - 1) * limit)
     .limit(limit);
 
-  const total = await Review.countDocuments({ product: req.params.productId, isApproved: true });
+  const total = await Review.countDocuments({ product: productId, isApproved: true });
+
+  // Calculate rating breakdown distribution
+  let distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let averageRating = 0;
+
+  if (mongoose.isValidObjectId(productId)) {
+    const stats = await Review.aggregate([
+      { $match: { product: new mongoose.Types.ObjectId(productId), isApproved: true } },
+      {
+        $group: {
+          _id: "$rating",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    let totalRatingSum = 0;
+    stats.forEach((s) => {
+      if (distribution[s._id] !== undefined) {
+        distribution[s._id] = s.count;
+        totalRatingSum += s._id * s.count;
+      }
+    });
+
+    averageRating = total > 0 ? Number((totalRatingSum / total).toFixed(1)) : 0;
+  }
 
   return sendSuccess(res, 200, "Reviews fetched successfully", reviews, {
     page,
     limit,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(total / limit) || 1,
+    distribution,
+    averageRating,
   });
 });
 
@@ -44,7 +74,11 @@ const createReview = asyncHandler(async (req, res) => {
   const hasPurchased = await Order.findOne({
     user: req.user._id,
     "items.product": productId,
-    isPaid: true,
+    $or: [
+      { isPaid: true },
+      { orderStatus: "delivered" },
+      { paymentStatus: "captured" },
+    ],
   });
 
   const images = [];
@@ -58,8 +92,8 @@ const createReview = asyncHandler(async (req, res) => {
   const review = await Review.create({
     product: productId,
     user: req.user._id,
-    rating,
-    title,
+    rating: Number(rating),
+    title: title || "",
     comment,
     images,
     isVerifiedPurchase: !!hasPurchased,

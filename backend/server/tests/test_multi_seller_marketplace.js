@@ -12,10 +12,12 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const SubOrder = require("../models/SubOrder");
 const Payout = require("../models/Payout");
+const Review = require("../models/Review");
 const { requireVerifiedSeller, authorize } = require("../middleware/authMiddleware");
 const productController = require("../controllers/productController");
 const orderController = require("../controllers/orderController");
 const adminController = require("../controllers/adminController");
+const reviewController = require("../controllers/reviewController");
 const checkoutService = require("../services/checkoutService");
 const stockService = require("../services/stockService");
 
@@ -685,5 +687,214 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
     nextCalled = false;
     adminOnlyMiddleware({ user: mockAdminUser }, {}, mockNext);
     assert.strictEqual(nextCalled, true, "SuperAdmin must be authorized for settings");
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-09: Seller-Scoped Marketplace Payouts & Aggregate Financial Metrics
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-09: Seller-Scoped Marketplace Payouts & Aggregate Financial Metrics", async () => {
+    let capturedFilter = null;
+    const originalCountDocuments = Payout.countDocuments;
+    const originalFind = Payout.find;
+    const originalAggregate = Payout.aggregate;
+
+    Payout.countDocuments = (filter) => {
+      capturedFilter = filter;
+      return Promise.resolve(1);
+    };
+
+    Payout.find = (filter) => ({
+      populate: () => ({
+        populate: () => ({
+          populate: () => ({
+            sort: () => ({
+              skip: () => ({
+                limit: () =>
+                  Promise.resolve([
+                    {
+                      _id: new mongoose.Types.ObjectId(),
+                      seller: mockSellerA._id,
+                      grossAmount: 2000,
+                      commissionAmount: 120,
+                      netAmount: 1880,
+                      status: "pending",
+                    },
+                  ]),
+              }),
+            }),
+          }),
+        }),
+      }),
+    });
+
+    Payout.aggregate = () =>
+      Promise.resolve([
+        { _id: "pending", totalNet: 1880, totalGross: 2000, totalCommission: 120, count: 1 },
+      ]);
+
+    try {
+      const { req, res, next } = createMockReqRes({
+        user: mockSellerA,
+      });
+
+      await adminController.getMarketplacePayouts(req, res, next);
+      assert.strictEqual(res.getStatusCode(), 200);
+
+      const resp = res.getResponseData();
+      assert.strictEqual(resp.success, true);
+      assert.strictEqual(
+        capturedFilter.seller.toString(),
+        mockSellerA._id.toString(),
+        "Payout query must be strictly scoped to seller's own ID"
+      );
+      assert.strictEqual(resp.meta.financials.escrowBalance, 1880);
+      assert.strictEqual(resp.meta.financials.totalGross, 2000);
+      assert.strictEqual(resp.meta.financials.totalCommission, 120);
+    } finally {
+      Payout.countDocuments = originalCountDocuments;
+      Payout.find = originalFind;
+      Payout.aggregate = originalAggregate;
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-10: SuperAdmin Product Moderation Lifecycle
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-10: SuperAdmin Product Moderation Lifecycle", async () => {
+    const prodId = new mongoose.Types.ObjectId();
+    const mockProductDoc = {
+      _id: prodId,
+      moderationStatus: "pending_approval",
+      isActive: true,
+      moderationFeedback: "",
+      save: function () {
+        return Promise.resolve(this);
+      },
+    };
+
+    const originalFindById = Product.findById;
+    Product.findById = (id) => Promise.resolve(mockProductDoc);
+
+    try {
+      // 1. SuperAdmin approves product
+      const { req: reqApprove, res: resApprove, next: nextApprove } = createMockReqRes({
+        user: mockAdminUser,
+        params: { id: prodId.toString() },
+        body: { status: "approved" },
+      });
+
+      await adminController.moderateProduct(reqApprove, resApprove, nextApprove);
+      assert.strictEqual(resApprove.getStatusCode(), 200);
+      assert.strictEqual(mockProductDoc.moderationStatus, "approved");
+
+      // 2. SuperAdmin rejects product with feedback
+      const { req: reqReject, res: resReject, next: nextReject } = createMockReqRes({
+        user: mockAdminUser,
+        params: { id: prodId.toString() },
+        body: {
+          status: "rejected",
+          feedback: "Images must have clean white background.",
+        },
+      });
+
+      await adminController.moderateProduct(reqReject, resReject, nextReject);
+      assert.strictEqual(resReject.getStatusCode(), 200);
+      assert.strictEqual(mockProductDoc.moderationStatus, "rejected");
+      assert.strictEqual(mockProductDoc.isActive, false);
+      assert.strictEqual(mockProductDoc.moderationFeedback, "Images must have clean white background.");
+    } finally {
+      Product.findById = originalFindById;
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-11: Verified Customer Reviews & Rating Distribution Breakdown
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-11: Verified Customer Reviews & Rating Distribution Breakdown", async () => {
+    const testProductId = new mongoose.Types.ObjectId();
+    const originalFind = Review.find;
+    const originalCountDocuments = Review.countDocuments;
+    const originalAggregate = Review.aggregate;
+    const originalProductFindById = Product.findById;
+    const originalReviewFindOne = Review.findOne;
+    const originalOrderFindOne = Order.findOne;
+    const originalReviewCreate = Review.create;
+
+    Review.find = () => ({
+      populate: () => ({
+        sort: () => ({
+          skip: () => ({
+            limit: () =>
+              Promise.resolve([
+                {
+                  _id: new mongoose.Types.ObjectId(),
+                  rating: 5,
+                  title: "Incredible craftsmanship",
+                  comment: "Loved the quality!",
+                  isVerifiedPurchase: true,
+                },
+              ]),
+          }),
+        }),
+      }),
+    });
+
+    Review.countDocuments = () => Promise.resolve(2);
+
+    Review.aggregate = () =>
+      Promise.resolve([
+        { _id: 5, count: 1 },
+        { _id: 4, count: 1 },
+      ]);
+
+    try {
+      // 1. Test getProductReviews with breakdown
+      const { req: reqGet, res: resGet, next: nextGet } = createMockReqRes({
+        params: { productId: testProductId.toString() },
+      });
+
+      await reviewController.getProductReviews(reqGet, resGet, nextGet);
+      assert.strictEqual(resGet.getStatusCode(), 200);
+
+      const data = resGet.getResponseData();
+      assert.strictEqual(data.meta.distribution[5], 1);
+      assert.strictEqual(data.meta.distribution[4], 1);
+      assert.strictEqual(data.meta.averageRating, 4.5);
+
+      // 2. Test createReview with verified purchase validation
+      Product.findById = () => Promise.resolve({ _id: testProductId });
+      Review.findOne = () => Promise.resolve(null); // No existing review
+      Order.findOne = () => Promise.resolve({ _id: new mongoose.Types.ObjectId(), isPaid: true }); // Paid order exists
+
+      let createdReviewPayload = null;
+      Review.create = (payload) => {
+        createdReviewPayload = payload;
+        return Promise.resolve(payload);
+      };
+
+      const { req: reqCreate, res: resCreate, next: nextCreate } = createMockReqRes({
+        user: { _id: new mongoose.Types.ObjectId(), role: "customer" },
+        body: {
+          productId: testProductId.toString(),
+          rating: 5,
+          title: "Top tier jacket",
+          comment: "Best fit and stitching I have ever worn.",
+        },
+      });
+
+      await reviewController.createReview(reqCreate, resCreate, nextCreate);
+      assert.strictEqual(resCreate.getStatusCode(), 201);
+      assert.strictEqual(createdReviewPayload.isVerifiedPurchase, true, "Must flag as verified purchase");
+      assert.strictEqual(createdReviewPayload.rating, 5);
+      assert.strictEqual(createdReviewPayload.title, "Top tier jacket");
+    } finally {
+      Review.find = originalFind;
+      Review.countDocuments = originalCountDocuments;
+      Review.aggregate = originalAggregate;
+      Product.findById = originalProductFindById;
+      Review.findOne = originalReviewFindOne;
+      Order.findOne = originalOrderFindOne;
+      Review.create = originalReviewCreate;
+    }
   });
 });

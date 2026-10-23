@@ -36,6 +36,7 @@ router.get("/stats", authorize("admin", "seller"), getDashboardStats);
 router.get("/revenue", authorize("admin", "seller"), getRevenueByDay);
 router.get("/orders-status", authorize("admin", "seller"), getOrdersByStatus);
 router.get("/recent-orders", authorize("admin", "seller"), getRecentOrders);
+router.get("/payouts", authorize("admin", "seller"), getMarketplacePayouts);
 
 // ── SuperAdmin Protected Routes ──
 router.use(authorize("admin"));
@@ -51,7 +52,6 @@ router.put("/sellers/:id/kyc", updateSellerKyc);
 router.post("/sellers/:id/resend-invite", resendSellerInvite);
 
 // ── Marketplace Financials & Payouts ──
-router.get("/payouts", getMarketplacePayouts);
 router.post("/payouts/:id/release", releaseSellerPayout);
 
 // ── Product Moderation Queue ──

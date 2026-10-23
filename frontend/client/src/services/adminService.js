@@ -59,8 +59,9 @@ export const adminService = {
     return res.data;
   },
 
-  releasePayout: async (id, transactionRef) => {
-    const res = await api.post(`/admin/payouts/${id}/release`, { transactionRef });
+  releasePayout: async (id, payload) => {
+    const body = typeof payload === "string" ? { transactionReference: payload } : payload;
+    const res = await api.post(`/admin/payouts/${id}/release`, body);
     return res.data;
   },
 

@@ -14,6 +14,9 @@ import AdminDashboardPage from "./pages/superadmin/AdminDashboardPage";
 import AdminSellersPage from "./pages/superadmin/AdminSellersPage";
 import AdminSellerDetailsPage from "./pages/superadmin/AdminSellerDetailsPage";
 import AdminCustomersPage from "./pages/superadmin/AdminCustomersPage";
+import AdminProductModerationPage from "./pages/superadmin/AdminProductModerationPage";
+import AdminMarketplacePayoutsPage from "./pages/superadmin/AdminMarketplacePayoutsPage";
+import SellerPayoutsPage from "./pages/admin/SellerPayoutsPage";
 
 import LandingPage from "./pages/LandingPage";
 import ShopPage from "./pages/ShopPage";
@@ -187,6 +190,7 @@ function App() {
           <Route path="brands" element={<AdminBrandsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
+          <Route path="payouts" element={<SellerPayoutsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="emails" element={<AdminEmailsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
@@ -204,6 +208,8 @@ function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="sellers" element={<AdminSellersPage />} />
           <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
+          <Route path="moderation" element={<AdminProductModerationPage />} />
+          <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
         </Route>
       </Routes>

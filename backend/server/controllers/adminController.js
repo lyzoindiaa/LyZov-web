@@ -514,15 +514,20 @@ const getSellerKycDocument = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get all marketplace payouts
+// @desc    Get all marketplace payouts (filtered for seller, global for admin)
 // @route   GET /api/admin/payouts
-// @access  Private/Admin
+// @access  Private/Admin/Seller
 const getMarketplacePayouts = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
-  if (req.query.seller) filter.seller = req.query.seller;
+
+  if (req.user.role === "seller") {
+    filter.seller = req.user._id;
+  } else if (req.query.seller) {
+    filter.seller = req.query.seller;
+  }
 
   const total = await Payout.countDocuments(filter);
   const payouts = await Payout.find(filter)
@@ -533,11 +538,54 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(limit);
 
+  // Financial aggregation
+  const summaryFilter = req.user.role === "seller"
+    ? { seller: req.user._id }
+    : (req.query.seller && mongoose.isValidObjectId(req.query.seller) ? { seller: new mongoose.Types.ObjectId(req.query.seller) } : {});
+
+  let escrowBalance = 0;
+  let eligibleBalance = 0;
+  let paidBalance = 0;
+  let totalGross = 0;
+  let totalCommission = 0;
+
+  try {
+    const metrics = await Payout.aggregate([
+      { $match: summaryFilter },
+      {
+        $group: {
+          _id: "$status",
+          totalNet: { $sum: "$netAmount" },
+          totalGross: { $sum: "$grossAmount" },
+          totalCommission: { $sum: "$commissionAmount" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    metrics.forEach((m) => {
+      totalGross += m.totalGross || 0;
+      totalCommission += m.totalCommission || 0;
+      if (m._id === "pending") escrowBalance += m.totalNet || 0;
+      else if (m._id === "eligible") eligibleBalance += m.totalNet || 0;
+      else if (m._id === "completed") paidBalance += m.totalNet || 0;
+    });
+  } catch (err) {
+    console.error("[getMarketplacePayouts] Aggregation error:", err.message);
+  }
+
   return sendSuccess(res, 200, "Marketplace payouts fetched", payouts, {
     page,
     limit,
     total,
     totalPages: Math.ceil(total / limit) || 1,
+    financials: {
+      escrowBalance,
+      eligibleBalance,
+      paidBalance,
+      totalGross,
+      totalCommission,
+    },
   });
 });
 

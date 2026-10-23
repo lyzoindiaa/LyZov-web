@@ -15,6 +15,8 @@ import {
   ArrowLeft,
   ChevronRight,
   UserCheck,
+  ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
@@ -23,6 +25,8 @@ import Logo from "../../components/ui/Logo";
 const navItems = [
   { label: "Dashboard Overview", to: "/admin", icon: BarChart3, end: true },
   { label: "Sellers Directory", to: "/admin/sellers", icon: Store },
+  { label: "Product Moderation", to: "/admin/moderation", icon: ShieldCheck },
+  { label: "Marketplace Payouts", to: "/admin/payouts", icon: Wallet },
   { label: "Customer Accounts", to: "/admin/customers", icon: Users },
 ];
 
