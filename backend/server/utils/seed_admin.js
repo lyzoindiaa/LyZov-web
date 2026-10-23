@@ -20,9 +20,25 @@ const seedAdminAndTestUsers = async () => {
 
     console.log("Seeding test users for complete marketplace workflow...\n");
 
-    // 1. Super Admin Account
-    const adminEmail = process.env.ADMIN_SEED_EMAIL || "admin@lyzov.com";
-    const adminPassword = process.env.ADMIN_SEED_PASSWORD || "Admin@1234";
+    // 1. Super Admin Account (supports CLI flags --email, --password and .env overrides)
+    const emailArgIndex = process.argv.findIndex((arg) => arg === "--email" || arg.startsWith("--email="));
+    let cliEmail = "";
+    if (emailArgIndex !== -1) {
+      cliEmail = process.argv[emailArgIndex].includes("=")
+        ? process.argv[emailArgIndex].split("=")[1]
+        : process.argv[emailArgIndex + 1];
+    }
+
+    const passArgIndex = process.argv.findIndex((arg) => arg === "--password" || arg.startsWith("--password="));
+    let cliPassword = "";
+    if (passArgIndex !== -1) {
+      cliPassword = process.argv[passArgIndex].includes("=")
+        ? process.argv[passArgIndex].split("=")[1]
+        : process.argv[passArgIndex + 1];
+    }
+
+    const adminEmail = (cliEmail || process.env.ADMIN_SEED_EMAIL || "admin@lyzov.com").toLowerCase().trim();
+    const adminPassword = cliPassword || process.env.ADMIN_SEED_PASSWORD || "Admin@1234";
 
     let admin = await User.findOne({ email: adminEmail }).select("+password");
     if (!admin) {
