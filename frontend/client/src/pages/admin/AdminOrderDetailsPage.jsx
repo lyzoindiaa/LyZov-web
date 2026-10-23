@@ -508,7 +508,7 @@ const AdminOrderDetailsPage = () => {
           <section className="card-surface p-5">
             <h2 className="mb-4 text-lg font-semibold">Products</h2>
             <div className="flex flex-col divide-y divide-hairline dark:divide-hairline-dark">
-              {order.items.map((item, index) => {
+              {(order.items || order.orderItems || []).map((item, index) => {
                 const product = item.product && typeof item.product === "object" ? item.product : null;
                 const image = item.image || product?.images?.[0]?.url;
                 return (

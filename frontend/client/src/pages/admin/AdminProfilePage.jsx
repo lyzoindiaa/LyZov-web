@@ -37,9 +37,9 @@ const AdminProfilePage = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar?.url || "");
   const [panFile, setPanFile] = useState(null);
-  const [panPreview, setPanPreview] = useState(user?.sellerProfile?.panDocument?.url || "");
+  const [panPreview, setPanPreview] = useState(user?.sellerProfile?.panDocument?.url || (user?.sellerProfile?.panDocument?.uploaded ? "attached" : ""));
   const [aadhaarFile, setAadhaarFile] = useState(null);
-  const [aadhaarPreview, setAadhaarPreview] = useState(user?.sellerProfile?.aadhaarDocument?.url || "");
+  const [aadhaarPreview, setAadhaarPreview] = useState(user?.sellerProfile?.aadhaarDocument?.url || (user?.sellerProfile?.aadhaarDocument?.uploaded ? "attached" : ""));
   const [showAadhaar, setShowAadhaar] = useState(false);
   const [isDeletingPan, setIsDeletingPan] = useState(false);
   const [isDeletingAadhaar, setIsDeletingAadhaar] = useState(false);
@@ -65,9 +65,9 @@ const AdminProfilePage = () => {
   const isStep2Complete = Boolean(
     isStep1Complete &&
     sp.panNumber?.trim() &&
-    sp.panDocument?.url &&
+    (sp.panDocument?.uploaded || sp.panDocument?.url || panFile) &&
     sp.aadhaarNumber?.trim() &&
-    sp.aadhaarDocument?.url
+    (sp.aadhaarDocument?.uploaded || sp.aadhaarDocument?.url || aadhaarFile)
   );
 
   const isStep3Complete = Boolean(
@@ -116,8 +116,8 @@ const AdminProfilePage = () => {
     });
 
     setAvatarPreview(user.avatar?.url || "");
-    setPanPreview(currentSp.panDocument?.url || "");
-    setAadhaarPreview(currentSp.aadhaarDocument?.url || "");
+    setPanPreview(currentSp.panDocument?.url || (currentSp.panDocument?.uploaded ? "attached" : ""));
+    setAadhaarPreview(currentSp.aadhaarDocument?.url || (currentSp.aadhaarDocument?.uploaded ? "attached" : ""));
   };
 
   useEffect(() => {

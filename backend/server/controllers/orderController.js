@@ -134,7 +134,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
   // If caller is seller, look up their specific SubOrder
   if (isSeller) {
-    let subOrderQuery = isValidObjectId(req.params.id)
+    let subOrderQuery = mongoose.isValidObjectId(req.params.id)
       ? { $or: [{ _id: req.params.id }, { parentOrder: req.params.id }] }
       : { subOrderNumber: req.params.id };
 

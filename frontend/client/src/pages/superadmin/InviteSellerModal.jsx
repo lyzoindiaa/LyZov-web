@@ -19,6 +19,7 @@ const InviteSellerModal = ({ isOpen, onClose, onSellerCreated }) => {
     businessName: "",
     email: "",
     phone: "",
+    commissionRate: 10,
     storeBio: "",
     sendEmail: true,
   });
@@ -86,6 +87,7 @@ const InviteSellerModal = ({ isOpen, onClose, onSellerCreated }) => {
       businessName: "",
       email: "",
       phone: "",
+      commissionRate: 10,
       storeBio: "",
       sendEmail: true,
     });
@@ -282,6 +284,34 @@ const InviteSellerModal = ({ isOpen, onClose, onSellerCreated }) => {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "var(--ink)", marginBottom: "0.35rem" }}>
+                  Platform Commission Fee (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  name="commissionRate"
+                  value={formData.commissionRate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, commissionRate: Number(e.target.value) }))}
+                  placeholder="10"
+                  style={{
+                    width: "100%",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "0.625rem",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg)",
+                    color: "var(--ink)",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+                <span style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", display: "block" }}>
+                  Percentage deducted from merchant order items before weekly payout settlement.
+                </span>
               </div>
 
               {/* Temporary Password Box */}

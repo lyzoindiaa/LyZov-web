@@ -27,15 +27,18 @@ const {
   getRecentOrders,
 } = require("../controllers/adminAnalytics.controller");
 
-// All admin routes require authentication and "admin" role
-router.use(protect, authorize("admin"));
+// All routes require authentication
+router.use(protect);
 
-// ── Overview & Analytics ──
-router.get("/overview", getAdminOverview);
-router.get("/stats", getDashboardStats);
-router.get("/revenue", getRevenueByDay);
-router.get("/orders-status", getOrdersByStatus);
-router.get("/recent-orders", getRecentOrders);
+// ── Overview & Analytics (Scoped for sellers, global for superadmin) ──
+router.get("/overview", authorize("admin"), getAdminOverview);
+router.get("/stats", authorize("admin", "seller"), getDashboardStats);
+router.get("/revenue", authorize("admin", "seller"), getRevenueByDay);
+router.get("/orders-status", authorize("admin", "seller"), getOrdersByStatus);
+router.get("/recent-orders", authorize("admin", "seller"), getRecentOrders);
+
+// ── SuperAdmin Protected Routes ──
+router.use(authorize("admin"));
 
 // ── Seller Management & KYC ──
 router.get("/sellers", getSellers);

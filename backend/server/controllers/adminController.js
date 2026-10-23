@@ -208,6 +208,11 @@ const inviteSeller = asyncHandler(async (req, res) => {
       businessName: businessName ? businessName.trim() : "",
       storeBio: storeBio ? storeBio.trim() : "",
       kycStatus: "pending",
+      onboardingSource: "invite",
+      commissionRate:
+        typeof req.body.commissionRate === "number" && req.body.commissionRate >= 0
+          ? req.body.commissionRate
+          : 10,
     },
   });
 
