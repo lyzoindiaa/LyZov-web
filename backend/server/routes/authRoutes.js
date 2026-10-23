@@ -11,6 +11,7 @@ const {
   resendVerification,
   forgotPassword,
   resetPassword,
+  registerSeller,
   getMe,
   logoutAll,
   getActiveSessions,
@@ -22,6 +23,7 @@ const {
   loginValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
+  registerSellerValidator,
 } = require("../validators/authValidators");
 
 const router = express.Router();
@@ -43,6 +45,7 @@ const refreshLimiter = rateLimit({
 });
 
 router.post("/register", authLimiter, registerValidator, validate, register);
+router.post("/seller/register", authLimiter, registerSellerValidator, validate, registerSeller);
 router.post("/login", authLimiter, loginValidator, validate, login);
 router.get("/google", googleLogin);
 router.get("/google/callback", googleCallback);

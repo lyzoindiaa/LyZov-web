@@ -6,6 +6,8 @@ export const productService = {
   getProductById: (id) => api.get(`/products/${id}`).then((res) => res.data),
   getCollection: (type, limit = 12) =>
     api.get(`/products/collections/${type}`, { params: { limit } }).then((res) => res.data),
+  getSellerStorefront: (storeSlug, params) =>
+    api.get(`/products/store/${storeSlug}`, { params }).then((res) => res.data),
 };
 
 export const brandService = {

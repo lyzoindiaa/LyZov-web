@@ -3,12 +3,13 @@ const {
   getProducts,
   getProductBySlug,
   getProductCollection,
+  getSellerStorefront,
   createProduct,
   updateProduct,
   deleteProductImage,
   deleteProduct,
 } = require("../controllers/productController");
-const { protect, authorize } = require("../middleware/authMiddleware");
+const { protect, authorize, requireVerifiedSeller } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 const validate = require("../middleware/validateMiddleware");
 const { createProductValidator, updateProductValidator } = require("../validators/productValidators");
@@ -17,12 +18,14 @@ const router = express.Router();
 
 router.get("/", getProducts);
 router.get("/collections/:type", getProductCollection);
+router.get("/store/:storeSlug", getSellerStorefront);
 router.get("/:slug", getProductBySlug);
 
 router.post(
   "/",
   protect,
   authorize("seller"),
+  requireVerifiedSeller,
   upload.array("images", 6),
   createProductValidator,
   validate,
@@ -33,13 +36,15 @@ router.put(
   "/:id",
   protect,
   authorize("seller"),
+  requireVerifiedSeller,
   upload.array("images", 6),
   updateProductValidator,
   validate,
   updateProduct
 );
 
-router.delete("/:id/images/:imageId", protect, authorize("seller"), deleteProductImage);
-router.delete("/:id", protect, authorize("seller"), deleteProduct);
+router.delete("/:id/images/:imageId", protect, authorize("seller"), requireVerifiedSeller, deleteProductImage);
+router.delete("/:id", protect, authorize("seller"), requireVerifiedSeller, deleteProduct);
 
 module.exports = router;
+

@@ -2,6 +2,7 @@ import api from "./api";
 
 export const authService = {
   register: (payload) => api.post("/auth/register", payload).then((res) => res.data),
+  registerSeller: (payload) => api.post("/auth/seller/register", payload).then((res) => res.data),
   login: (payload) => api.post("/auth/login", payload).then((res) => res.data),
   logout: () => api.post("/auth/logout").then((res) => res.data),
   getMe: () => api.get("/auth/me").then((res) => res.data),

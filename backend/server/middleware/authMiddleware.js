@@ -87,4 +87,24 @@ const disallowRoles = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize, optionalAuth, disallowRoles };
+const requireVerifiedSeller = (req, res, next) => {
+  if (!req.user) {
+    throw ApiError.unauthorized("Not authorized. Please log in.");
+  }
+  if (req.user.role === "admin") {
+    return next();
+  }
+  if (req.user.role === "seller") {
+    const kycStatus = req.user.sellerProfile?.kycStatus || "pending";
+    if (kycStatus !== "verified") {
+      throw ApiError.forbidden(
+        `Your seller account KYC status is currently '${kycStatus}'. Product publishing and catalog management require verified status.`
+      );
+    }
+    return next();
+  }
+  throw ApiError.forbidden("You do not have permission to perform this action.");
+};
+
+module.exports = { protect, authorize, optionalAuth, disallowRoles, requireVerifiedSeller };
+

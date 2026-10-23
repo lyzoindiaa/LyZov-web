@@ -1,4 +1,7 @@
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
+const SubOrder = require("../models/SubOrder");
+const Payout = require("../models/Payout");
 const User = require("../models/User");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
@@ -126,16 +129,52 @@ const getMyOrders = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/:id
 // @access  Private
 const getOrderById = asyncHandler(async (req, res) => {
+  const isSeller = req.user.role === "seller";
+  const isAdmin = req.user.role === "admin";
+
+  // If caller is seller, look up their specific SubOrder
+  if (isSeller) {
+    let subOrderQuery = isValidObjectId(req.params.id)
+      ? { $or: [{ _id: req.params.id }, { parentOrder: req.params.id }] }
+      : { subOrderNumber: req.params.id };
+
+    const subOrder = await SubOrder.findOne({ ...subOrderQuery, seller: req.user._id })
+      .populate("customer", "name email phone")
+      .populate("items.product", "title slug images");
+
+    if (subOrder) {
+      const formatted = subOrder.toObject();
+      formatted.orderNumber = subOrder.subOrderNumber;
+      formatted.user = subOrder.customer;
+      return sendSuccess(res, 200, "Sub-order fetched successfully", formatted);
+    }
+  }
+
   const order = await Order.findById(req.params.id)
     .populate("user", "name email")
-    .populate("items.product", "title slug images");
+    .populate("items.product", "title slug images")
+    .populate("subOrders");
 
   if (!order) {
     throw ApiError.notFound("Order not found");
   }
 
-  if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "seller" && req.user.role !== "admin") {
+  if (order.user._id.toString() !== req.user._id.toString() && !isSeller && !isAdmin) {
     throw ApiError.forbidden("You do not have access to this order");
+  }
+
+  // If seller queried parent order ID but has no items in it
+  if (isSeller && !isAdmin) {
+    const sellerSubOrder = await SubOrder.findOne({ parentOrder: order._id, seller: req.user._id })
+      .populate("customer", "name email phone")
+      .populate("items.product", "title slug images");
+    if (!sellerSubOrder) {
+      throw ApiError.forbidden("You do not have items in this order");
+    }
+    const formatted = sellerSubOrder.toObject();
+    formatted.orderNumber = sellerSubOrder.subOrderNumber;
+    formatted.user = sellerSubOrder.customer;
+    return sendSuccess(res, 200, "Sub-order fetched successfully", formatted);
   }
 
   return sendSuccess(res, 200, "Order fetched successfully", order);
@@ -581,18 +620,48 @@ const processExchange = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get all orders (admin)
+// @desc    Get all orders (admin or seller)
 // @route   GET /api/orders
-// @access  Private/Admin
+// @access  Private/Admin/Seller
 const getAllOrders = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
+
+  // Strict tenant scoping for sellers: return ONLY their SubOrders
+  if (req.user.role === "seller") {
+    const subFilter = { seller: req.user._id };
+    if (req.query.status) subFilter.orderStatus = req.query.status;
+
+    const total = await SubOrder.countDocuments(subFilter);
+    const subOrders = await SubOrder.find(subFilter)
+      .populate("customer", "name email phone")
+      .populate("items.product", "title slug images")
+      .sort("-createdAt")
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    // Format sub-order objects so seller portal renders seamlessly
+    const formatted = subOrders.map((so) => {
+      const obj = so.toObject();
+      obj.orderNumber = so.subOrderNumber; // Alias for UI table
+      obj.user = so.customer;
+      return obj;
+    });
+
+    return sendSuccess(res, 200, "Seller orders fetched successfully", formatted, {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    });
+  }
 
   const filter = {};
   if (req.query.status) filter.orderStatus = req.query.status;
 
   const orders = await Order.find(filter)
     .populate("user", "name email")
+    .populate("subOrders")
     .sort("-createdAt")
     .skip((page - 1) * limit)
     .limit(limit);
@@ -603,16 +672,72 @@ const getAllOrders = asyncHandler(async (req, res) => {
     page,
     limit,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(total / limit) || 1,
   });
 });
 
-// @desc    Update order status (admin)
+// @desc    Update order status (admin or seller)
 // @route   PUT /api/orders/:id/status
-// @access  Private/Admin
+// @access  Private/Admin/Seller
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status, note, trackingNumber } = req.body;
+  const isSeller = req.user.role === "seller";
 
+  // If seller is updating, find and update their specific SubOrder
+  if (isSeller) {
+    const subQuery = mongoose.isValidObjectId(req.params.id)
+      ? { $or: [{ _id: req.params.id }, { parentOrder: req.params.id }] }
+      : { subOrderNumber: req.params.id };
+
+    const subOrder = await SubOrder.findOne({ ...subQuery, seller: req.user._id });
+    if (!subOrder) throw ApiError.notFound("Sub-order not found or unauthorized");
+
+    const prevStatus = subOrder.orderStatus;
+    if (status) {
+      assertForwardStatusTransition(prevStatus, status);
+      subOrder.orderStatus = status;
+      subOrder.statusHistory.push({ status, note: note || `Updated by seller` });
+      if (status === "delivered") {
+        subOrder.isDelivered = true;
+        subOrder.deliveredAt = new Date();
+      }
+    }
+
+    if (trackingNumber !== undefined) {
+      subOrder.trackingNumber = String(trackingNumber).trim();
+      subOrder.trackingAssignedAt = new Date();
+    }
+
+    await subOrder.save();
+
+    // Check sibling SubOrders and sync parent Order status
+    if (subOrder.parentOrder) {
+      const siblings = await SubOrder.find({ parentOrder: subOrder.parentOrder });
+      const parentOrder = await Order.findById(subOrder.parentOrder);
+      if (parentOrder && siblings.length > 0) {
+        const allDelivered = siblings.every((s) => s.orderStatus === "delivered");
+        const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
+        if (!Array.isArray(parentOrder.statusHistory)) parentOrder.statusHistory = [];
+        if (allDelivered && parentOrder.orderStatus !== "delivered") {
+          parentOrder.orderStatus = "delivered";
+          parentOrder.isDelivered = true;
+          parentOrder.deliveredAt = new Date();
+          parentOrder.statusHistory.push({ status: "delivered", note: "All seller packages delivered" });
+          await parentOrder.save();
+        } else if (allShipped && !["shipped", "delivered"].includes(parentOrder.orderStatus)) {
+          parentOrder.orderStatus = "shipped";
+          parentOrder.statusHistory.push({ status: "shipped", note: "All seller packages dispatched" });
+          await parentOrder.save();
+        }
+      }
+    }
+
+    const formatted = subOrder.toObject();
+    formatted.orderNumber = subOrder.subOrderNumber;
+    return sendSuccess(res, 200, "Sub-order status updated successfully", formatted);
+  }
+
+  // Admin global order update
   const order = await Order.findById(req.params.id);
   if (!order) throw ApiError.notFound("Order not found");
 
@@ -658,59 +783,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     order.deliveredAt = new Date();
   }
 
-  try {
-    await order.save({ validateModifiedOnly: true });
-  } catch (saveErr) {
-    console.warn("[OrderController] order.save validation failed, applying fallback direct update:", saveErr.message);
-    const updateObj = {};
-    if (status) {
-      updateObj.orderStatus = status;
-      if (status === "delivered") {
-        updateObj.isDelivered = true;
-        updateObj.deliveredAt = new Date();
-      }
-    }
-    if (trackingTrimmed !== undefined) {
-      updateObj.trackingNumber = trackingTrimmed;
-    }
-    updateObj.statusHistory = order.statusHistory;
-    const updated = await Order.findByIdAndUpdate(order._id, { $set: updateObj }, { new: true, runValidators: false });
-    if (!updated) throw saveErr;
-    Object.assign(order, updated.toObject());
-  }
-
-  if (order.user) {
-    await Notification.create({
-      user: order.user,
-      title: isTrackingUpdated ? "Tracking details assigned" : "Order status updated",
-      message: isTrackingUpdated
-        ? `Tracking number ${trackingTrimmed} assigned to order #${order.orderNumber}.`
-        : `Your order #${order.orderNumber} status is now: ${status || order.orderStatus}.`,
-      type: "order",
-      link: `/dashboard/orders/${order._id}`,
-    }).catch(() => {});
-  }
-
-  const statusChanged = Boolean(status && status !== prevStatus);
-
-  // Tracking-only updates: in-app notification only — shipment email is sent from the seller dispatch flow.
-  if (statusChanged) {
-    const statusToSend = status || order.orderStatus;
-    const finalTracking = trackingTrimmed !== undefined ? trackingTrimmed : order.trackingNumber;
-    const emailNote = note || "";
-
-    if (["cancelled", "refunded"].includes(statusToSend)) {
-      await emailCustomerOrderCancelled(order, emailNote || order.cancelReason || statusToSend).catch((err) =>
-        console.error("[EmailService] Order cancellation email error:", err.message)
-      );
-    } else {
-      await emailCustomerOrderStatusUpdate(order, {
-        newStatus: statusToSend,
-        note: emailNote,
-        trackingNumber: finalTracking,
-      }).catch((err) => console.error("[EmailService] Order status update email error:", err.message));
-    }
-  }
+  await order.save();
 
   return sendSuccess(res, 200, "Order status updated successfully", order);
 });
@@ -726,7 +799,16 @@ const getShipmentPlatforms = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/shipment/preview-email
 // @access  Private/Seller
 const previewShipmentEmail = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  let order = null;
+  if (req.user.role === "seller") {
+    order = await SubOrder.findOne({
+      $or: [{ _id: req.params.id }, { subOrderNumber: req.params.id }],
+      seller: req.user._id,
+    });
+  }
+  if (!order) {
+    order = await Order.findById(req.params.id);
+  }
   if (!order) throw ApiError.notFound("Order not found");
 
   const trackingNumber = (req.body.trackingNumber || order.trackingNumber || "").trim();
@@ -741,15 +823,17 @@ const previewShipmentEmail = asyncHandler(async (req, res) => {
   );
 
   const ctx = await loadCustomerContext(order);
+  const recipientName =
+    ctx?.recipientUser?.name || order.shippingAddress?.fullName || "Customer";
   const emailBody = buildDefaultShipmentEmailText({
-    recipientName: ctx?.recipientUser?.name || order.shippingAddress?.fullName,
-    orderNumber: order.orderNumber,
+    recipientName,
+    orderNumber: order.subOrderNumber || order.orderNumber,
     platformLabel,
     trackingNumber,
     trackingUrl,
   });
 
-  const defaultSubject = `Order #${order.orderNumber} shipped — ${platformLabel} tracking ${trackingNumber}`;
+  const defaultSubject = `Order #${order.subOrderNumber || order.orderNumber} shipped — ${platformLabel} tracking ${trackingNumber}`;
 
   return sendSuccess(res, 200, "Shipment email preview generated", {
     emailSubject: defaultSubject,
@@ -803,19 +887,43 @@ const applyShipmentFieldsToOrder = (order, body) => {
 // @route   PUT /api/orders/:id/shipment
 // @access  Private/Seller
 const saveOrderShipment = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  let order = null;
+  let isSubOrder = false;
+
+  if (req.user.role === "seller") {
+    order = await SubOrder.findOne({
+      $or: [{ _id: req.params.id }, { subOrderNumber: req.params.id }],
+      seller: req.user._id,
+    });
+    if (order) isSubOrder = true;
+  }
+  if (!order) {
+    order = await Order.findById(req.params.id);
+  }
   if (!order) throw ApiError.notFound("Order not found");
 
   const { platformLabel, trackingUrl } = applyShipmentFieldsToOrder(order, req.body);
   await order.save();
 
-  if (order.user) {
+  if (isSubOrder && order.parentOrder) {
+    const siblings = await SubOrder.find({ parentOrder: order.parentOrder });
+    const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
+    if (allShipped) {
+      await Order.findByIdAndUpdate(order.parentOrder, {
+        $set: { orderStatus: "shipped" },
+        $push: { statusHistory: { status: "shipped", note: "All seller packages dispatched" } },
+      });
+    }
+  }
+
+  const customerId = order.customer || order.user;
+  if (customerId) {
     await Notification.create({
-      user: order.user,
+      user: customerId,
       title: "Tracking details added",
-      message: `Tracking for order #${order.orderNumber} is available (${platformLabel}: ${order.trackingNumber}).`,
+      message: `Tracking for order #${order.subOrderNumber || order.orderNumber} is available (${platformLabel}: ${order.trackingNumber}).`,
       type: "order",
-      link: `/dashboard/orders/${order._id}`,
+      link: `/dashboard/orders/${order.parentOrder || order._id}`,
     }).catch(() => {});
   }
 
@@ -830,7 +938,19 @@ const saveOrderShipment = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/shipment/notify
 // @access  Private/Seller
 const notifyOrderShipment = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  let order = null;
+  let isSubOrder = false;
+
+  if (req.user.role === "seller") {
+    order = await SubOrder.findOne({
+      $or: [{ _id: req.params.id }, { subOrderNumber: req.params.id }],
+      seller: req.user._id,
+    });
+    if (order) isSubOrder = true;
+  }
+  if (!order) {
+    order = await Order.findById(req.params.id);
+  }
   if (!order) throw ApiError.notFound("Order not found");
 
   const { emailBody, emailSubject, markAsShipped = true, sendInAppNotification = true } = req.body;
@@ -844,6 +964,17 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
     markAsShipped,
   });
   await order.save();
+
+  if (isSubOrder && order.parentOrder) {
+    const siblings = await SubOrder.find({ parentOrder: order.parentOrder });
+    const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
+    if (allShipped) {
+      await Order.findByIdAndUpdate(order.parentOrder, {
+        $set: { orderStatus: "shipped" },
+        $push: { statusHistory: { status: "shipped", note: "All seller packages dispatched" } },
+      });
+    }
+  }
 
   const ctx = await loadCustomerContext(order);
 

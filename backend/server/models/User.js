@@ -1,7 +1,18 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const { decrypt } = require("../utils/encryption");
+const slugify = require("slugify");
+const { decrypt, maskPan, maskAadhaar } = require("../utils/encryption");
+
+// KYC document metadata. `accessType: "authenticated"` documents are stored privately on
+// Cloudinary and can only be viewed through short-lived signed URLs (see kycDocumentService).
+const kycDocumentSchema = {
+  url: { type: String, default: "" },
+  publicId: { type: String, default: "" },
+  accessType: { type: String, enum: ["public", "authenticated"], default: "public" },
+  format: { type: String, default: "" },
+  resourceType: { type: String, default: "image" },
+};
 
 const userSchema = new mongoose.Schema(
   {
@@ -67,25 +78,24 @@ const userSchema = new mongoose.Schema(
     phoneVerificationExpires: Date,
     sellerProfile: {
       businessName: { type: String, trim: true, default: "" },
+      // Public storefront handle: /store/:storeSlug
+      storeSlug: { type: String, trim: true, lowercase: true },
       storeBio: { type: String, trim: true, default: "" },
+      // Optional per-seller commission override (percent). null = platform default.
+      commissionRate: { type: Number, min: 0, max: 100, default: null },
+      onboardingSource: { type: String, enum: ["invite", "self"], default: "invite" },
       panNumber: {
         type: String,
         trim: true,
         default: "",
       },
-      panDocument: {
-        url: { type: String, default: "" },
-        publicId: { type: String, default: "" },
-      },
+      panDocument: kycDocumentSchema,
       aadhaarNumber: {
         type: String,
         trim: true,
         default: "",
       },
-      aadhaarDocument: {
-        url: { type: String, default: "" },
-        publicId: { type: String, default: "" },
-      },
+      aadhaarDocument: kycDocumentSchema,
       gstNumber: {
         type: String,
         trim: true,
@@ -114,6 +124,8 @@ const userSchema = new mongoose.Schema(
       kycSubmittedAt: Date,
       kycVerifiedAt: Date,
       kycRejectionReason: { type: String, default: "" },
+      kycReviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      kycReviewedAt: Date,
     },
     emailPreferences: {
       orderUpdates: { type: Boolean, default: true },
@@ -153,6 +165,37 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.index(
+  { "sellerProfile.storeSlug": 1 },
+  { unique: true, partialFilterExpression: { "sellerProfile.storeSlug": { $type: "string" } } }
+);
+userSchema.index({ role: 1, "sellerProfile.kycStatus": 1 });
+
+// Generate a unique public store slug for sellers once they have a business name.
+userSchema.pre("save", async function (next) {
+  try {
+    if (this.role !== "seller") return next();
+    const businessName = this.sellerProfile?.businessName?.trim();
+    if (!businessName || this.sellerProfile.storeSlug) return next();
+
+    const base = slugify(businessName, { lower: true, strict: true }) || "store";
+    let candidate = base;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const taken = await this.constructor.exists({
+        "sellerProfile.storeSlug": candidate,
+        _id: { $ne: this._id },
+      });
+      if (!taken) break;
+      candidate = `${base}-${crypto.randomBytes(2).toString("hex")}`;
+    }
+    this.sellerProfile.storeSlug = candidate;
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+});
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -177,7 +220,12 @@ userSchema.methods.generatePasswordResetToken = function () {
   return token;
 };
 
-userSchema.methods.toSafeObject = function () {
+/**
+ * Serialise a user for API responses.
+ * KYC identity numbers are masked by default; pass { revealKyc: true } only from
+ * endpoints that are explicitly authorised to see them (admin KYC review).
+ */
+userSchema.methods.toSafeObject = function ({ revealKyc = false } = {}) {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshTokens;
@@ -188,11 +236,25 @@ userSchema.methods.toSafeObject = function () {
 
   if (obj.sellerProfile) {
     if (obj.sellerProfile.panNumber) {
-      obj.sellerProfile.panNumber = decrypt(obj.sellerProfile.panNumber);
+      const pan = decrypt(obj.sellerProfile.panNumber);
+      obj.sellerProfile.panNumber = revealKyc ? pan : maskPan(pan);
     }
     if (obj.sellerProfile.aadhaarNumber) {
-      obj.sellerProfile.aadhaarNumber = decrypt(obj.sellerProfile.aadhaarNumber);
+      const aadhaar = decrypt(obj.sellerProfile.aadhaarNumber);
+      obj.sellerProfile.aadhaarNumber = revealKyc ? aadhaar : maskAadhaar(aadhaar);
     }
+    // Never expose raw private document locations; clients use the signed-URL endpoint.
+    ["panDocument", "aadhaarDocument"].forEach((key) => {
+      const doc = obj.sellerProfile[key];
+      if (doc) {
+        obj.sellerProfile[key] = {
+          uploaded: Boolean(doc.publicId || doc.url),
+          accessType: doc.accessType || "authenticated",
+          format: doc.format,
+          url: revealKyc ? (doc.url || "") : null,
+        };
+      }
+    });
   }
 
   return obj;

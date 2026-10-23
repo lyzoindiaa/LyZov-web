@@ -142,6 +142,20 @@ const AdminSellerDetailsPage = () => {
     }
   };
 
+  const handleViewKycDoc = async (docType) => {
+    try {
+      const res = await adminService.getSellerKycDocument(seller._id, docType);
+      if (res.success && res.data?.url) {
+        window.open(res.data.url, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("Document link not found");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to generate document access link");
+    }
+  };
+
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
@@ -402,6 +416,24 @@ const AdminSellerDetailsPage = () => {
                   <strong style={{ color: "var(--ink)" }}>{seller.sellerProfile?.gstNumber || "Not provided"}</strong>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--ink-muted)" }}>Store Slug:</span>
+                  {seller.sellerProfile?.storeSlug ? (
+                    <Link
+                      to={`/store/${seller.sellerProfile.storeSlug}`}
+                      target="_blank"
+                      style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                    >
+                      /{seller.sellerProfile.storeSlug} <ExternalLink size={12} />
+                    </Link>
+                  ) : (
+                    <span style={{ color: "var(--ink-muted)" }}>Not generated</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--ink-muted)" }}>Platform Commission:</span>
+                  <strong style={{ color: "var(--ink)" }}>{seller.sellerProfile?.commissionRate ?? 10}%</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ color: "var(--ink-muted)" }}>Store Bio:</span>
                   <span style={{ color: "var(--ink)", maxWidth: "60%", textAlign: "right" }}>{seller.sellerProfile?.storeBio || "None"}</span>
                 </div>
@@ -492,10 +524,14 @@ const AdminSellerDetailsPage = () => {
               <div style={{ backgroundColor: "var(--bg)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
                   <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--ink-muted)" }}>PAN Card</span>
-                  {seller.sellerProfile?.panDocument?.url && (
-                    <a href={seller.sellerProfile.panDocument.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "11px", color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
-                      View Doc <ExternalLink size={11} />
-                    </a>
+                  {(seller.sellerProfile?.panDocument || seller.sellerProfile?.panNumber) && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewKycDoc("pan")}
+                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "11px", color: "var(--accent)", fontWeight: 600 }}
+                    >
+                      View Secure Doc <ExternalLink size={11} />
+                    </button>
                   )}
                 </div>
                 <strong style={{ fontFamily: "monospace", fontSize: "0.875rem", color: "var(--ink)" }}>
@@ -507,10 +543,14 @@ const AdminSellerDetailsPage = () => {
               <div style={{ backgroundColor: "var(--bg)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
                   <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--ink-muted)" }}>Aadhaar Card</span>
-                  {seller.sellerProfile?.aadhaarDocument?.url && (
-                    <a href={seller.sellerProfile.aadhaarDocument.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "11px", color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
-                      View Doc <ExternalLink size={11} />
-                    </a>
+                  {(seller.sellerProfile?.aadhaarDocument || seller.sellerProfile?.aadhaarNumber) && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewKycDoc("aadhaar")}
+                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "11px", color: "var(--accent)", fontWeight: 600 }}
+                    >
+                      View Secure Doc <ExternalLink size={11} />
+                    </button>
                   )}
                 </div>
                 <strong style={{ fontFamily: "monospace", fontSize: "0.875rem", color: "var(--ink)" }}>

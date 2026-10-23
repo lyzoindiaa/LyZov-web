@@ -145,6 +145,22 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+      default: null,
+    },
+    moderationStatus: {
+      type: String,
+      enum: ["draft", "pending_approval", "approved", "rejected"],
+      default: "approved",
+    },
+    moderationFeedback: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -205,6 +221,8 @@ productSchema.index({
 productSchema.index({ category: 1 });
 productSchema.index({ categoryPath: 1 });
 productSchema.index({ brand: 1 });
+productSchema.index({ seller: 1, createdAt: -1 });
+productSchema.index({ moderationStatus: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ isFeatured: 1, isNewArrival: 1, isTrending: 1 });
 productSchema.index({ slugHistory: 1 });

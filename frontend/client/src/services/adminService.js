@@ -48,6 +48,32 @@ export const adminService = {
     return res.data;
   },
 
+  getSellerKycDocument: async (id, docType) => {
+    const res = await api.get(`/admin/sellers/${id}/kyc-document/${docType}`);
+    return res.data;
+  },
+
+  // ── Marketplace Financials & Moderation ──
+  getPayouts: async (params = {}) => {
+    const res = await api.get("/admin/payouts", { params });
+    return res.data;
+  },
+
+  releasePayout: async (id, transactionRef) => {
+    const res = await api.post(`/admin/payouts/${id}/release`, { transactionRef });
+    return res.data;
+  },
+
+  getProductsForModeration: async (params = {}) => {
+    const res = await api.get("/admin/products/moderation", { params });
+    return res.data;
+  },
+
+  moderateProduct: async (id, data) => {
+    const res = await api.put(`/admin/products/${id}/moderation`, data);
+    return res.data;
+  },
+
   // ── Customer Management ──
   getCustomers: async (params = {}) => {
     const res = await api.get("/admin/customers", { params });
@@ -59,3 +85,4 @@ export const adminService = {
     return res.data;
   },
 };
+

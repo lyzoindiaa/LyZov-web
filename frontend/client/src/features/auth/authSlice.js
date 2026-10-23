@@ -39,6 +39,16 @@ export const logoutAllDevices = createAsyncThunk("auth/logoutAll", async () => {
   }
 });
 
+export const registerSellerUser = createAsyncThunk("auth/registerSeller", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await authService.registerSeller(payload);
+    if (res.data?.accessToken) setAccessToken(res.data.accessToken);
+    return res.data.user;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || "Seller registration failed");
+  }
+});
+
 export const fetchCurrentUser = createAsyncThunk("auth/me", async (_, { rejectWithValue }) => {
   try {
     const res = await authService.getMe();
@@ -63,6 +73,13 @@ const authSlice = createSlice({
     },
     setUser: (state, action) => {
       state.user = action.payload;
+      state.isAuthenticated = Boolean(action.payload);
+    },
+    setAuthSession: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = Boolean(action.payload);
+      state.status = "succeeded";
+      state.bootstrapped = true;
     },
   },
   extraReducers: (builder) => {
@@ -123,9 +140,15 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.status = "idle";
         state.bootstrapped = true;
+      })
+      .addCase(registerSellerUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.bootstrapped = true;
       });
   },
 });
 
-export const { clearAuthError, setUser } = authSlice.actions;
+export const { clearAuthError, setUser, setAuthSession } = authSlice.actions;
 export default authSlice.reducer;

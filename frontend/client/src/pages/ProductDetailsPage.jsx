@@ -657,7 +657,28 @@ const ProductDetailsPage = () => {
                   </span>
                 )}
               </div>
+
+              {/* Multi-Seller Attribution */}
+              {product.seller && (
+                <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8125rem", color: "var(--ink-muted)" }}>
+                  <ShieldCheck size={14} style={{ color: "var(--accent)" }} />
+                  <span>Sold & Fulfilled by:</span>
+                  <Link
+                    to={product.seller.sellerProfile?.storeSlug ? `/store/${product.seller.sellerProfile.storeSlug}` : "#"}
+                    style={{
+                      fontWeight: 600,
+                      color: "var(--accent)",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                    onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                  >
+                    {product.seller.sellerProfile?.businessName || product.seller.name || "LyZov Verified Merchant"}
+                  </Link>
+                </div>
+              )}
             </div>
+
 
             {/* Price Box */}
             <div

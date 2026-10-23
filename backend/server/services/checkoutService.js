@@ -2,6 +2,9 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
 const Order = require("../models/Order");
+const SubOrder = require("../models/SubOrder");
+const Payout = require("../models/Payout");
+const User = require("../models/User");
 const Notification = require("../models/Notification");
 const ApiError = require("../utils/ApiError");
 const emailService = require("./emailService");
@@ -155,6 +158,7 @@ const buildCheckoutSnapshot = async (user) => {
       size: cartItem.size || "",
       quantity: qty,
       gstRate: product.gstRate || cartItem.gstRate || null,
+      seller: product.seller || null,
     });
   }
 
@@ -248,6 +252,103 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
       statusHistory: [{ status: "pending", note: isPaid ? "Order placed & payment captured" : "Order placed" }],
     });
 
+    // ── Multi-Seller Split: Create isolated SubOrder per seller ──
+    const sellerItemsMap = new Map();
+    for (const item of snapshot.items) {
+      const sellerKey = item.seller ? item.seller.toString() : "platform_admin";
+      if (!sellerItemsMap.has(sellerKey)) {
+        sellerItemsMap.set(sellerKey, []);
+      }
+      sellerItemsMap.get(sellerKey).push(item);
+    }
+
+    // Resolve platform fallback seller if needed
+    let defaultAdminId = null;
+    const findAdmin = async () => {
+      if (!defaultAdminId) {
+        const adminUser = await User.findOne({ role: "admin" }).select("_id");
+        defaultAdminId = adminUser ? adminUser._id : user._id;
+      }
+      return defaultAdminId;
+    };
+
+    const createdSubOrders = [];
+    let subOrderIndex = 1;
+
+    for (const [sellerKey, sellerItems] of sellerItemsMap.entries()) {
+      let sellerId = sellerKey !== "platform_admin" ? sellerKey : await findAdmin();
+      const sellerUser = await User.findById(sellerId).select("sellerProfile");
+      const commissionRate =
+        typeof sellerUser?.sellerProfile?.commissionRate === "number"
+          ? sellerUser.sellerProfile.commissionRate
+          : 10; // Default platform commission: 10%
+
+      const sellerItemsPrice = round2(
+        sellerItems.reduce((acc, it) => acc + it.price * it.quantity, 0)
+      );
+
+      // Proportional discount and tax allocation
+      const proportion = snapshot.itemsPrice > 0 ? sellerItemsPrice / snapshot.itemsPrice : 1;
+      const sellerDiscount = round2(snapshot.discountAmount * proportion);
+      const sellerTax = round2(snapshot.taxPrice * proportion);
+      // Flat shipping assigned to first sub-order or shared proportionally
+      const sellerShipping = round2(snapshot.shippingPrice * proportion);
+      const sellerTotal = round2(sellerItemsPrice - sellerDiscount + sellerTax + sellerShipping);
+
+      const commissionAmount = round2((sellerItemsPrice * commissionRate) / 100);
+      const sellerEarnings = round2(Math.max(sellerTotal - commissionAmount, 0));
+
+      const subOrderNumber = `${order.orderNumber}-S${String(subOrderIndex++).padStart(2, "0")}`;
+
+      const subOrder = await SubOrder.create({
+        parentOrder: order._id,
+        subOrderNumber,
+        seller: sellerId,
+        customer: user._id,
+        items: sellerItems,
+        shippingAddress,
+        paymentMethod,
+        paymentStatus: isPaid ? "captured" : "cod_pending",
+        itemsPrice: sellerItemsPrice,
+        taxPrice: sellerTax,
+        shippingPrice: sellerShipping,
+        discountAmount: sellerDiscount,
+        totalPrice: sellerTotal,
+        commissionRate,
+        commissionAmount,
+        sellerEarnings,
+        payoutStatus: "pending",
+        orderStatus: "pending",
+        statusHistory: [{ status: "pending", note: "Sub-order created and waiting for seller processing" }],
+      });
+
+      // Create linked Payout ledger entry
+      const returnWindowDays = 7;
+      const eligibleDate = new Date(Date.now() + returnWindowDays * 24 * 60 * 60 * 1000);
+      const payout = await Payout.create({
+        seller: sellerId,
+        subOrder: subOrder._id,
+        parentOrder: order._id,
+        grossAmount: sellerTotal,
+        commissionRate,
+        commissionAmount,
+        netAmount: sellerEarnings,
+        status: "pending",
+        eligibleAt: eligibleDate,
+        bankDetailsSnapshot: sellerUser?.sellerProfile?.bankDetails || {},
+      });
+
+      subOrder.payoutId = payout._id;
+      await subOrder.save();
+      createdSubOrders.push(subOrder._id);
+    }
+
+    if (createdSubOrders.length > 0) {
+      order.hasSubOrders = true;
+      order.subOrders = createdSubOrders;
+      await order.save();
+    }
+
     return order;
   } catch (err) {
     await restoreStockForItems(deducted);
@@ -270,6 +371,25 @@ const afterOrderPlaced = async ({ user, order }) => {
     type: "order",
     link: `/dashboard/orders/${order._id}`,
   }).catch(() => {});
+
+  // Notify each seller that received an order
+  const distinctSellers = [
+    ...new Set(
+      (order.items || [])
+        .map((i) => i.seller?.toString())
+        .filter((id) => id && id !== user._id.toString())
+    ),
+  ];
+
+  for (const sellerId of distinctSellers) {
+    await Notification.create({
+      user: sellerId,
+      title: "New Customer Order Assigned",
+      message: `You have received order items for order #${order.orderNumber}. Open Orders to prepare dispatch.`,
+      type: "order",
+      link: `/seller/orders`,
+    }).catch(() => {});
+  }
 
   // Await email dispatch via Promise.allSettled so serverless runtimes (Vercel) do not freeze before sockets finish
   await Promise.allSettled([
