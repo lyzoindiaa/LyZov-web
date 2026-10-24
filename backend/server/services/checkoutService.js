@@ -168,6 +168,7 @@ const buildCheckoutSnapshot = async (user) => {
       quantity: qty,
       gstRate: product.gstRate || cartItem.gstRate || null,
       seller: resolvedSellerId,
+      category: product.category || null,
     });
   }
 
@@ -322,7 +323,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
       const sellerTotal = round2(sellerItemsPrice - sellerDiscount + sellerTax + sellerShipping);
 
       // Resolve dynamic commission rule (Seller > Category > Global > Fallback)
-      const sampleCategoryId = sellerItems[0]?.product?.category || null;
+      const sampleCategoryId = sellerItems[0]?.category || sellerItems[0]?.product?.category || null;
       const rule = await resolveCommissionRule({
         sellerId,
         categoryId: sampleCategoryId,

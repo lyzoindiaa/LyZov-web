@@ -34,6 +34,7 @@ const authLimiter = rateLimit({
   message: { success: false, message: "Too many attempts. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test",
 });
 
 const refreshLimiter = rateLimit({
@@ -42,6 +43,7 @@ const refreshLimiter = rateLimit({
   message: { success: false, message: "Too many refresh attempts. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test",
 });
 
 router.post("/register", authLimiter, registerValidator, validate, register);
