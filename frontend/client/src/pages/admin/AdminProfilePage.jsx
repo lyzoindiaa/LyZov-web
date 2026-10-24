@@ -54,6 +54,7 @@ const AdminProfilePage = () => {
   const sp = user?.sellerProfile || {};
   const ba = sp.businessAddress || {};
   const bd = sp.bankDetails || {};
+  const isKycVerified = sp.kycStatus === "verified";
 
   const isStep1Complete = Boolean(
     sp.businessName?.trim() &&
@@ -151,6 +152,10 @@ const AdminProfilePage = () => {
   };
 
   const handleDeleteDocument = async (docType) => {
+    if (isKycVerified) {
+      toast.error("Your KYC has been verified by Admin. Verified documents cannot be deleted or removed.");
+      return;
+    }
     if (docType === "pan") {
       if (panFile && !user?.sellerProfile?.panDocument?.url) {
         setPanFile(null);
@@ -228,6 +233,11 @@ const AdminProfilePage = () => {
   };
 
   const onKycSubmit = async (data) => {
+    if (isKycVerified) {
+      toast.info("Your KYC is verified and locked by Admin. Moving to Step 3...");
+      setActiveTab("bank");
+      return;
+    }
     if (!panFile && !panPreview) {
       toast.error("Please upload a copy of your PAN Card");
       return;
@@ -622,6 +632,18 @@ const AdminProfilePage = () => {
             )}
           </div>
 
+          {isKycVerified && (
+            <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200 flex items-start gap-3 mb-6">
+              <ShieldCheck size={20} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-xs leading-relaxed">
+                <p className="font-bold text-sm text-emerald-800 dark:text-emerald-300">Verified Identity Details Locked</p>
+                <p className="mt-0.5 text-stone dark:text-stone-300">
+                  Your PAN and Aadhaar identity documents have been approved and verified by LyZov Admin. In compliance with security policy, verified identity numbers and documents cannot be modified or deleted. You may view and download your verified records below.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={kycForm.handleSubmit(onKycSubmit)} className="flex flex-col gap-6">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {/* PAN Number */}
@@ -629,6 +651,7 @@ const AdminProfilePage = () => {
                 <Input
                   label="PAN Card Number *"
                   placeholder="e.g. ABCDE1234F"
+                  disabled={isKycVerified}
                   {...kycForm.register("panNumber", {
                     required: "PAN Card Number is required",
                     pattern: {
@@ -638,7 +661,9 @@ const AdminProfilePage = () => {
                   })}
                   error={kycForm.formState.errors.panNumber?.message}
                 />
-                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory Permanent Account Number (Encrypted AES-256)</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">
+                  {isKycVerified ? "🔒 Verified & Locked by Admin" : "Compulsory Permanent Account Number (Encrypted AES-256)"}
+                </span>
               </div>
 
               {/* GSTIN (Optional) */}
@@ -664,6 +689,7 @@ const AdminProfilePage = () => {
                     label="Aadhaar Card Number (12 Digits) *"
                     type={showAadhaar ? "text" : "password"}
                     placeholder="Enter 12-digit Aadhaar Number"
+                    disabled={isKycVerified}
                     {...kycForm.register("aadhaarNumber", {
                       required: "12-digit Aadhaar Number is required",
                       pattern: {
@@ -682,7 +708,9 @@ const AdminProfilePage = () => {
                     {showAadhaar ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <span className="text-[0.7rem] text-stone mt-1 block">Compulsory 12-digit UIDAI Identification (Encrypted AES-256)</span>
+                <span className="text-[0.7rem] text-stone mt-1 block">
+                  {isKycVerified ? "🔒 Verified & Locked by Admin" : "Compulsory 12-digit UIDAI Identification (Encrypted AES-256)"}
+                </span>
               </div>
             </div>
 
@@ -748,26 +776,34 @@ const AdminProfilePage = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* Replace Document */}
-                        <label
-                          htmlFor="pan-doc-upload"
-                          className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
-                        >
-                          <Upload size={12} />
-                          <span>Replace</span>
-                        </label>
+                        {!isKycVerified ? (
+                          <>
+                            {/* Replace Document */}
+                            <label
+                              htmlFor="pan-doc-upload"
+                              className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
+                            >
+                              <Upload size={12} />
+                              <span>Replace</span>
+                            </label>
 
-                        {/* Delete Document */}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteDocument("pan")}
-                          disabled={isDeletingPan}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                          title="Delete PAN Document"
-                        >
-                          <Trash2 size={13} />
-                          <span>{isDeletingPan ? "..." : "Delete"}</span>
-                        </button>
+                            {/* Delete Document */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDocument("pan")}
+                              disabled={isDeletingPan}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                              title="Delete PAN Document"
+                            >
+                              <Trash2 size={13} />
+                              <span>{isDeletingPan ? "..." : "Delete"}</span>
+                            </button>
+                          </>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-500/30">
+                            <ShieldCheck size={12} /> Verified &amp; Locked
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -853,26 +889,34 @@ const AdminProfilePage = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* Replace Document */}
-                        <label
-                          htmlFor="aadhaar-doc-upload"
-                          className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
-                        >
-                          <Upload size={12} />
-                          <span>Replace</span>
-                        </label>
+                        {!isKycVerified ? (
+                          <>
+                            {/* Replace Document */}
+                            <label
+                              htmlFor="aadhaar-doc-upload"
+                              className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--accent)] hover:underline"
+                            >
+                              <Upload size={12} />
+                              <span>Replace</span>
+                            </label>
 
-                        {/* Delete Document */}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteDocument("aadhaar")}
-                          disabled={isDeletingAadhaar}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                          title="Delete Aadhaar Document"
-                        >
-                          <Trash2 size={13} />
-                          <span>{isDeletingAadhaar ? "..." : "Delete"}</span>
-                        </button>
+                            {/* Delete Document */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDocument("aadhaar")}
+                              disabled={isDeletingAadhaar}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                              title="Delete Aadhaar Document"
+                            >
+                              <Trash2 size={13} />
+                              <span>{isDeletingAadhaar ? "..." : "Delete"}</span>
+                            </button>
+                          </>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-500/30">
+                            <ShieldCheck size={12} /> Verified &amp; Locked
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -907,8 +951,13 @@ const AdminProfilePage = () => {
               >
                 ← Back to Step 1
               </button>
-              <Button type="submit" isLoading={kycForm.formState.isSubmitting} className="flex items-center gap-2">
-                <span>Save & Continue to Step 3</span>
+              <Button
+                type={isKycVerified ? "button" : "submit"}
+                onClick={isKycVerified ? () => setActiveTab("bank") : undefined}
+                isLoading={kycForm.formState.isSubmitting}
+                className="flex items-center gap-2"
+              >
+                <span>{isKycVerified ? "Continue to Step 3 (KYC Verified)" : "Save & Continue to Step 3"}</span>
                 <ArrowRight size={16} />
               </Button>
             </div>

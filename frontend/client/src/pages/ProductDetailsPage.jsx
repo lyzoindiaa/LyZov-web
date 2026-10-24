@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Star,
@@ -21,6 +21,8 @@ import {
   X,
   BadgeCheck,
   MessageSquarePlus,
+  Palmtree,
+  Lock,
 } from "lucide-react";
 import { productService, reviewService } from "../services/productService";
 import { shippingService } from "../services/shippingService";
@@ -58,6 +60,13 @@ const ProductDetailsPage = () => {
   const [reviewImages, setReviewImages] = useState([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [helpfulVoted, setHelpfulVoted] = useState({});
+  const [searchParams] = useSearchParams();
+  const [reviewEligibility, setReviewEligibility] = useState({
+    canReview: false,
+    hasPurchased: false,
+    alreadyReviewed: false,
+    isLoading: true,
+  });
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -139,6 +148,10 @@ const ProductDetailsPage = () => {
       navigate(`/login?redirect=/product/${slug}`);
       return;
     }
+    if (!reviewEligibility.canReview) {
+      toast.error("Review submission is restricted to verified customers who have purchased this product.");
+      return;
+    }
     if (!reviewComment.trim()) {
       toast.error("Please provide a review comment");
       return;
@@ -154,12 +167,18 @@ const ProductDetailsPage = () => {
       reviewImages.forEach((img) => formData.append("images", img));
 
       await reviewService.createReview(formData);
-      toast.success("Review submitted successfully! Thank you for sharing your experience.");
+      toast.success("Review submitted successfully! Thank you for sharing your verified experience.");
       setShowReviewModal(false);
       setReviewTitle("");
       setReviewComment("");
       setReviewImages([]);
       setReviewRating(5);
+      setReviewEligibility({
+        canReview: false,
+        hasPurchased: true,
+        alreadyReviewed: true,
+        isLoading: false,
+      });
 
       // Refresh reviews
       const rv = await reviewService.getProductReviews(product._id).catch(() => ({ data: [], meta: {} }));
@@ -191,6 +210,30 @@ const ProductDetailsPage = () => {
         const rv = await reviewService.getProductReviews(prod._id).catch(() => ({ data: [], meta: {} }));
         setReviews(rv.data || []);
         if (rv.meta) setReviewMeta(rv.meta);
+
+        // Check verified buyer review eligibility
+        if (isAuthenticated && !isAdmin) {
+          reviewService
+            .checkReviewEligibility(prod._id)
+            .then((eligRes) => {
+              if (eligRes?.data) {
+                setReviewEligibility({
+                  canReview: Boolean(eligRes.data.canReview),
+                  hasPurchased: Boolean(eligRes.data.hasPurchased),
+                  alreadyReviewed: Boolean(eligRes.data.alreadyReviewed),
+                  orderId: eligRes.data.orderId,
+                  isLoading: false,
+                });
+                if (searchParams.get("openReview") === "true" && eligRes.data.canReview) {
+                  setActiveTab("reviews");
+                  setShowReviewModal(true);
+                }
+              }
+            })
+            .catch(() => setReviewEligibility((p) => ({ ...p, isLoading: false })));
+        } else {
+          setReviewEligibility((p) => ({ ...p, isLoading: false }));
+        }
       } catch {
         setProduct(null);
         setLoadError(true);
@@ -200,7 +243,86 @@ const ProductDetailsPage = () => {
     };
     load();
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [slug]);
+  }, [slug, isAuthenticated, isAdmin, searchParams]);
+
+  // Real-Time Review Event Streaming (Server-Sent Events)
+  useEffect(() => {
+    if (!product?._id) return;
+
+    let eventSource;
+    try {
+      const streamUrl = reviewService.getReviewStreamUrl(product._id);
+      eventSource = new EventSource(streamUrl);
+
+      eventSource.addEventListener("review:new", (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data?.review) {
+            setReviews((prev) => {
+              if (prev.some((r) => r._id === data.review._id)) return prev;
+              return [data.review, ...prev];
+            });
+
+            if (data.distribution) {
+              setReviewMeta({
+                distribution: data.distribution,
+                averageRating: data.averageRating || 0,
+                total: data.total || 0,
+              });
+            }
+
+            toast.info(
+              `⭐ New verified buyer review: "${data.review.title || (data.review.comment ? data.review.comment.slice(0, 35) + '...' : 'Customer review')}"`,
+              { autoClose: 4000 }
+            );
+          }
+        } catch (err) {
+          console.error("Live review SSE error", err);
+        }
+      });
+
+      eventSource.addEventListener("review:helpful", (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data?.reviewId) {
+            setReviews((prev) =>
+              prev.map((r) =>
+                r._id === data.reviewId ? { ...r, helpfulCount: data.helpfulCount } : r
+              )
+            );
+          }
+        } catch (err) {
+          console.error("Live helpful SSE error", err);
+        }
+      });
+
+      eventSource.addEventListener("review:deleted", (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data?.reviewId) {
+            setReviews((prev) => prev.filter((r) => r._id !== data.reviewId));
+            if (data.distribution) {
+              setReviewMeta({
+                distribution: data.distribution,
+                averageRating: data.averageRating || 0,
+                total: data.total || 0,
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Live delete SSE error", err);
+        }
+      });
+    } catch (err) {
+      console.warn("SSE connection error", err);
+    }
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [product?._id]);
 
   useEffect(() => {
     if (isSlideshowPlaying && product?.images?.length > 1) {
@@ -251,6 +373,7 @@ const ProductDetailsPage = () => {
       : 0;
   const isWished = Boolean(wishlistProducts?.some?.((p) => (p?._id || p) === product._id));
   const stock = selectedVariant ? selectedVariant.stock : product.stock;
+  const isSellerOnVacation = Boolean(product?.seller?.sellerProfile?.isVacationMode);
 
   const handleAddToCart = (e) => {
     if (!isAuthenticated) {
@@ -260,6 +383,10 @@ const ProductDetailsPage = () => {
     }
     if (isSeller) {
       toast.info("Sellers can manage products, not shop as a customer.");
+      return;
+    }
+    if (isSellerOnVacation) {
+      toast.warn("This merchant is currently on vacation. Orders for this item are temporarily paused.");
       return;
     }
     if (stock <= 0) {
@@ -873,6 +1000,21 @@ const ProductDetailsPage = () => {
             {/* Qty & Add to cart actions */}
             {!isAdmin ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {isSellerOnVacation && (
+                  <div
+                    className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/40 text-amber-900 dark:text-amber-200"
+                    style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}
+                  >
+                    <Palmtree size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p style={{ fontSize: "0.875rem", fontWeight: 700 }}>Merchant on Vacation</p>
+                      <p style={{ fontSize: "0.75rem", marginTop: "0.25rem", opacity: 0.9 }}>
+                        {product.seller?.sellerProfile?.vacationMessage ||
+                          "This seller is currently taking a temporary holiday break. Item orders will resume shortly."}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)" }}>Quantity:</span>
                   <QuantityStepper quantity={quantity} onIncrease={handleIncreaseQuantity} onDecrease={handleDecreaseQuantity} max={stock > 0 ? stock : 10} />
@@ -881,12 +1023,12 @@ const ProductDetailsPage = () => {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    disabled={stock <= 0}
+                    disabled={stock <= 0 || isSellerOnVacation}
                     className="btn btn-accent btn-ripple flex-1"
                     style={{ minWidth: "11rem", flex: 1, padding: "0.9rem 1.5rem", fontSize: "0.9375rem" }}
                   >
                     <ShoppingBag size={18} />
-                    {stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                    {isSellerOnVacation ? "Merchant on Vacation" : stock <= 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
                   <button
                     type="button"
@@ -1122,20 +1264,47 @@ const ProductDetailsPage = () => {
                     <p className="text-xs text-[var(--ink-muted)]">
                       Based on {reviews.length} {reviews.length === 1 ? "review" : "customer reviews"}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          toast.info("Please log in to leave a product review");
-                          navigate(`/login?redirect=/product/${slug}`);
-                          return;
-                        }
-                        setShowReviewModal(true);
-                      }}
-                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95 transition-all shadow-xs"
-                    >
-                      <MessageSquarePlus size={15} /> Write a Review
-                    </button>
+
+                    {/* Real-time Indicator & Action */}
+                    <div className="mt-4 flex flex-col items-center md:items-start gap-2 w-full">
+                      <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Live Real-Time Reviews</span>
+                      </div>
+
+                      {!isAuthenticated ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toast.info("Please sign in to leave a review (buyers only)");
+                            navigate(`/login?redirect=/product/${slug}`);
+                          }}
+                          className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95 transition-all shadow-xs"
+                        >
+                          <MessageSquarePlus size={15} /> Sign in to Review
+                        </button>
+                      ) : reviewEligibility.alreadyReviewed ? (
+                        <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-semibold border border-emerald-300 dark:border-emerald-700">
+                          <CheckCircle size={14} className="text-emerald-600" />
+                          <span>You reviewed this item</span>
+                        </div>
+                      ) : reviewEligibility.canReview ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowReviewModal(true)}
+                          className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95 transition-all shadow-xs"
+                        >
+                          <MessageSquarePlus size={15} /> Write a Verified Review
+                        </button>
+                      ) : (
+                        <div className="mt-1 p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300/60 dark:border-amber-700/40 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2">
+                          <Lock size={14} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                          <span>
+                            <strong>Verified Buyers Only:</strong> Purchase this product to unlock customer reviews.
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right: Star breakdown bars */}
@@ -1172,19 +1341,28 @@ const ProductDetailsPage = () => {
                   <p className="text-xs text-[var(--ink-muted)] mt-1 mb-4">
                     Be the first verified customer to share insights about this product.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        navigate(`/login?redirect=/product/${slug}`);
-                        return;
-                      }
-                      setShowReviewModal(true);
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95"
-                  >
-                    <MessageSquarePlus size={14} /> Write First Review
-                  </button>
+                  {!isAuthenticated ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/login?redirect=/product/${slug}`)}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95"
+                    >
+                      <MessageSquarePlus size={14} /> Sign in to Write First Review
+                    </button>
+                  ) : reviewEligibility.canReview ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowReviewModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-[var(--accent)] text-white hover:opacity-95"
+                    >
+                      <MessageSquarePlus size={14} /> Write First Review
+                    </button>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-medium border border-amber-200 dark:border-amber-800">
+                      <Lock size={13} className="text-amber-600" />
+                      <span>Only verified buyers who ordered this product can write a review.</span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">

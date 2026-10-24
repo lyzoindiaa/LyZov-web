@@ -18,6 +18,7 @@ const productController = require("../controllers/productController");
 const orderController = require("../controllers/orderController");
 const adminController = require("../controllers/adminController");
 const reviewController = require("../controllers/reviewController");
+const userController = require("../controllers/userController");
 const checkoutService = require("../services/checkoutService");
 const stockService = require("../services/stockService");
 
@@ -305,6 +306,66 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
       await productController.updateProduct(reqAdmin, resAdmin, nextAdmin);
       assert.strictEqual(resAdmin.getStatusCode(), 200, "Admin must be permitted to edit any product");
       assert.strictEqual(productA.price, 5499);
+
+      // 5. Seller attempts to update a product with NO seller (null/undefined) -> Blocked with 403
+      const productNoSeller = {
+        _id: new mongoose.Types.ObjectId(),
+        title: "Platform Unassigned Product",
+        seller: null,
+      };
+      Product.findById = (id) => ({
+        populate: () => Promise.resolve(productNoSeller),
+        then: (fn) => fn(productNoSeller),
+      });
+
+      const { req: reqUnassigned, res: resUnassigned, next: nextUnassigned } = createMockReqRes({
+        user: mockSellerA,
+        params: { id: productNoSeller._id.toString() },
+        body: { price: 999 },
+      });
+
+      await assert.rejects(
+        async () => {
+          await productController.updateProduct(reqUnassigned, resUnassigned, nextUnassigned);
+        },
+        (err) => {
+          return err.statusCode === 403 && err.message.includes("modify another seller's product");
+        },
+        "Seller must be blocked when modifying an unassigned / platform product"
+      );
+
+      // 6. getMyProducts strictly filters by req.user._id for sellers
+      let capturedFilter = null;
+      const originalFind = Product.find;
+      const originalCount = Product.countDocuments;
+
+      Product.find = (filter) => {
+        capturedFilter = filter;
+        return {
+          populate: () => ({
+            populate: () => ({
+              sort: () => ({
+                skip: () => ({
+                  limit: () => Promise.resolve([productA]),
+                }),
+              }),
+            }),
+          }),
+        };
+      };
+      Product.countDocuments = (filter) => Promise.resolve(1);
+
+      const { req: reqMine, res: resMine, next: nextMine } = createMockReqRes({
+        user: mockSellerA,
+        query: { limit: 10 },
+      });
+
+      await productController.getMyProducts(reqMine, resMine, nextMine);
+      assert.strictEqual(resMine.getStatusCode(), 200);
+      assert.strictEqual(capturedFilter.seller.toString(), sellerAId.toString(), "getMyProducts must strictly scope to sellerAId");
+
+      Product.find = originalFind;
+      Product.countDocuments = originalCount;
     } finally {
       Product.findById = originalProductFindById;
     }
@@ -813,6 +874,7 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
   test("TEST-MS-11: Verified Customer Reviews & Rating Distribution Breakdown", async () => {
     const testProductId = new mongoose.Types.ObjectId();
     const originalFind = Review.find;
+    const originalFindById = Review.findById;
     const originalCountDocuments = Review.countDocuments;
     const originalAggregate = Review.aggregate;
     const originalProductFindById = Product.findById;
@@ -861,19 +923,46 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
       assert.strictEqual(data.meta.distribution[4], 1);
       assert.strictEqual(data.meta.averageRating, 4.5);
 
-      // 2. Test createReview with verified purchase validation
+      // 2. Non-buyer attempts to review -> 403 Forbidden
       Product.findById = () => Promise.resolve({ _id: testProductId });
       Review.findOne = () => Promise.resolve(null); // No existing review
+      Order.findOne = () => Promise.resolve(null); // User has NOT purchased
+
+      const { req: reqNonBuyer, res: resNonBuyer, next: nextNonBuyer } = createMockReqRes({
+        user: { _id: new mongoose.Types.ObjectId(), role: "customer" },
+        body: {
+          productId: testProductId.toString(),
+          rating: 4,
+          comment: "Looks nice but never bought.",
+        },
+      });
+
+      await assert.rejects(
+        async () => {
+          await reviewController.createReview(reqNonBuyer, resNonBuyer, nextNonBuyer);
+        },
+        (err) => {
+          return err.statusCode === 403 && err.message.includes("restricted to verified customers");
+        },
+        "Non-buyer must be rejected with 403 Forbidden"
+      );
+
+      // 3. Verified buyer submits review -> 201 Created & populated
+      const verifiedBuyerId = new mongoose.Types.ObjectId();
       Order.findOne = () => Promise.resolve({ _id: new mongoose.Types.ObjectId(), isPaid: true }); // Paid order exists
 
       let createdReviewPayload = null;
       Review.create = (payload) => {
-        createdReviewPayload = payload;
-        return Promise.resolve(payload);
+        createdReviewPayload = { ...payload, _id: new mongoose.Types.ObjectId() };
+        return Promise.resolve(createdReviewPayload);
       };
 
+      Review.findById = (id) => ({
+        populate: () => Promise.resolve({ ...createdReviewPayload, user: { name: "Aditya", avatar: null } }),
+      });
+
       const { req: reqCreate, res: resCreate, next: nextCreate } = createMockReqRes({
-        user: { _id: new mongoose.Types.ObjectId(), role: "customer" },
+        user: { _id: verifiedBuyerId, role: "customer" },
         body: {
           productId: testProductId.toString(),
           rating: 5,
@@ -887,14 +976,230 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
       assert.strictEqual(createdReviewPayload.isVerifiedPurchase, true, "Must flag as verified purchase");
       assert.strictEqual(createdReviewPayload.rating, 5);
       assert.strictEqual(createdReviewPayload.title, "Top tier jacket");
+
+      // 4. Test review eligibility endpoint
+      const { req: reqElig, res: resElig, next: nextElig } = createMockReqRes({
+        user: { _id: verifiedBuyerId, role: "customer" },
+        params: { productId: testProductId.toString() },
+      });
+
+      // User has existing review now
+      Review.findOne = () => Promise.resolve(createdReviewPayload);
+      await reviewController.checkReviewEligibility(reqElig, resElig, nextElig);
+      assert.strictEqual(resElig.getStatusCode(), 200);
+      assert.strictEqual(resElig.getResponseData().data.alreadyReviewed, true);
+      assert.strictEqual(resElig.getResponseData().data.canReview, false);
     } finally {
       Review.find = originalFind;
+      Review.findById = originalFindById;
       Review.countDocuments = originalCountDocuments;
       Review.aggregate = originalAggregate;
       Product.findById = originalProductFindById;
       Review.findOne = originalReviewFindOne;
       Order.findOne = originalOrderFindOne;
       Review.create = originalReviewCreate;
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-12: Vacation Mode & Tenant-Isolated getMyProducts
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-12: Vacation Mode & Tenant-Isolated getMyProducts", async () => {
+    const originalProductFind = Product.find;
+    const originalProductCountDocuments = Product.countDocuments;
+    const originalUserFind = User.find;
+    const originalUserFindOne = User.findOne;
+
+    let capturedFilter = null;
+    const createChainableFind = () => {
+      const chainable = {
+        populate: () => chainable,
+        sort: () => chainable,
+        select: () => chainable,
+        skip: () => chainable,
+        limit: () => chainable,
+        find: () => chainable,
+        clone: () => chainable,
+        countDocuments: () => Promise.resolve(0),
+        then: (resolve) => Promise.resolve([]).then(resolve),
+      };
+      return chainable;
+    };
+
+    Product.find = (filter) => {
+      capturedFilter = filter;
+      return createChainableFind();
+    };
+
+    Product.countDocuments = (filter) => {
+      capturedFilter = filter;
+      return Promise.resolve(0);
+    };
+
+    try {
+      // 1. Seller Alpha requests getMyProducts -> strictly scoped to sellerAId
+      const { req: reqAlpha, res: resAlpha, next: nextAlpha } = createMockReqRes({
+        user: mockSellerA,
+        query: { seller: sellerBId.toString() }, // Attempting IDOR spoof
+      });
+
+      await productController.getMyProducts(reqAlpha, resAlpha, nextAlpha);
+      assert.strictEqual(resAlpha.getStatusCode(), 200);
+      assert.strictEqual(
+        capturedFilter.seller.toString(),
+        sellerAId.toString(),
+        "Seller must strictly only query their own products, spoofed query param ignored"
+      );
+
+      // 2. SuperAdmin requests getMyProducts with seller filter -> respects query
+      const { req: reqAdm, res: resAdm, next: nextAdm } = createMockReqRes({
+        user: mockAdminUser,
+        query: { seller: sellerBId.toString() },
+      });
+
+      await productController.getMyProducts(reqAdm, resAdm, nextAdm);
+      assert.strictEqual(resAdm.getStatusCode(), 200);
+      assert.strictEqual(
+        capturedFilter.seller.toString(),
+        sellerBId.toString(),
+        "SuperAdmin can inspect specific seller products"
+      );
+
+      // 3. Public getProducts excludes vacation sellers
+      User.find = () => ({
+        distinct: () => Promise.resolve([sellerAId]),
+      });
+
+      let publicCatalogFilter = null;
+      Product.find = (filter) => {
+        publicCatalogFilter = filter;
+        return createChainableFind();
+      };
+
+      const { req: reqPublic, res: resPublic, next: nextPublic } = createMockReqRes({
+        query: {},
+      });
+
+      await productController.getProducts(reqPublic, resPublic, nextPublic);
+      assert.strictEqual(resPublic.getStatusCode(), 200);
+      assert.ok(
+        publicCatalogFilter.seller?.$nin?.some?.((id) => id.toString() === sellerAId.toString()),
+        "Public product catalog must exclude products belonging to vacation sellers"
+      );
+
+      // 4. Public getSellerStorefront for vacationing seller returns isVacationMode: true and 0 products
+      User.findOne = () => ({
+        select: () =>
+          Promise.resolve({
+            _id: sellerAId,
+            name: "Alpha Royal Fabrics",
+            role: "seller",
+            isActive: true,
+            createdAt: new Date(),
+            sellerProfile: {
+              businessName: "Alpha Royal Fabrics",
+              storeSlug: "alpha-royal-fabrics",
+              isVacationMode: true,
+              vacationMessage: "We are away until Diwali!",
+              kycStatus: "verified",
+            },
+          }),
+      });
+
+      const { req: reqStore, res: resStore, next: nextStore } = createMockReqRes({
+        params: { storeSlug: "alpha-royal-fabrics" },
+      });
+
+      await productController.getSellerStorefront(reqStore, resStore, nextStore);
+      assert.strictEqual(resStore.getStatusCode(), 200);
+      const storeData = resStore.getResponseData()?.data;
+      assert.strictEqual(storeData?.seller?.isVacationMode, true);
+      assert.strictEqual(storeData?.seller?.vacationMessage, "We are away until Diwali!");
+      assert.strictEqual(storeData?.products?.length, 0, "No sale products returned during vacation");
+    } finally {
+      Product.find = originalProductFind;
+      Product.countDocuments = originalProductCountDocuments;
+      User.find = originalUserFind;
+      User.findOne = originalUserFindOne;
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-13: KYC Document Lock on Verified Sellers
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-13: KYC Document Lock on Verified Sellers", async () => {
+    const originalUserFindById = User.findById;
+
+    const mockVerifiedSellerDoc = {
+      _id: sellerAId,
+      name: "Alpha Royal Fabrics",
+      role: "seller",
+      phone: "9876543210",
+      sellerProfile: {
+        businessName: "Alpha Royal Fabrics",
+        kycStatus: "verified",
+        panNumber: "encrypted_pan_mock",
+        aadhaarNumber: "encrypted_aadhaar_mock",
+        panDocument: { url: "https://cloud.com/pan.jpg", publicId: "pan_123" },
+        aadhaarDocument: { url: "https://cloud.com/aadhaar.jpg", publicId: "aadhaar_123" },
+      },
+      save: async function () { return this; },
+      toSafeObject: function () { return this; },
+    };
+
+    User.findById = (id) => Promise.resolve(mockVerifiedSellerDoc);
+
+    try {
+      // 1. Seller attempts to alter verified PAN number -> 400 Bad Request
+      const { req: reqPan, res: resPan, next: nextPan } = createMockReqRes({
+        user: { _id: sellerAId, role: "seller" },
+        body: { panNumber: "ABCDE9999Z" },
+      });
+
+      await assert.rejects(
+        async () => {
+          await userController.updateSellerProfile(reqPan, resPan, nextPan);
+        },
+        (err) => {
+          return err.statusCode === 400 && err.message.includes("identity details are locked");
+        },
+        "Verified seller modifying PAN must throw 400 KYC Locked error"
+      );
+
+      // 2. Seller attempts to upload new PAN file -> 400 Bad Request
+      const { req: reqFile, res: resFile, next: nextFile } = createMockReqRes({
+        user: { _id: sellerAId, role: "seller" },
+        body: {},
+      });
+      reqFile.files = { panDocument: [{ buffer: Buffer.from("dummy") }] };
+
+      await assert.rejects(
+        async () => {
+          await userController.updateSellerProfile(reqFile, resFile, nextFile);
+        },
+        (err) => {
+          return err.statusCode === 400 && err.message.includes("identity details are locked");
+        },
+        "Verified seller uploading new PAN file must throw 400 KYC Locked error"
+      );
+
+      // 3. Seller attempts to delete KYC document -> 400 Bad Request
+      const { req: reqDel, res: resDel, next: nextDel } = createMockReqRes({
+        user: { _id: sellerAId, role: "seller" },
+        params: { docType: "pan" },
+      });
+
+      await assert.rejects(
+        async () => {
+          await userController.deleteSellerDocument(reqDel, resDel, nextDel);
+        },
+        (err) => {
+          return err.statusCode === 400 && err.message.includes("Verified documents cannot be deleted or removed");
+        },
+        "Verified seller attempting to delete document must throw 400 error"
+      );
+    } finally {
+      User.findById = originalUserFindById;
     }
   });
 });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { productService } from "../../services/productService";
 import { adminProductService } from "../../services/adminProductService";
@@ -8,6 +9,7 @@ import ProductForm from "../../components/admin/ProductForm";
 const AdminProductEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -17,7 +19,19 @@ const AdminProductEditPage = () => {
       try {
         setIsFetching(true);
         const res = await productService.getProductById(id);
-        setProduct(res.data.product || res.data);
+        const loadedProduct = res.data.product || res.data;
+
+        // If logged-in user is a seller, enforce tenant ownership
+        if (user?.role === "seller") {
+          const sellerId = loadedProduct.seller?._id || loadedProduct.seller;
+          if (!sellerId || sellerId.toString() !== user._id.toString()) {
+            toast.error("You do not have permission to edit another seller's product.");
+            navigate("/seller/products");
+            return;
+          }
+        }
+
+        setProduct(loadedProduct);
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load product");
         navigate("/seller/products");
@@ -27,7 +41,7 @@ const AdminProductEditPage = () => {
     };
 
     fetchProduct();
-  }, [id, navigate]);
+  }, [id, navigate, user]);
 
   const handleSubmit = async (formData) => {
     try {

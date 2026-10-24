@@ -32,8 +32,10 @@ const AdminProductsPage = () => {
   const loadProducts = async () => {
     setIsLoading(true);
     try {
-      const res = await productService.getProducts({ limit: 50 });
+      const res = await adminProductService.getMyProducts({ limit: 50 });
       setProducts(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load seller products");
     } finally {
       setIsLoading(false);
     }
@@ -209,6 +211,18 @@ const AdminProductsPage = () => {
               <tr>
                 <td colSpan={6} className="px-5 py-8 text-center text-stone">
                   Loading products...
+                </td>
+              </tr>
+            ) : products.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center text-stone">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <p className="text-base font-semibold text-gray-700 dark:text-gray-300">No products found</p>
+                    <p className="text-xs text-stone">You haven't added any products to your catalog yet.</p>
+                    <Button icon={Plus} size="sm" onClick={handleAdd} className="mt-2">
+                      Add Your First Product
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ) : (

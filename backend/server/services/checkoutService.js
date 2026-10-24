@@ -128,9 +128,12 @@ const buildCheckoutSnapshot = async (user) => {
       throw ApiError.badRequest(`You can order at most ${MAX_ITEM_QUANTITY} units of "${cartItem.name}" at a time`);
     }
 
-    const product = await Product.findById(cartItem.product);
+    const product = await Product.findById(cartItem.product).populate("seller", "sellerProfile.isVacationMode sellerProfile.businessName");
     if (!product || !product.isActive) {
       throw ApiError.badRequest(`Product "${cartItem.name}" is no longer available`);
+    }
+    if (product.seller?.sellerProfile?.isVacationMode) {
+      throw ApiError.badRequest(`Product "${product.title}" cannot be ordered because the merchant is currently on vacation.`);
     }
 
     let availableStock = product.stock;

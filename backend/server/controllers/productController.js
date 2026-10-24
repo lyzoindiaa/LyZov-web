@@ -79,6 +79,22 @@ const getProducts = asyncHandler(async (req, res) => {
   }
   delete resolvedQuery.includeUnmoderated;
 
+  // Exclude products from sellers who have activated Vacation Mode
+  const vacationSellerIds = await User.find({
+    role: "seller",
+    "sellerProfile.isVacationMode": true,
+  }).distinct("_id");
+
+  if (vacationSellerIds.length > 0) {
+    if (activeFilter.seller) {
+      if (vacationSellerIds.some((vid) => vid.toString() === activeFilter.seller.toString())) {
+        activeFilter._id = new mongoose.Types.ObjectId(); // Match nothing
+      }
+    } else {
+      activeFilter.seller = { $nin: vacationSellerIds };
+    }
+  }
+
   const baseQuery = Product.find(activeFilter)
     .populate("brand", "name slug")
     .populate("category", "name slug level ancestors parent")
@@ -113,7 +129,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     .populate("brand", "name slug logo")
     .populate("category", "name slug level ancestors parent")
     .populate("categoryPath", "name slug level")
-    .populate("seller", "name email phone sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus");
+    .populate("seller", "name email phone sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus sellerProfile.isVacationMode sellerProfile.vacationMessage");
 
   if (!product) {
     // Check slugHistory for permanent 301 relocation
@@ -175,7 +191,17 @@ const getProductCollection = asyncHandler(async (req, res) => {
   }
 
   const limit = Number(req.query.limit) || 12;
-  const products = await Product.find({ ...filter, isActive: { $ne: false } })
+  const vacationSellerIds = await User.find({
+    role: "seller",
+    "sellerProfile.isVacationMode": true,
+  }).distinct("_id");
+
+  const collFilter = { ...filter, isActive: { $ne: false } };
+  if (vacationSellerIds.length > 0) {
+    collFilter.seller = { $nin: vacationSellerIds };
+  }
+
+  const products = await Product.find(collFilter)
     .limit(limit)
     .populate("brand", "name slug")
     .populate("category", "name slug");
@@ -276,11 +302,10 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw ApiError.notFound("Product not found");
   }
 
-  // Enforce tenancy / ownership
+  // Enforce tenancy / ownership: seller can only modify their own products
   if (
-    product.seller &&
     req.user.role === "seller" &&
-    product.seller.toString() !== req.user._id.toString()
+    (!product.seller || product.seller.toString() !== req.user._id.toString())
   ) {
     throw ApiError.forbidden("You do not have permission to modify another seller's product.");
   }
@@ -391,9 +416,8 @@ const deleteProductImage = asyncHandler(async (req, res) => {
   if (!product) throw ApiError.notFound("Product not found");
 
   if (
-    product.seller &&
     req.user.role === "seller" &&
-    product.seller.toString() !== req.user._id.toString()
+    (!product.seller || product.seller.toString() !== req.user._id.toString())
   ) {
     throw ApiError.forbidden("You do not have permission to modify another seller's product.");
   }
@@ -418,9 +442,8 @@ const deleteProduct = asyncHandler(async (req, res) => {
   }
 
   if (
-    product.seller &&
     req.user.role === "seller" &&
-    product.seller.toString() !== req.user._id.toString()
+    (!product.seller || product.seller.toString() !== req.user._id.toString())
   ) {
     throw ApiError.forbidden("You do not have permission to delete another seller's product.");
   }
@@ -443,28 +466,35 @@ const getSellerStorefront = asyncHandler(async (req, res) => {
     role: "seller",
     isActive: true,
     "sellerProfile.storeSlug": storeSlug.toLowerCase().trim(),
-  }).select("name email createdAt sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus");
+  }).select("name email createdAt sellerProfile.businessName sellerProfile.storeSlug sellerProfile.storeBio sellerProfile.kycStatus sellerProfile.isVacationMode sellerProfile.vacationMessage");
 
   if (!seller) {
     throw ApiError.notFound("Seller store not found or is currently inactive.");
   }
 
+  const isVacation = Boolean(seller.sellerProfile?.isVacationMode);
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 12;
 
-  const filter = {
-    seller: seller._id,
-    isActive: true,
-    moderationStatus: "approved",
-  };
+  let total = 0;
+  let products = [];
 
-  const total = await Product.countDocuments(filter);
-  const products = await Product.find(filter)
-    .populate("brand", "name slug")
-    .populate("category", "name slug")
-    .sort("-createdAt")
-    .skip((page - 1) * limit)
-    .limit(limit);
+  // If seller is on vacation, do not return active products for sale
+  if (!isVacation) {
+    const filter = {
+      seller: seller._id,
+      isActive: true,
+      moderationStatus: "approved",
+    };
+
+    total = await Product.countDocuments(filter);
+    products = await Product.find(filter)
+      .populate("brand", "name slug")
+      .populate("category", "name slug")
+      .sort("-createdAt")
+      .skip((page - 1) * limit)
+      .limit(limit);
+  }
 
   return sendSuccess(res, 200, "Seller store fetched successfully", {
     seller: {
@@ -474,6 +504,8 @@ const getSellerStorefront = asyncHandler(async (req, res) => {
       storeSlug: seller.sellerProfile?.storeSlug,
       storeBio: seller.sellerProfile?.storeBio || "",
       kycVerified: seller.sellerProfile?.kycStatus === "verified",
+      isVacationMode: isVacation,
+      vacationMessage: seller.sellerProfile?.vacationMessage || "This store is currently on vacation.",
       memberSince: seller.createdAt,
     },
     products,
@@ -486,6 +518,50 @@ const getSellerStorefront = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get logged-in seller's own products (or filtered by seller if admin)
+// @route   GET /api/products/seller/mine
+// @access  Private (Seller/Admin)
+const getMyProducts = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 50;
+  const search = req.query.search?.trim();
+
+  const filter = {};
+  if (req.user.role === "seller") {
+    // Strict tenant isolation: sellers can ONLY view their own products
+    filter.seller = req.user._id;
+  } else if (req.query.seller) {
+    filter.seller = req.query.seller;
+  }
+
+  if (search) {
+    filter.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { lyId: { $regex: search, $options: "i" } },
+      { sku: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  const total = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
+    .populate("brand", "name slug")
+    .populate("category", "name slug")
+    .sort("-createdAt")
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return sendSuccess(res, 200, "Seller products fetched successfully", products, {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit) || 1,
+  });
+});
+
 module.exports = {
   getProducts,
   getProductBySlug,
@@ -495,4 +571,5 @@ module.exports = {
   deleteProductImage,
   deleteProduct,
   getSellerStorefront,
+  getMyProducts,
 };

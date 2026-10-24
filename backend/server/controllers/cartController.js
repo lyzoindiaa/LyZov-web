@@ -38,9 +38,15 @@ const getCart = asyncHandler(async (req, res) => {
 const addItemToCart = asyncHandler(async (req, res) => {
   const { productId, variantId, quantity = 1, color = "", size = "" } = req.body;
 
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate("seller", "sellerProfile.isVacationMode sellerProfile.businessName");
   if (!product || !product.isActive) {
     throw ApiError.notFound("Product not found");
+  }
+
+  if (product.seller?.sellerProfile?.isVacationMode) {
+    throw ApiError.badRequest(
+      `"${product.title}" cannot be added to cart because the merchant is currently on vacation.`
+    );
   }
 
   let availableStock = product.stock;

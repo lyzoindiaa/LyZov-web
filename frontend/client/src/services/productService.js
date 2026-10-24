@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { API_URL } from "./api";
 
 export const productService = {
   getProducts: (params) => api.get("/products", { params }).then((res) => res.data),
@@ -17,9 +17,12 @@ export const brandService = {
 export const reviewService = {
   getProductReviews: (productId, params) =>
     api.get(`/reviews/product/${productId}`, { params }).then((res) => res.data),
+  checkReviewEligibility: (productId) =>
+    api.get(`/reviews/product/${productId}/eligibility`).then((res) => res.data),
   createReview: (formData) =>
     api
       .post("/reviews", formData, { headers: { "Content-Type": "multipart/form-data" } })
       .then((res) => res.data),
   markHelpful: (id) => api.put(`/reviews/${id}/helpful`).then((res) => res.data),
+  getReviewStreamUrl: (productId) => `${API_URL}/reviews/product/${productId}/stream`,
 };
