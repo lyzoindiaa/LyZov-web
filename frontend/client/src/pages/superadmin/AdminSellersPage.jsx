@@ -21,6 +21,8 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { adminService } from "../../services/adminService";
 import InviteSellerModal from "./InviteSellerModal";
+import SellerCredentialsModal from "./SellerCredentialsModal";
+import ConfirmActionModal from "./ConfirmActionModal";
 import { toast } from "react-toastify";
 
 const AdminSellersPage = () => {
@@ -32,6 +34,8 @@ const AdminSellersPage = () => {
   const [kycFilter, setKycFilter] = useState("all"); // "all", "pending", "submitted", "verified", "rejected"
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [credentialsModal, setCredentialsModal] = useState({ isOpen: false, seller: null });
+  const [confirmStatusModal, setConfirmStatusModal] = useState({ isOpen: false, seller: null, nextStatus: null });
 
   const fetchSellers = async (page = 1) => {
     try {
@@ -64,13 +68,18 @@ const AdminSellersPage = () => {
     fetchSellers(1);
   };
 
-  const handleToggleStatus = async (seller) => {
-    const nextStatus = !seller.isActive;
-    const actionWord = nextStatus ? "activate" : "deactivate";
+  const handlePromptToggleStatus = (seller) => {
+    setConfirmStatusModal({
+      isOpen: true,
+      seller,
+      nextStatus: !seller.isActive,
+    });
+  };
 
-    if (!window.confirm(`Are you sure you want to ${actionWord} seller "${seller.sellerProfile?.businessName || seller.name}"?`)) {
-      return;
-    }
+  const handleConfirmToggleStatus = async () => {
+    const { seller, nextStatus } = confirmStatusModal;
+    if (!seller) return;
+    const actionWord = nextStatus ? "activate" : "deactivate";
 
     try {
       setActionLoadingId(seller._id);
@@ -85,28 +94,15 @@ const AdminSellersPage = () => {
       toast.error(err.response?.data?.message || `Failed to ${actionWord} seller`);
     } finally {
       setActionLoadingId(null);
+      setConfirmStatusModal({ isOpen: false, seller: null, nextStatus: null });
     }
   };
 
-  const handleResendCredentials = async (seller) => {
-    if (!window.confirm(`Regenerate a new temporary password and resend credentials to ${seller.email}?`)) {
-      return;
-    }
-
-    try {
-      setActionLoadingId(seller._id);
-      const res = await adminService.resendSellerInvite(seller._id);
-      if (res.success) {
-        toast.success("New credentials generated!");
-        if (res.data?.whatsappUrl) {
-          window.open(res.data.whatsappUrl, "_blank");
-        }
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to regenerate credentials");
-    } finally {
-      setActionLoadingId(null);
-    }
+  const handleOpenCredentialsModal = (seller) => {
+    setCredentialsModal({
+      isOpen: true,
+      seller,
+    });
   };
 
   const getKycBadge = (status) => {
@@ -387,7 +383,7 @@ const AdminSellersPage = () => {
                     {/* Account Status Toggle */}
                     <td style={{ padding: "1rem" }}>
                       <button
-                        onClick={() => handleToggleStatus(seller)}
+                        onClick={() => handlePromptToggleStatus(seller)}
                         disabled={actionLoadingId === seller._id}
                         style={{
                           display: "inline-flex",
@@ -447,9 +443,10 @@ const AdminSellersPage = () => {
                         )}
 
                         <button
-                          onClick={() => handleResendCredentials(seller)}
+                          onClick={() => handleOpenCredentialsModal(seller)}
                           disabled={actionLoadingId === seller._id}
-                          title="Regenerate & Resend Temporary Password"
+                          title="Regenerate Password & Copy Credentials"
+                          id={`regenerate-seller-btn-${seller._id}`}
                           style={{
                             padding: "0.4rem",
                             borderRadius: "0.375rem",
@@ -551,6 +548,37 @@ const AdminSellersPage = () => {
         isOpen={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         onSellerCreated={() => fetchSellers(1)}
+      />
+
+      {/* Seller Credentials Modal (Password Regeneration & Copying) */}
+      <SellerCredentialsModal
+        isOpen={credentialsModal.isOpen}
+        onClose={() => setCredentialsModal({ isOpen: false, seller: null })}
+        seller={credentialsModal.seller}
+      />
+
+      {/* Action Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmStatusModal.isOpen}
+        onClose={() => setConfirmStatusModal({ isOpen: false, seller: null, nextStatus: null })}
+        onConfirm={handleConfirmToggleStatus}
+        title={confirmStatusModal.nextStatus ? "Activate Seller Account" : "Deactivate Seller Account"}
+        message={
+          confirmStatusModal.seller
+            ? `Are you sure you want to ${
+                confirmStatusModal.nextStatus ? "activate" : "deactivate"
+              } seller "${
+                confirmStatusModal.seller.sellerProfile?.businessName || confirmStatusModal.seller.name
+              }"? ${
+                confirmStatusModal.nextStatus
+                  ? "Their store and products will be visible to buyers."
+                  : "Their products will be hidden from the marketplace until reactivated."
+              }`
+            : ""
+        }
+        confirmText={confirmStatusModal.nextStatus ? "Activate Account" : "Deactivate Account"}
+        confirmVariant={confirmStatusModal.nextStatus ? "accent" : "danger"}
+        loading={actionLoadingId === confirmStatusModal.seller?._id}
       />
     </div>
   );

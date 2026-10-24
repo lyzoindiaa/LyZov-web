@@ -58,6 +58,7 @@ import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
 import AdminEmailsPage from "./pages/admin/AdminEmailsPage";
 import AdminProfilePage from "./pages/admin/AdminProfilePage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import SellerSettingsPage from "./pages/admin/SellerSettingsPage";
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
@@ -193,7 +194,7 @@ function App() {
           <Route path="payouts" element={<SellerPayoutsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
           <Route path="emails" element={<AdminEmailsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="settings" element={<SellerSettingsPage />} />
         </Route>
 
         {/* ── Super Admin Console ── */}
@@ -211,6 +212,7 @@ function App() {
           <Route path="moderation" element={<AdminProductModerationPage />} />
           <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Routes>
 

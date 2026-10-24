@@ -16,6 +16,7 @@ import {
   X,
   Mail,
   UserCheck,
+  Palmtree,
   Settings,
   Wrench,
   Wallet,
@@ -35,7 +36,7 @@ const navItems = [
   { label: "Payouts & Escrow", to: "/seller/payouts", icon: Wallet },
   { label: "Profile & KYC", to: "/seller/profile", icon: UserCheck },
   { label: "Email Logs", to: "/seller/emails", icon: Mail },
-  { label: "Store Settings", to: "/seller/settings", icon: Settings },
+  { label: "Vacation & Settings", to: "/seller/settings", icon: Palmtree },
 ];
 
 const AdminLayout = () => {
@@ -55,7 +56,7 @@ const AdminLayout = () => {
   else if (currentPath.includes("/payouts")) activeTitle = "Seller Financials & Payouts";
   else if (currentPath.includes("/profile")) activeTitle = "Seller Profile & KYC";
   else if (currentPath.includes("/emails")) activeTitle = "Email Communications";
-  else if (currentPath.includes("/settings")) activeTitle = "Store Settings & Maintenance";
+  else if (currentPath.includes("/settings")) activeTitle = "Store Vacation & Settings";
 
   // Keyboard navigation: Alt + Left Arrow to go back
   useEffect(() => {

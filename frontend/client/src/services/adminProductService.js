@@ -1,6 +1,7 @@
 import api from "./api";
 
 export const adminProductService = {
+  getMyProducts: (params = {}) => api.get("/products/seller/mine", { params }).then((res) => res.data),
   createProduct: (formData) =>
     api
       .post("/products", formData, { headers: { "Content-Type": "multipart/form-data" } })

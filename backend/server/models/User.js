@@ -81,6 +81,9 @@ const userSchema = new mongoose.Schema(
       // Public storefront handle: /store/:storeSlug
       storeSlug: { type: String, trim: true, lowercase: true },
       storeBio: { type: String, trim: true, default: "" },
+      isVacationMode: { type: Boolean, default: false },
+      vacationMessage: { type: String, trim: true, default: "" },
+      vacationStartedAt: Date,
       // Optional per-seller commission override (percent). null = platform default.
       commissionRate: { type: Number, min: 0, max: 100, default: null },
       onboardingSource: { type: String, enum: ["invite", "self"], default: "invite" },

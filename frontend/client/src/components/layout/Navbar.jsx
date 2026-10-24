@@ -529,32 +529,41 @@ const Navbar = () => {
                 )}
               </>
             ) : (
-              /* Temporarily hidden while Google-only authentication is integrated. */
-              /*
               <Link
                 to="/login"
+                id="navbar-signin-btn"
                 style={{
                   fontSize: "0.8125rem",
                   fontWeight: 700,
                   color: "var(--ink)",
                   textDecoration: "none",
-                  padding: "0.45rem 0.875rem",
+                  padding: "0.45rem 0.95rem",
                   borderRadius: "9999px",
                   border: "1.5px solid var(--border)",
                   backgroundColor: "var(--surface)",
-                  transition: "all 0.2s",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.35rem",
+                  gap: "0.4rem",
                   whiteSpace: "nowrap",
+                  boxShadow: "var(--shadow-sm)",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.backgroundColor = "var(--bg-raised)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.backgroundColor = "var(--surface)"; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-raised)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.backgroundColor = "var(--surface)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                }}
               >
-                <User size={14} style={{ color: "var(--accent)" }} /> Login
+                <User size={14} style={{ color: "var(--accent)" }} />
+                <span>Sign In</span>
               </Link>
-              */
-              null
             )}
           </div>
         </div>
@@ -593,6 +602,51 @@ const Navbar = () => {
           </form>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            {!isAuthenticated && (
+              <div
+                style={{
+                  marginBottom: "0.75rem",
+                  padding: "0.75rem 1rem",
+                  backgroundColor: "var(--bg-subtle)",
+                  borderRadius: "0.875rem",
+                  border: "1px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "0.75rem",
+                }}
+              >
+                <div>
+                  <p style={{ margin: 0, fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)" }}>
+                    Account Login
+                  </p>
+                  <p style={{ margin: "0.15rem 0 0", fontSize: "0.6875rem", color: "var(--ink-muted)" }}>
+                    Sign in to customer, seller or admin portal
+                  </p>
+                </div>
+                <Link
+                  to="/login"
+                  id="mobile-drawer-top-signin-btn"
+                  onClick={() => dispatch(closeMobileMenu())}
+                  className="btn-accent"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
+                    padding: "0.45rem 0.875rem",
+                    borderRadius: "9999px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  <User size={13} />
+                  <span>Sign In</span>
+                </Link>
+              </div>
+            )}
             {isAdmin ? (
               <>
                 <MobileNavLink to="/admin" accent>Admin Console</MobileNavLink>
@@ -683,6 +737,11 @@ const Navbar = () => {
                 )}
 
                 <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
+                {!isAuthenticated && (
+                  <MobileNavLink to="/login" accent>
+                    Sign In / SuperAdmin Portal
+                  </MobileNavLink>
+                )}
                 <MobileNavLink to={isAuthenticated ? "/dashboard/wishlist" : "/login"}>Saved Wishlist</MobileNavLink>
                 {isAuthenticated && <MobileNavLink to="/dashboard/orders">My Orders</MobileNavLink>}
                 <MobileNavLink to="/track">Track Order</MobileNavLink>

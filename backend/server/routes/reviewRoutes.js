@@ -2,6 +2,8 @@ const express = require("express");
 const { body } = require("express-validator");
 const {
   getProductReviews,
+  streamProductReviews,
+  checkReviewEligibility,
   createReview,
   updateReview,
   deleteReview,
@@ -13,8 +15,14 @@ const validate = require("../middleware/validateMiddleware");
 
 const router = express.Router();
 
+// Public review list and real-time SSE stream
 router.get("/product/:productId", getProductReviews);
+router.get("/product/:productId/stream", streamProductReviews);
 
+// Private review eligibility check for authenticated customer
+router.get("/product/:productId/eligibility", protect, checkReviewEligibility);
+
+// Create a review (restricted to verified buyers)
 router.post(
   "/",
   protect,

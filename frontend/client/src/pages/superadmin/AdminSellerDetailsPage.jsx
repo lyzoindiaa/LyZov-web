@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { adminService } from "../../services/adminService";
+import SellerCredentialsModal from "./SellerCredentialsModal";
+import ConfirmActionModal from "./ConfirmActionModal";
 import { toast } from "react-toastify";
 
 const AdminSellerDetailsPage = () => {
@@ -38,6 +40,9 @@ const AdminSellerDetailsPage = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showMaskedPan, setShowMaskedPan] = useState(false);
   const [showMaskedAadhaar, setShowMaskedAadhaar] = useState(false);
+  const [credentialsModalOpen, setCredentialsModalOpen] = useState(false);
+  const [confirmStatusModalOpen, setConfirmStatusModalOpen] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   // Editable Form State
   const [editForm, setEditForm] = useState({
@@ -107,14 +112,18 @@ const AdminSellerDetailsPage = () => {
     fetchSellerDetails();
   }, [id]);
 
-  const handleToggleStatus = async () => {
+  const handlePromptToggleStatus = () => {
+    if (!seller) return;
+    setConfirmStatusModalOpen(true);
+  };
+
+  const handleConfirmToggleStatus = async () => {
     if (!seller) return;
     const nextStatus = !seller.isActive;
     const action = nextStatus ? "activate" : "deactivate";
 
-    if (!window.confirm(`Are you sure you want to ${action} this seller?`)) return;
-
     try {
+      setStatusLoading(true);
       const res = await adminService.updateSellerStatus(seller._id, nextStatus);
       if (res.success) {
         toast.success(`Seller ${action}d successfully`);
@@ -122,6 +131,9 @@ const AdminSellerDetailsPage = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || `Failed to ${action} seller`);
+    } finally {
+      setStatusLoading(false);
+      setConfirmStatusModalOpen(false);
     }
   };
 
@@ -173,22 +185,8 @@ const AdminSellerDetailsPage = () => {
     }
   };
 
-  const handleResendCredentials = async () => {
-    if (!window.confirm(`Generate a new temporary password and send credentials to ${seller.email}?`)) {
-      return;
-    }
-
-    try {
-      const res = await adminService.resendSellerInvite(seller._id);
-      if (res.success) {
-        toast.success("New credentials generated!");
-        if (res.data?.whatsappUrl) {
-          window.open(res.data.whatsappUrl, "_blank");
-        }
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to reset credentials");
-    }
+  const handleResendCredentials = () => {
+    setCredentialsModalOpen(true);
   };
 
   if (loading) {
@@ -271,7 +269,8 @@ const AdminSellerDetailsPage = () => {
           </button>
 
           <button
-            onClick={handleToggleStatus}
+            onClick={handlePromptToggleStatus}
+            id="seller-details-toggle-status-btn"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -679,6 +678,35 @@ const AdminSellerDetailsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Seller Credentials Modal */}
+      <SellerCredentialsModal
+        isOpen={credentialsModalOpen}
+        onClose={() => setCredentialsModalOpen(false)}
+        seller={seller}
+      />
+
+      {/* Account Status Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmStatusModalOpen}
+        onClose={() => setConfirmStatusModalOpen(false)}
+        onConfirm={handleConfirmToggleStatus}
+        title={seller?.isActive ? "Deactivate Seller Account" : "Activate Seller Account"}
+        message={
+          seller
+            ? `Are you sure you want to ${
+                seller.isActive ? "deactivate" : "activate"
+              } seller "${seller.sellerProfile?.businessName || seller.name}"? ${
+                seller.isActive
+                  ? "Their storefront and product listings will be temporarily hidden from marketplace buyers."
+                  : "Their storefront and active products will be immediately visible to marketplace buyers."
+              }`
+            : ""
+        }
+        confirmText={seller?.isActive ? "Deactivate Account" : "Activate Account"}
+        confirmVariant={seller?.isActive ? "danger" : "accent"}
+        loading={statusLoading}
+      />
     </div>
   );
 };

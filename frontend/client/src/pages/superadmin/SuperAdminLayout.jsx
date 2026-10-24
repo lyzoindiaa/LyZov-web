@@ -17,6 +17,7 @@ import {
   UserCheck,
   ShieldCheck,
   Wallet,
+  Settings,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
@@ -28,6 +29,7 @@ const navItems = [
   { label: "Product Moderation", to: "/admin/moderation", icon: ShieldCheck },
   { label: "Marketplace Payouts", to: "/admin/payouts", icon: Wallet },
   { label: "Customer Accounts", to: "/admin/customers", icon: Users },
+  { label: "Maintenance & Banner", to: "/admin/settings", icon: Settings },
 ];
 
 const SuperAdminLayout = () => {

@@ -107,6 +107,36 @@ const updateSellerProfile = asyncHandler(async (req, res) => {
     user.sellerProfile = {};
   }
 
+  // Enforce KYC lock: Once verified by Admin, sellers cannot modify or re-upload PAN/Aadhaar
+  const isKycVerified = user.sellerProfile.kycStatus === "verified";
+  if (isKycVerified && req.user.role === "seller") {
+    const existingPan = user.sellerProfile.panNumber ? decrypt(user.sellerProfile.panNumber) : "";
+    const existingAadhaar = user.sellerProfile.aadhaarNumber ? decrypt(user.sellerProfile.aadhaarNumber) : "";
+    const cleanPan = panNumber !== undefined ? panNumber.trim().toUpperCase() : existingPan;
+    const cleanAadhaar = aadhaarNumber !== undefined ? aadhaarNumber.replace(/\s+/g, "").trim() : existingAadhaar;
+
+    if (
+      (panNumber !== undefined && cleanPan !== existingPan) ||
+      (aadhaarNumber !== undefined && cleanAadhaar !== existingAadhaar) ||
+      req.files?.panDocument ||
+      req.files?.aadhaarDocument
+    ) {
+      throw ApiError.badRequest(
+        "Your KYC has been verified by Admin. PAN and Aadhaar identity details are locked and cannot be modified or re-uploaded."
+      );
+    }
+  }
+
+  // Vacation mode toggle
+  if (req.body.isVacationMode !== undefined) {
+    const isVacation = req.body.isVacationMode === true || req.body.isVacationMode === "true";
+    user.sellerProfile.isVacationMode = isVacation;
+    user.sellerProfile.vacationStartedAt = isVacation ? new Date() : null;
+  }
+  if (req.body.vacationMessage !== undefined) {
+    user.sellerProfile.vacationMessage = req.body.vacationMessage.trim();
+  }
+
   if (businessName !== undefined) user.sellerProfile.businessName = businessName.trim();
   if (storeBio !== undefined) user.sellerProfile.storeBio = storeBio.trim();
 
@@ -227,6 +257,12 @@ const deleteSellerDocument = asyncHandler(async (req, res) => {
 
   if (!user.sellerProfile) {
     user.sellerProfile = {};
+  }
+
+  if (req.user.role === "seller" && user.sellerProfile.kycStatus === "verified") {
+    throw ApiError.badRequest(
+      "Your KYC has been verified by Admin. Verified documents cannot be deleted or removed."
+    );
   }
 
   if (docType === "pan") {

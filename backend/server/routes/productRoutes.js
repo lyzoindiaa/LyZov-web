@@ -8,6 +8,7 @@ const {
   updateProduct,
   deleteProductImage,
   deleteProduct,
+  getMyProducts,
 } = require("../controllers/productController");
 const { protect, authorize, requireVerifiedSeller } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
@@ -19,6 +20,7 @@ const router = express.Router();
 router.get("/", getProducts);
 router.get("/collections/:type", getProductCollection);
 router.get("/store/:storeSlug", getSellerStorefront);
+router.get("/seller/mine", protect, authorize("seller", "admin"), getMyProducts);
 router.get("/:slug", getProductBySlug);
 
 router.post(
