@@ -78,10 +78,14 @@ const subOrderSchema = new mongoose.Schema(
     // Financial settlements
     commissionRate: { type: Number, default: 10, min: 0, max: 100 }, // Percentage e.g. 10%
     commissionAmount: { type: Number, default: 0, min: 0 },
+    gstOnCommission: { type: Number, default: 0, min: 0 },
+    tcsAmount: { type: Number, default: 0, min: 0 },
     sellerEarnings: { type: Number, default: 0, min: 0 },
+    settlementPeriod: { type: String, default: "" },
+    coolingOffUntil: { type: Date, default: null },
     payoutStatus: {
       type: String,
-      enum: ["pending", "eligible", "processing", "paid", "refunded"],
+      enum: ["pending", "cooling_off", "eligible", "processing", "paid", "refunded"],
       default: "pending",
       index: true,
     },

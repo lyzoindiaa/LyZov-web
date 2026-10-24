@@ -9,6 +9,7 @@ const Notification = require("../models/Notification");
 const ApiError = require("../utils/ApiError");
 const emailService = require("./emailService");
 const { deductStockForItems, restoreStockForItems } = require("./stockService");
+const { resolveCommissionRule, calculateSubOrderFinancials } = require("./commissionService");
 
 const TAX_RATE = Number(process.env.TAX_RATE) || 0; // 0 default for GST-inclusive catalog prices
 const FREE_SHIPPING_THRESHOLD = Number(process.env.FREE_SHIPPING_THRESHOLD) || 999;
@@ -303,7 +304,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
           ? rawSellerId._id
           : rawSellerId;
       const sellerUser = await User.findById(sellerId).select("sellerProfile");
-      const commissionRate =
+      const fallbackRate =
         typeof sellerUser?.sellerProfile?.commissionRate === "number"
           ? sellerUser.sellerProfile.commissionRate
           : 10; // Default platform commission: 10%
@@ -320,8 +321,19 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
       const sellerShipping = round2(snapshot.shippingPrice * proportion);
       const sellerTotal = round2(sellerItemsPrice - sellerDiscount + sellerTax + sellerShipping);
 
-      const commissionAmount = round2((sellerItemsPrice * commissionRate) / 100);
-      const sellerEarnings = round2(Math.max(sellerTotal - commissionAmount, 0));
+      // Resolve dynamic commission rule (Seller > Category > Global > Fallback)
+      const sampleCategoryId = sellerItems[0]?.product?.category || null;
+      const rule = await resolveCommissionRule({
+        sellerId,
+        categoryId: sampleCategoryId,
+        fallbackRate,
+      });
+
+      const financials = calculateSubOrderFinancials({
+        sellerItemsPrice,
+        sellerTotal,
+        rule,
+      });
 
       const subOrderNumber = `${order.orderNumber}-S${String(subOrderIndex++).padStart(2, "0")}`;
 
@@ -339,9 +351,12 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         shippingPrice: sellerShipping,
         discountAmount: sellerDiscount,
         totalPrice: sellerTotal,
-        commissionRate,
-        commissionAmount,
-        sellerEarnings,
+        commissionRate: financials.commissionRate,
+        commissionAmount: financials.commissionAmount,
+        gstOnCommission: financials.gstOnCommission,
+        tcsAmount: financials.tcsAmount,
+        sellerEarnings: financials.sellerEarnings,
+        settlementPeriod: financials.settlementPeriod,
         payoutStatus: "pending",
         orderStatus: "pending",
         statusHistory: [{ status: "pending", note: "Sub-order created and waiting for seller processing" }],
@@ -355,9 +370,13 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         subOrder: subOrder._id,
         parentOrder: order._id,
         grossAmount: sellerTotal,
-        commissionRate,
-        commissionAmount,
-        netAmount: sellerEarnings,
+        commissionRate: financials.commissionRate,
+        commissionAmount: financials.commissionAmount,
+        gstOnCommission: financials.gstOnCommission,
+        tcsAmount: financials.tcsAmount,
+        netAmount: financials.sellerEarnings,
+        settlementPeriod: financials.settlementPeriod,
+        commissionRuleSnapshot: financials.ruleSnapshot,
         status: "pending",
         eligibleAt: eligibleDate,
         bankDetailsSnapshot: sellerUser?.sellerProfile?.bankDetails || {},

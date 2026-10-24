@@ -30,6 +30,10 @@ const delhiveryService = require("../services/delhiveryService");
 const { restoreStockForItems, deductStockForItems } = require("../services/stockService");
 const { refundPayment } = require("../services/paymentService");
 const {
+  handleSubOrderDelivery,
+  handleSubOrderCancellation,
+} = require("../services/settlementService");
+const {
   buildCheckoutSnapshot,
   createOrderFromSnapshot,
   afterOrderPlaced,
@@ -270,6 +274,14 @@ const cancelOrder = asyncHandler(async (req, res) => {
   // Restore inventory AFTER refund succeeds
   await restoreStockForItems(order.items);
 
+  // Void child suborders and associated payouts
+  const cancelChildSubOrders = await SubOrder.find({ parentOrder: order._id });
+  for (const child of cancelChildSubOrders) {
+    child.orderStatus = "cancelled";
+    await handleSubOrderCancellation({ subOrder: child, reason });
+    await child.save();
+  }
+
   order.cancelReason = reason;
   await order.save();
 
@@ -362,6 +374,14 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
   }
 
   await restoreStockForItems(order.items);
+
+  // Void child suborders and associated payouts
+  const adminCancelChildSubOrders = await SubOrder.find({ parentOrder: order._id });
+  for (const child of adminCancelChildSubOrders) {
+    child.orderStatus = "cancelled";
+    await handleSubOrderCancellation({ subOrder: child, reason });
+    await child.save();
+  }
 
   order.cancelReason = reason;
   await order.save();
@@ -698,8 +718,9 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
       subOrder.orderStatus = status;
       subOrder.statusHistory.push({ status, note: note || `Updated by seller` });
       if (status === "delivered") {
-        subOrder.isDelivered = true;
-        subOrder.deliveredAt = new Date();
+        await handleSubOrderDelivery({ subOrder });
+      } else if (["cancelled", "refunded"].includes(status)) {
+        await handleSubOrderCancellation({ subOrder, reason: note });
       }
     }
 
@@ -781,6 +802,19 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   if (status === "delivered") {
     order.isDelivered = true;
     order.deliveredAt = new Date();
+    const deliveredChildren = await SubOrder.find({ parentOrder: order._id });
+    for (const child of deliveredChildren) {
+      child.orderStatus = "delivered";
+      await handleSubOrderDelivery({ subOrder: child });
+      await child.save();
+    }
+  } else if (["cancelled", "refunded"].includes(status)) {
+    const cancelledChildren = await SubOrder.find({ parentOrder: order._id });
+    for (const child of cancelledChildren) {
+      child.orderStatus = status;
+      await handleSubOrderCancellation({ subOrder: child, reason: note });
+      await child.save();
+    }
   }
 
   await order.save();

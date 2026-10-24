@@ -1,8 +1,10 @@
 const delhiveryService = require('../services/delhiveryService');
 const Shipment = require('../models/Shipment');
 const Order = require('../models/Order');
+const SubOrder = require('../models/SubOrder');
 const Notification = require('../models/Notification');
 const { emailCustomerOrderStatusUpdate } = require('../utils/orderCustomerNotifications');
+const { handleSubOrderDelivery } = require('../services/settlementService');
 
 // ---------------------------------------------------------------------------
 // Helper: converts a raw Delhivery/network error into a structured response
@@ -382,6 +384,14 @@ exports.trackingWebhook = async (req, res) => {
               note: `Delivered via Delhivery (AWB: ${waybill})`,
             });
             await order.save();
+
+            // Handle SubOrders delivery cooling off transition
+            const deliveredChildren = await SubOrder.find({ parentOrder: order._id });
+            for (const child of deliveredChildren) {
+              child.orderStatus = "delivered";
+              await handleSubOrderDelivery({ subOrder: child });
+              await child.save();
+            }
 
             emailCustomerOrderStatusUpdate(order, {
               newStatus: "delivered",
