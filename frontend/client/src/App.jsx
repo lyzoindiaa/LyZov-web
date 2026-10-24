@@ -210,6 +210,10 @@ function App() {
           <Route path="sellers" element={<AdminSellersPage />} />
           <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
           <Route path="moderation" element={<AdminProductModerationPage />} />
+          <Route path="brands" element={<AdminBrandsPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="categories/add" element={<AdminCategoryAddPage />} />
+          <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
           <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />

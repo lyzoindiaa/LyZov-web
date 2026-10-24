@@ -21,13 +21,13 @@ router.get("/:slug", getCategoryBySlug);
 router.post(
   "/",
   protect,
-  authorize("seller"),
+  authorize("seller", "admin"),
   upload.single("image"),
   [body("name").trim().notEmpty().withMessage("Category name is required")],
   validate,
   createCategory
 );
-router.put("/:id", protect, authorize("seller"), upload.single("image"), updateCategory);
-router.delete("/:id", protect, authorize("seller"), deleteCategory);
+router.put("/:id", protect, authorize("admin"), upload.single("image"), updateCategory);
+router.delete("/:id", protect, authorize("admin"), deleteCategory);
 
 module.exports = router;

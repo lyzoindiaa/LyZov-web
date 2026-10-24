@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Award } from "lucide-react";
+import { useSelector } from "react-redux";
+import { Plus, Pencil, Trash2, Award, Shield } from "lucide-react";
 import { toast } from "react-toastify";
 import { adminBrandService } from "../../services/adminBrandService";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
+import ConfirmActionModal from "../superadmin/ConfirmActionModal";
 
 const AdminBrandsPage = () => {
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "admin";
+
   const [brands, setBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, brand: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -19,7 +26,7 @@ const AdminBrandsPage = () => {
   const loadBrands = async () => {
     setIsLoading(true);
     try {
-      const res = await adminBrandService.getBrands();
+      const res = await adminBrandService.getBrands({ all: "true" });
       setBrands(res.data || []);
     } catch {
       setBrands([]);
@@ -40,20 +47,37 @@ const AdminBrandsPage = () => {
   };
 
   const handleEdit = (brand) => {
+    if (!isAdmin) {
+      toast.error("Only Administrators can modify brand details.");
+      return;
+    }
     setEditingBrand(brand);
     setName(brand.name);
     setDescription(brand.description || "");
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Delete this brand? Action cannot be undone.")) return;
+  const handlePromptDelete = (brand) => {
+    if (!isAdmin) {
+      toast.error("Only Administrators can delete catalog brands.");
+      return;
+    }
+    setConfirmDeleteModal({ isOpen: true, brand });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { brand } = confirmDeleteModal;
+    if (!brand) return;
+    setIsDeleting(true);
     try {
-      await adminBrandService.deleteBrand(id);
-      toast.success("Brand deleted successfully");
+      await adminBrandService.deleteBrand(brand._id);
+      toast.success(`Brand "${brand.name}" deleted successfully`);
       loadBrands();
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not delete brand");
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteModal({ isOpen: false, brand: null });
     }
   };
 
@@ -66,10 +90,10 @@ const AdminBrandsPage = () => {
     setIsSubmitting(true);
     try {
       if (editingBrand) {
-        await adminBrandService.updateBrand(editingBrand._id, { name, description });
+        await adminBrandService.updateBrand(editingBrand._id, { name: name.trim(), description: description.trim() });
         toast.success("Brand updated successfully");
       } else {
-        await adminBrandService.createBrand({ name, description });
+        await adminBrandService.createBrand({ name: name.trim(), description: description.trim() });
         toast.success("Brand created successfully");
       }
       loadBrands();
@@ -128,20 +152,28 @@ const AdminBrandsPage = () => {
                     {brand.description || "â€”"}
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleEdit(brand)}
-                        className="text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(brand._id)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                    {isAdmin ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleEdit(brand)}
+                          className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                          title="Edit Brand"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => handlePromptDelete(brand)}
+                          className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                          title="Delete Brand"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                        Admin Managed
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -182,6 +214,22 @@ const AdminBrandsPage = () => {
           </Button>
         </form>
       </Modal>
+
+      {/* Brand Deletion Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmDeleteModal.isOpen}
+        onClose={() => setConfirmDeleteModal({ isOpen: false, brand: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Catalog Brand"
+        message={
+          confirmDeleteModal.brand
+            ? `Are you sure you want to delete brand "${confirmDeleteModal.brand.name}"?\n\nIf any products in the marketplace are currently associated with this brand, deletion will be blocked by system integrity rules.`
+            : ""
+        }
+        confirmText="Delete Brand"
+        confirmVariant="danger"
+        loading={isDeleting}
+      />
     </div>
   );
 };

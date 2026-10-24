@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   Eye,
   KeyRound,
+  Trash2,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { adminService } from "../../services/adminService";
@@ -36,6 +37,7 @@ const AdminSellersPage = () => {
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [credentialsModal, setCredentialsModal] = useState({ isOpen: false, seller: null });
   const [confirmStatusModal, setConfirmStatusModal] = useState({ isOpen: false, seller: null, nextStatus: null });
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, seller: null });
 
   const fetchSellers = async (page = 1) => {
     try {
@@ -95,6 +97,32 @@ const AdminSellersPage = () => {
     } finally {
       setActionLoadingId(null);
       setConfirmStatusModal({ isOpen: false, seller: null, nextStatus: null });
+    }
+  };
+
+  const handlePromptDeleteSeller = (seller) => {
+    setConfirmDeleteModal({
+      isOpen: true,
+      seller,
+    });
+  };
+
+  const handleConfirmDeleteSeller = async () => {
+    const { seller } = confirmDeleteModal;
+    if (!seller) return;
+
+    try {
+      setActionLoadingId(seller._id);
+      const res = await adminService.deleteSeller(seller._id);
+      if (res.success) {
+        toast.success(res.message || "Seller account deleted and email permanently blacklisted");
+        setSellers((prev) => prev.filter((s) => s._id !== seller._id));
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete seller account");
+    } finally {
+      setActionLoadingId(null);
+      setConfirmDeleteModal({ isOpen: false, seller: null });
     }
   };
 
@@ -482,6 +510,27 @@ const AdminSellersPage = () => {
                           <Eye size={12} />
                           <span>View</span>
                         </Link>
+
+                        <button
+                          onClick={() => handlePromptDeleteSeller(seller)}
+                          disabled={actionLoadingId === seller._id}
+                          title="Permanently Delete Account & Blacklist Email"
+                          id={`delete-seller-btn-${seller._id}`}
+                          style={{
+                            padding: "0.4rem",
+                            borderRadius: "0.375rem",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            backgroundColor: "rgba(239, 68, 68, 0.08)",
+                            color: "#ef4444",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -579,6 +628,24 @@ const AdminSellersPage = () => {
         confirmText={confirmStatusModal.nextStatus ? "Activate Account" : "Deactivate Account"}
         confirmVariant={confirmStatusModal.nextStatus ? "accent" : "danger"}
         loading={actionLoadingId === confirmStatusModal.seller?._id}
+      />
+
+      {/* Delete Seller Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmDeleteModal.isOpen}
+        onClose={() => setConfirmDeleteModal({ isOpen: false, seller: null })}
+        onConfirm={handleConfirmDeleteSeller}
+        title="Permanently Terminate Seller Account"
+        message={
+          confirmDeleteModal.seller
+            ? `Are you sure you want to permanently delete seller account "${
+                confirmDeleteModal.seller.sellerProfile?.businessName || confirmDeleteModal.seller.name
+              }" (${confirmDeleteModal.seller.email})?\n\nWARNING: All of this merchant's active products will be hidden from the catalog, seller sessions revoked, and this email (${confirmDeleteModal.seller.email}) will be PERMANENTLY BLACKLISTED. No user or seller account can EVER be registered with this email again.`
+            : ""
+        }
+        confirmText="Delete & Blacklist Email"
+        confirmVariant="danger"
+        loading={actionLoadingId === confirmDeleteModal.seller?._id}
       />
     </div>
   );

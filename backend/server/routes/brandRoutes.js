@@ -19,13 +19,13 @@ router.get("/:slug", getBrandBySlug);
 router.post(
   "/",
   protect,
-  authorize("seller"),
+  authorize("seller", "admin"),
   upload.single("logo"),
   [body("name").trim().notEmpty().withMessage("Brand name is required")],
   validate,
   createBrand
 );
-router.put("/:id", protect, authorize("seller"), upload.single("logo"), updateBrand);
-router.delete("/:id", protect, authorize("seller"), deleteBrand);
+router.put("/:id", protect, authorize("admin"), upload.single("logo"), updateBrand);
+router.delete("/:id", protect, authorize("admin"), deleteBrand);
 
 module.exports = router;

@@ -5,6 +5,7 @@ const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/apiResponse");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
 const { encrypt, decrypt } = require("../utils/encryption");
+const { generateSignedKycUrl } = require("../services/kycDocumentService");
 
 // @desc    Update own profile (Customer/Common)
 // @route   PUT /api/users/profile
@@ -287,6 +288,34 @@ const deleteSellerDocument = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, "Document removed successfully", { user: user.toSafeObject() });
 });
 
+// @desc    View/download own seller KYC document
+// @route   GET /api/users/seller/document/:docType/view
+// @access  Private (Seller/Admin)
+const getMyKycDocument = asyncHandler(async (req, res) => {
+  const { docType } = req.params; // "pan" or "aadhaar"
+  const user = await User.findById(req.user._id);
+  if (!user) throw ApiError.notFound("User not found");
+
+  const doc =
+    docType === "pan"
+      ? user.sellerProfile?.panDocument
+      : docType === "aadhaar"
+        ? user.sellerProfile?.aadhaarDocument
+        : null;
+
+  if (!doc || (!doc.publicId && !doc.url)) {
+    throw ApiError.notFound(`No ${docType.toUpperCase()} document uploaded`);
+  }
+
+  const documentUrl = doc.url || (doc.publicId ? generateSignedKycUrl(doc.publicId) : "");
+
+  return sendSuccess(res, 200, "Document URL retrieved successfully", {
+    docType,
+    url: documentUrl,
+    signedUrl: documentUrl,
+  });
+});
+
 // @desc    Change password
 // @route   PUT /api/users/change-password
 // @access  Private
@@ -379,6 +408,7 @@ module.exports = {
   updateProfile,
   updateSellerProfile,
   deleteSellerDocument,
+  getMyKycDocument,
   changePassword,
   getUsers,
   updateUser,

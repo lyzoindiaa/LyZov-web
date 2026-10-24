@@ -21,6 +21,7 @@ import {
   FileText,
   MapPin,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { adminService } from "../../services/adminService";
@@ -43,6 +44,8 @@ const AdminSellerDetailsPage = () => {
   const [credentialsModalOpen, setCredentialsModalOpen] = useState(false);
   const [confirmStatusModalOpen, setConfirmStatusModalOpen] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Editable Form State
   const [editForm, setEditForm] = useState({
@@ -157,13 +160,31 @@ const AdminSellerDetailsPage = () => {
   const handleViewKycDoc = async (docType) => {
     try {
       const res = await adminService.getSellerKycDocument(seller._id, docType);
-      if (res.success && res.data?.url) {
-        window.open(res.data.url, "_blank", "noopener,noreferrer");
+      const docUrl = res.data?.url || res.data?.signedUrl;
+      if (res.success && docUrl) {
+        window.open(docUrl, "_blank", "noopener,noreferrer");
       } else {
         toast.error("Document link not found");
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to generate document access link");
+    }
+  };
+
+  const handleConfirmDeleteSeller = async () => {
+    if (!seller) return;
+    try {
+      setDeleteLoading(true);
+      const res = await adminService.deleteSeller(seller._id);
+      if (res.success) {
+        toast.success(res.message || "Seller account deleted and email permanently blacklisted");
+        navigate("/admin/sellers");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete seller account");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteModalOpen(false);
     }
   };
 
@@ -286,6 +307,26 @@ const AdminSellerDetailsPage = () => {
             }}
           >
             {seller.isActive ? "Deactivate Seller" : "Activate Seller"}
+          </button>
+
+          <button
+            onClick={() => setConfirmDeleteModalOpen(true)}
+            id="seller-details-delete-btn"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.5rem 0.875rem",
+              borderRadius: "0.5rem",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              backgroundColor: "rgba(239, 68, 68, 0.08)",
+              color: "#ef4444",
+              fontSize: "0.8125rem",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <Trash2 size={14} /> Delete Account
           </button>
         </div>
       </div>
@@ -706,6 +747,22 @@ const AdminSellerDetailsPage = () => {
         confirmText={seller?.isActive ? "Deactivate Account" : "Activate Account"}
         confirmVariant={seller?.isActive ? "danger" : "accent"}
         loading={statusLoading}
+      />
+
+      {/* Delete Seller Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmDeleteModalOpen}
+        onClose={() => setConfirmDeleteModalOpen(false)}
+        onConfirm={handleConfirmDeleteSeller}
+        title="Permanently Terminate Seller Account"
+        message={
+          seller
+            ? `Are you sure you want to permanently delete seller "${seller.sellerProfile?.businessName || seller.name}" (${seller.email})?\n\nWARNING: All of this merchant's products will be hidden from the marketplace, seller sessions revoked, and this email (${seller.email}) will be PERMANENTLY BLACKLISTED. No user or seller account can EVER be registered with this email again.`
+            : ""
+        }
+        confirmText="Delete & Blacklist Email"
+        confirmVariant="danger"
+        loading={deleteLoading}
       />
     </div>
   );

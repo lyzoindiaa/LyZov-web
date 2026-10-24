@@ -4,6 +4,7 @@ const {
   updateProfile,
   updateSellerProfile,
   deleteSellerDocument,
+  getMyKycDocument,
   changePassword,
   getUsers,
   updateUser,
@@ -27,6 +28,11 @@ router.put(
     { name: "aadhaarDocument", maxCount: 1 },
   ]),
   updateSellerProfile
+);
+router.get(
+  "/seller/document/:docType/view",
+  authorize("seller", "admin"),
+  getMyKycDocument
 );
 router.delete(
   "/seller/document/:docType",

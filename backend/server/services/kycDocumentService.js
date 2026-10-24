@@ -9,19 +9,16 @@ const generateSignedKycUrl = (publicId, { expiresInSeconds = 600 } = {}) => {
 
   try {
     const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
-    // Cloudinary signed URL generation
-    return cloudinary.utils.private_download_url(publicId, "jpg", {
-      expires_at: expiresAt,
-      resource_type: "image",
-      type: "authenticated",
-    });
-  } catch (err) {
-    // Fallback: standard signed URL
+    // Generate valid signed URL on Cloudinary matching upload storage type and auto format
     return cloudinary.url(publicId, {
       sign_url: true,
       secure: true,
-      expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
+      expires_at: expiresAt,
+      resource_type: "auto",
     });
+  } catch (err) {
+    console.error("[KYC Document] Failed to generate signed URL:", err.message);
+    return "";
   }
 };
 

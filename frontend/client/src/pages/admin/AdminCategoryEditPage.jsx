@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { categoryService } from "../../services/categoryService";
@@ -7,11 +8,20 @@ import CategoryForm from "../../components/admin/CategoryForm";
 const AdminCategoryEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const targetPath = user?.role === "admin" ? "/admin/categories" : "/seller/categories";
+
   const [category, setCategory] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
+    if (user && user.role !== "admin") {
+      toast.error("Access denied: Only Administrators can edit categories.");
+      navigate("/seller/categories");
+      return;
+    }
+
     const fetchCategory = async () => {
       try {
         setIsFetching(true);
@@ -19,21 +29,21 @@ const AdminCategoryEditPage = () => {
         setCategory(res.data);
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load category");
-        navigate("/seller/categories");
+        navigate(targetPath);
       } finally {
         setIsFetching(false);
       }
     };
 
     fetchCategory();
-  }, [id, navigate]);
+  }, [id, navigate, user, targetPath]);
 
   const handleSubmit = async (payload) => {
     try {
       setIsLoading(true);
       await categoryService.updateCategory(id, payload);
       toast.success("Category updated successfully");
-      navigate("/seller/categories");
+      navigate(targetPath);
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update category");
       throw err; // Re-throw to let form handle error state
@@ -43,7 +53,7 @@ const AdminCategoryEditPage = () => {
   };
 
   const handleCancel = () => {
-    navigate("/seller/categories");
+    navigate(targetPath);
   };
 
   if (isFetching) {
@@ -64,7 +74,7 @@ const AdminCategoryEditPage = () => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Category Not Found</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">The category you're looking for doesn't exist or has been deleted.</p>
           <button
-            onClick={() => navigate("/seller/categories")}
+            onClick={() => navigate(targetPath)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Categories

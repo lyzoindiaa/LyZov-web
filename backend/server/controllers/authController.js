@@ -125,6 +125,7 @@ const googleCallback = async (req, res) => {
     }).select("+password");
 
     if (user) {
+      if (user.isDeleted) return redirectToLogin("account_terminated");
       if (user.googleId && user.googleId !== payload.sub) return redirectToLogin("account_conflict");
       user.googleId = payload.sub;
       user.authProvider = "google";
@@ -193,6 +194,11 @@ const register = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
+    if (existingUser.isDeleted) {
+      throw ApiError.forbidden(
+        "This email account has been terminated by administration and cannot be re-registered."
+      );
+    }
     throw ApiError.conflict("An account with this email already exists");
   }
 
@@ -245,6 +251,10 @@ const login = asyncHandler(async (req, res) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
     throw ApiError.unauthorized("Invalid email or password");
+  }
+
+  if (user.isDeleted) {
+    throw ApiError.forbidden("This account has been terminated by administration.");
   }
 
   if (!user.isActive) {

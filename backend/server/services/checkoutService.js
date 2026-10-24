@@ -151,6 +151,11 @@ const buildCheckoutSnapshot = async (user) => {
     // Same price rule as cartController.addItemToCart, but read from the DB *now*.
     const livePrice = product.discountPrice > 0 ? product.discountPrice : product.price;
 
+    const resolvedSellerId =
+      product.seller && typeof product.seller === "object" && product.seller._id
+        ? product.seller._id
+        : product.seller || null;
+
     items.push({
       product: product._id,
       variantId: cartItem.variantId || null,
@@ -161,7 +166,7 @@ const buildCheckoutSnapshot = async (user) => {
       size: cartItem.size || "",
       quantity: qty,
       gstRate: product.gstRate || cartItem.gstRate || null,
-      seller: product.seller || null,
+      seller: resolvedSellerId,
     });
   }
 
@@ -237,9 +242,14 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
 
     const isPaid = Boolean(payment?.razorpayPaymentId);
 
+    const cleanItems = snapshot.items.map((it) => ({
+      ...it,
+      seller: it.seller && typeof it.seller === "object" && it.seller._id ? it.seller._id : it.seller || null,
+    }));
+
     const order = await Order.create({
       user: user._id,
-      items: snapshot.items,
+      items: cleanItems,
       shippingAddress,
       paymentMethod,
       paymentStatus: isPaid ? "captured" : "cod_pending",
@@ -257,12 +267,20 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
 
     // ── Multi-Seller Split: Create isolated SubOrder per seller ──
     const sellerItemsMap = new Map();
-    for (const item of snapshot.items) {
-      const sellerKey = item.seller ? item.seller.toString() : "platform_admin";
+    for (const item of cleanItems) {
+      const rawSeller = item.seller;
+      const sellerId =
+        rawSeller && typeof rawSeller === "object" && rawSeller._id
+          ? rawSeller._id
+          : rawSeller;
+      const sellerKey = sellerId ? sellerId.toString() : "platform_admin";
       if (!sellerItemsMap.has(sellerKey)) {
         sellerItemsMap.set(sellerKey, []);
       }
-      sellerItemsMap.get(sellerKey).push(item);
+      sellerItemsMap.get(sellerKey).push({
+        ...item,
+        seller: sellerId || null,
+      });
     }
 
     // Resolve platform fallback seller if needed
@@ -279,7 +297,11 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
     let subOrderIndex = 1;
 
     for (const [sellerKey, sellerItems] of sellerItemsMap.entries()) {
-      let sellerId = sellerKey !== "platform_admin" ? sellerKey : await findAdmin();
+      let rawSellerId = sellerKey !== "platform_admin" ? sellerKey : await findAdmin();
+      let sellerId =
+        rawSellerId && typeof rawSellerId === "object" && rawSellerId._id
+          ? rawSellerId._id
+          : rawSellerId;
       const sellerUser = await User.findById(sellerId).select("sellerProfile");
       const commissionRate =
         typeof sellerUser?.sellerProfile?.commissionRate === "number"

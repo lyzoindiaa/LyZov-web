@@ -13,6 +13,8 @@ const {
   resendSellerInvite,
   getCustomers,
   updateCustomerStatus,
+  deleteCustomerAccount,
+  deleteSellerAccount,
   getSellerKycDocument,
   getMarketplacePayouts,
   releaseSellerPayout,
@@ -48,6 +50,7 @@ router.get("/sellers/:id", getSellerById);
 router.get("/sellers/:id/kyc-document/:docType", getSellerKycDocument);
 router.put("/sellers/:id", updateSeller);
 router.put("/sellers/:id/status", updateSellerStatus);
+router.delete("/sellers/:id", deleteSellerAccount);
 router.put("/sellers/:id/kyc", updateSellerKyc);
 router.post("/sellers/:id/resend-invite", resendSellerInvite);
 
@@ -61,5 +64,6 @@ router.put("/products/:id/moderation", moderateProduct);
 // ── Customer Management ──
 router.get("/customers", getCustomers);
 router.put("/customers/:id/status", updateCustomerStatus);
+router.delete("/customers/:id", deleteCustomerAccount);
 
 module.exports = router;

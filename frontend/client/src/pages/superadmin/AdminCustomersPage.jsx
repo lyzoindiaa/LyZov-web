@@ -13,8 +13,10 @@ import {
   Phone,
   Mail,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { adminService } from "../../services/adminService";
+import ConfirmActionModal from "./ConfirmActionModal";
 import { toast } from "react-toastify";
 
 const AdminCustomersPage = () => {
@@ -24,6 +26,8 @@ const AdminCustomersPage = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all", "active", "inactive"
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [statusModal, setStatusModal] = useState({ isOpen: false, customer: null, nextStatus: null });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, customer: null });
 
   const fetchCustomers = async (page = 1) => {
     try {
@@ -55,13 +59,18 @@ const AdminCustomersPage = () => {
     fetchCustomers(1);
   };
 
-  const handleToggleStatus = async (customer) => {
-    const nextStatus = !customer.isActive;
-    const actionWord = nextStatus ? "activate" : "deactivate";
+  const handlePromptToggleStatus = (customer) => {
+    setStatusModal({
+      isOpen: true,
+      customer,
+      nextStatus: !customer.isActive,
+    });
+  };
 
-    if (!window.confirm(`Are you sure you want to ${actionWord} customer "${customer.name}"?`)) {
-      return;
-    }
+  const handleConfirmToggleStatus = async () => {
+    const { customer, nextStatus } = statusModal;
+    if (!customer) return;
+    const actionWord = nextStatus ? "activate" : "deactivate";
 
     try {
       setActionLoadingId(customer._id);
@@ -76,6 +85,33 @@ const AdminCustomersPage = () => {
       toast.error(err.response?.data?.message || `Failed to ${actionWord} customer`);
     } finally {
       setActionLoadingId(null);
+      setStatusModal({ isOpen: false, customer: null, nextStatus: null });
+    }
+  };
+
+  const handlePromptDeleteCustomer = (customer) => {
+    setDeleteModal({
+      isOpen: true,
+      customer,
+    });
+  };
+
+  const handleConfirmDeleteCustomer = async () => {
+    const { customer } = deleteModal;
+    if (!customer) return;
+
+    try {
+      setActionLoadingId(customer._id);
+      const res = await adminService.deleteCustomer(customer._id);
+      if (res.success) {
+        toast.success(`Customer account deleted and ${customer.email} blacklisted`);
+        setCustomers((prev) => prev.filter((c) => c._id !== customer._id));
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete customer");
+    } finally {
+      setActionLoadingId(null);
+      setDeleteModal({ isOpen: false, customer: null });
     }
   };
 
@@ -331,22 +367,43 @@ const AdminCustomersPage = () => {
 
                     {/* Action */}
                     <td style={{ padding: "1rem", textAlign: "right" }}>
-                      <button
-                        onClick={() => handleToggleStatus(c)}
-                        disabled={actionLoadingId === c._id}
-                        style={{
-                          padding: "0.35rem 0.65rem",
-                          borderRadius: "0.375rem",
-                          border: "1px solid var(--border)",
-                          backgroundColor: c.isActive ? "var(--surface)" : "rgba(16, 185, 129, 0.15)",
-                          color: c.isActive ? "var(--red)" : "#10b981",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {c.isActive ? "Deactivate" : "Activate"}
-                      </button>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <button
+                          onClick={() => handlePromptToggleStatus(c)}
+                          disabled={actionLoadingId === c._id}
+                          style={{
+                            padding: "0.35rem 0.65rem",
+                            borderRadius: "0.375rem",
+                            border: "1px solid var(--border)",
+                            backgroundColor: c.isActive ? "var(--surface)" : "rgba(16, 185, 129, 0.15)",
+                            color: c.isActive ? "var(--red)" : "#10b981",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {c.isActive ? "Deactivate" : "Activate"}
+                        </button>
+
+                        <button
+                          onClick={() => handlePromptDeleteCustomer(c)}
+                          disabled={actionLoadingId === c._id}
+                          title="Permanently Delete Account & Blacklist Email"
+                          style={{
+                            padding: "0.35rem 0.5rem",
+                            borderRadius: "0.375rem",
+                            border: "1px solid rgba(239, 68, 68, 0.25)",
+                            backgroundColor: "rgba(239, 68, 68, 0.08)",
+                            color: "#ef4444",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -406,6 +463,40 @@ const AdminCustomersPage = () => {
           </div>
         )}
       </div>
+
+      {/* Status Toggle Modal */}
+      <ConfirmActionModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal({ isOpen: false, customer: null, nextStatus: null })}
+        onConfirm={handleConfirmToggleStatus}
+        title={statusModal.nextStatus ? "Activate Customer Account" : "Deactivate Customer Account"}
+        message={
+          statusModal.customer
+            ? `Are you sure you want to ${
+                statusModal.nextStatus ? "activate" : "deactivate"
+              } customer account "${statusModal.customer.name}" (${statusModal.customer.email})?`
+            : ""
+        }
+        confirmText={statusModal.nextStatus ? "Activate Account" : "Deactivate Account"}
+        confirmVariant={statusModal.nextStatus ? "accent" : "danger"}
+        loading={actionLoadingId === statusModal.customer?._id}
+      />
+
+      {/* Delete Customer Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, customer: null })}
+        onConfirm={handleConfirmDeleteCustomer}
+        title="Permanently Terminate Customer Account"
+        message={
+          deleteModal.customer
+            ? `Are you sure you want to permanently delete customer "${deleteModal.customer.name}" (${deleteModal.customer.email})? All active sessions will be terminated immediately, and this email will be permanently blacklisted from creating any new accounts on LyZov.`
+            : ""
+        }
+        confirmText="Delete & Blacklist Email"
+        confirmVariant="danger"
+        loading={actionLoadingId === deleteModal.customer?._id}
+      />
     </div>
   );
 };
