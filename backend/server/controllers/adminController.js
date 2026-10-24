@@ -106,7 +106,7 @@ const getSellers = asyncHandler(async (req, res) => {
   const limit = Number(req.query.limit) || 15;
   const { search, status, kycStatus } = req.query;
 
-  const filter = { role: "seller" };
+  const filter = { role: "seller", isDeleted: { $ne: true } };
 
   if (status === "active") filter.isActive = true;
   if (status === "inactive") filter.isActive = false;
@@ -188,6 +188,9 @@ const inviteSeller = asyncHandler(async (req, res) => {
 
   const existing = await User.findOne({ email: formattedEmail });
   if (existing) {
+    if (existing.isDeleted) {
+      throw ApiError.badRequest("This email was previously terminated by administration and cannot be re-invited or registered.");
+    }
     throw ApiError.badRequest("An account with this email already exists");
   }
 
@@ -422,7 +425,7 @@ const getCustomers = asyncHandler(async (req, res) => {
   const limit = Number(req.query.limit) || 15;
   const { search, status } = req.query;
 
-  const filter = { role: "customer" };
+  const filter = { role: "customer", isDeleted: { $ne: true } };
 
   if (status === "active") filter.isActive = true;
   if (status === "inactive") filter.isActive = false;
@@ -484,6 +487,54 @@ const updateCustomerStatus = asyncHandler(async (req, res) => {
   );
 });
 
+// @desc    Permanently delete/terminate customer account and blacklist email
+// @route   DELETE /api/admin/customers/:id
+// @access  Private/Admin
+const deleteCustomerAccount = asyncHandler(async (req, res) => {
+  const customer = await User.findOne({ _id: req.params.id, role: "customer" });
+  if (!customer) throw ApiError.notFound("Customer not found");
+
+  customer.isDeleted = true;
+  customer.isActive = false;
+  customer.deletedAt = new Date();
+  customer.deletedBy = req.user._id;
+  await customer.save({ validateBeforeSave: false });
+
+  await Session.revokeAllUserSessions(customer._id);
+
+  return sendSuccess(res, 200, "Customer account permanently terminated and email blacklisted");
+});
+
+// @desc    Permanently delete/terminate seller account, deactivate products, and blacklist email
+// @route   DELETE /api/admin/sellers/:id
+// @access  Private/Admin
+const deleteSellerAccount = asyncHandler(async (req, res) => {
+  const seller = await User.findOne({ _id: req.params.id, role: "seller" });
+  if (!seller) throw ApiError.notFound("Seller not found");
+
+  seller.isDeleted = true;
+  seller.isActive = false;
+  seller.deletedAt = new Date();
+  seller.deletedBy = req.user._id;
+  if (!seller.sellerProfile) seller.sellerProfile = {};
+  seller.sellerProfile.isVacationMode = true;
+  await seller.save({ validateBeforeSave: false });
+
+  // Deactivate all products belonging to this seller
+  await Product.updateMany(
+    { seller: seller._id },
+    { isActive: false, moderationStatus: "rejected" }
+  );
+
+  await Session.revokeAllUserSessions(seller._id);
+
+  return sendSuccess(
+    res,
+    200,
+    "Seller account permanently terminated, products deactivated, and email blacklisted"
+  );
+});
+
 // @desc    Get signed URL for seller KYC document
 // @route   GET /api/admin/sellers/:id/kyc-document/:docType
 // @access  Private/Admin
@@ -503,13 +554,12 @@ const getSellerKycDocument = asyncHandler(async (req, res) => {
     throw ApiError.notFound(`No ${docType.toUpperCase()} document uploaded for this seller`);
   }
 
-  const signedUrl = doc.publicId
-    ? generateSignedKycUrl(doc.publicId)
-    : doc.url;
+  const documentUrl = doc.url || (doc.publicId ? generateSignedKycUrl(doc.publicId) : "");
 
   return sendSuccess(res, 200, "Signed document URL generated", {
     docType,
-    signedUrl,
+    url: documentUrl,
+    signedUrl: documentUrl,
     expiresInSeconds: 600,
   });
 });
@@ -684,6 +734,8 @@ module.exports = {
   resendSellerInvite,
   getCustomers,
   updateCustomerStatus,
+  deleteCustomerAccount,
+  deleteSellerAccount,
   getSellerKycDocument,
   getMarketplacePayouts,
   releaseSellerPayout,

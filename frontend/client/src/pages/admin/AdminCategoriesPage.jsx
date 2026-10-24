@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import {
   Plus,
   Search,
@@ -20,9 +21,14 @@ import { toast } from "react-toastify";
 import { categoryService } from "../../services/categoryService";
 import Button from "../../components/ui/Button";
 import CategoryImageGalleryModal from "../../components/admin/CategoryImageGalleryModal";
+import ConfirmActionModal from "../superadmin/ConfirmActionModal";
 
 const AdminCategoriesPage = () => {
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "admin";
+  const basePath = isAdmin ? "/admin" : "/seller";
+
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -30,6 +36,8 @@ const AdminCategoriesPage = () => {
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [viewingCategory, setViewingCategory] = useState(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, category: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -77,14 +85,18 @@ const AdminCategoriesPage = () => {
 
   const handleAdd = (parentId = "") => {
     if (parentId) {
-      navigate(`/seller/categories/add?parent=${parentId}`);
+      navigate(`${basePath}/categories/add?parent=${parentId}`);
     } else {
-      navigate("/seller/categories/add");
+      navigate(`${basePath}/categories/add`);
     }
   };
 
   const handleEdit = (cat) => {
-    navigate(`/seller/categories/${cat._id}/edit`);
+    if (!isAdmin) {
+      toast.error("Only Administrators can modify category structure.");
+      return;
+    }
+    navigate(`${basePath}/categories/${cat._id}/edit`);
   };
 
   const handleViewImage = (cat) => {
@@ -92,14 +104,27 @@ const AdminCategoriesPage = () => {
     setIsGalleryOpen(true);
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete category "${name}"?`)) return;
+  const handlePromptDelete = (cat) => {
+    if (!isAdmin) {
+      toast.error("Only Administrators can delete categories.");
+      return;
+    }
+    setConfirmDeleteModal({ isOpen: true, category: cat });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { category } = confirmDeleteModal;
+    if (!category) return;
     try {
-      await categoryService.deleteCategory(id);
-      toast.success("Category deleted successfully!");
+      setIsDeleting(true);
+      await categoryService.deleteCategory(category._id);
+      toast.success(`Category "${category.name}" deleted successfully!`);
       fetchCategories();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to delete category");
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteModal({ isOpen: false, category: null });
     }
   };
 
@@ -446,23 +471,30 @@ const AdminCategoriesPage = () => {
                           </button>
                         )}
 
-                        {/* Edit */}
-                        <button
-                          onClick={() => handleEdit(cat)}
-                          className="rounded-lg p-1.5 text-stone hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream transition-colors"
-                          title="Edit Category"
-                        >
-                          <Edit2 size={15} />
-                        </button>
+                        {/* Edit & Delete (Admin Only) */}
+                        {isAdmin ? (
+                          <>
+                            <button
+                              onClick={() => handleEdit(cat)}
+                              className="rounded-lg p-1.5 text-stone hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream transition-colors cursor-pointer"
+                              title="Edit Category"
+                            >
+                              <Edit2 size={15} />
+                            </button>
 
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDelete(cat._id, cat.name)}
-                          className="rounded-lg p-1.5 text-stone hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 transition-colors"
-                          title="Delete Category"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                            <button
+                              onClick={() => handlePromptDelete(cat)}
+                              className="rounded-lg p-1.5 text-stone hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
+                              title="Delete Category"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                            Admin Managed
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -478,6 +510,22 @@ const AdminCategoriesPage = () => {
         isOpen={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
         category={viewingCategory}
+      />
+
+      {/* Category Deletion Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={confirmDeleteModal.isOpen}
+        onClose={() => setConfirmDeleteModal({ isOpen: false, category: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Catalog Category"
+        message={
+          confirmDeleteModal.category
+            ? `Are you sure you want to delete category "${confirmDeleteModal.category.name}"?\n\nNote: If this category contains child subcategories/items or has active products assigned, deletion will be safely blocked.`
+            : ""
+        }
+        confirmText="Delete Category"
+        confirmVariant="danger"
+        loading={isDeleting}
       />
     </div>
   );

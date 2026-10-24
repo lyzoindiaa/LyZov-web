@@ -63,6 +63,8 @@ export const userService = {
       .then((res) => res.data),
   deleteSellerDocument: (docType) =>
     api.delete(`/users/seller/document/${docType}`).then((res) => res.data),
+  getMyKycDocument: (docType) =>
+    api.get(`/users/seller/document/${docType}/view`).then((res) => res.data),
   changePassword: (payload) => api.put("/users/change-password", payload).then((res) => res.data),
   getUsers: (params) => api.get("/users", { params }).then((res) => res.data),
   updateUser: (id, payload) => api.put(`/users/${id}`, payload).then((res) => res.data),

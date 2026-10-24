@@ -43,6 +43,7 @@ const AdminProfilePage = () => {
   const [showAadhaar, setShowAadhaar] = useState(false);
   const [isDeletingPan, setIsDeletingPan] = useState(false);
   const [isDeletingAadhaar, setIsDeletingAadhaar] = useState(false);
+  const [docLoading, setDocLoading] = useState(null); // "pan" | "aadhaar" | null
 
   // Form hooks
   const storeForm = useForm();
@@ -151,16 +152,60 @@ const AdminProfilePage = () => {
     }
   };
 
+  const handleViewKycDocument = async (docType, isDownload = false) => {
+    try {
+      const localFile = docType === "pan" ? panFile : aadhaarFile;
+      if (localFile) {
+        const localUrl = URL.createObjectURL(localFile);
+        if (isDownload) {
+          const a = document.createElement("a");
+          a.href = localUrl;
+          a.download = localFile.name || `${docType.toUpperCase()}_Document`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          window.open(localUrl, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
+
+      setDocLoading(docType);
+      const res = await userService.getMyKycDocument(docType);
+      const docUrl = res.data?.url || res.data?.signedUrl;
+      if (res.success && docUrl) {
+        if (isDownload) {
+          const a = document.createElement("a");
+          a.href = docUrl;
+          a.target = "_blank";
+          a.download = `${docType.toUpperCase()}_Document`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          window.open(docUrl, "_blank", "noopener,noreferrer");
+        }
+      } else {
+        toast.error(res.message || "Document link not found");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to retrieve secure document link");
+    } finally {
+      setDocLoading(null);
+    }
+  };
+
   const handleDeleteDocument = async (docType) => {
     if (isKycVerified) {
       toast.error("Your KYC has been verified by Admin. Verified documents cannot be deleted or removed.");
       return;
     }
     if (docType === "pan") {
-      if (panFile && !user?.sellerProfile?.panDocument?.url) {
+      if (panFile) {
         setPanFile(null);
-        setPanPreview("");
-        toast.info("PAN attachment removed.");
+        const wasUploaded = Boolean(user?.sellerProfile?.panDocument?.uploaded || user?.sellerProfile?.panDocument?.url);
+        setPanPreview(wasUploaded ? "attached" : "");
+        toast.info("Unsaved PAN selection cleared.");
         return;
       }
       try {
@@ -177,10 +222,11 @@ const AdminProfilePage = () => {
         setIsDeletingPan(false);
       }
     } else if (docType === "aadhaar") {
-      if (aadhaarFile && !user?.sellerProfile?.aadhaarDocument?.url) {
+      if (aadhaarFile) {
         setAadhaarFile(null);
-        setAadhaarPreview("");
-        toast.info("Aadhaar attachment removed.");
+        const wasUploaded = Boolean(user?.sellerProfile?.aadhaarDocument?.uploaded || user?.sellerProfile?.aadhaarDocument?.url);
+        setAadhaarPreview(wasUploaded ? "attached" : "");
+        toast.info("Unsaved Aadhaar selection cleared.");
         return;
       }
       try {
@@ -751,28 +797,27 @@ const AdminProfilePage = () => {
                     <div className="flex items-center justify-between pt-2 border-t border-hairline/60 dark:border-hairline-dark/60 gap-2">
                       <div className="flex items-center gap-2">
                         {/* Download Document */}
-                        <a
-                          href={panPreview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download="PAN_Document"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all"
+                        <button
+                          type="button"
+                          onClick={() => handleViewKycDocument("pan", true)}
+                          disabled={docLoading === "pan"}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all disabled:opacity-50 cursor-pointer"
                           title="Download PAN Document"
                         >
                           <Download size={13} />
-                          <span>Download</span>
-                        </a>
+                          <span>{docLoading === "pan" ? "Loading..." : "Download"}</span>
+                        </button>
 
                         {/* Direct View in new tab */}
-                        <a
-                          href={panPreview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors"
-                          title="Open Document"
+                        <button
+                          type="button"
+                          onClick={() => handleViewKycDocument("pan", false)}
+                          disabled={docLoading === "pan"}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors disabled:opacity-50 cursor-pointer"
+                          title="Open Document in New Tab"
                         >
                           <ExternalLink size={13} />
-                        </a>
+                        </button>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -864,28 +909,27 @@ const AdminProfilePage = () => {
                     <div className="flex items-center justify-between pt-2 border-t border-hairline/60 dark:border-hairline-dark/60 gap-2">
                       <div className="flex items-center gap-2">
                         {/* Download Document */}
-                        <a
-                          href={aadhaarPreview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download="Aadhaar_Document"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all"
+                        <button
+                          type="button"
+                          onClick={() => handleViewKycDocument("aadhaar", true)}
+                          disabled={docLoading === "aadhaar"}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] hover:bg-[var(--bg-raised)] text-[var(--ink)] border border-hairline dark:border-hairline-dark transition-all disabled:opacity-50 cursor-pointer"
                           title="Download Aadhaar Document"
                         >
                           <Download size={13} />
-                          <span>Download</span>
-                        </a>
+                          <span>{docLoading === "aadhaar" ? "Loading..." : "Download"}</span>
+                        </button>
 
                         {/* Direct View in new tab */}
-                        <a
-                          href={aadhaarPreview}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors"
-                          title="Open Document"
+                        <button
+                          type="button"
+                          onClick={() => handleViewKycDocument("aadhaar", false)}
+                          disabled={docLoading === "aadhaar"}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-stone hover:text-[var(--ink)] transition-colors disabled:opacity-50 cursor-pointer"
+                          title="Open Document in New Tab"
                         >
                           <ExternalLink size={13} />
-                        </a>
+                        </button>
                       </div>
 
                       <div className="flex items-center gap-2">

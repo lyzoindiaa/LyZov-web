@@ -168,8 +168,21 @@ const createCategory = asyncHandler(async (req, res) => {
     ];
   }
 
+  const trimmedName = (name || "").trim();
+  if (!trimmedName) throw ApiError.badRequest("Category name is required");
+
+  const existingCategory = await Category.findOne({
+    parent: parentId,
+    name: { $regex: new RegExp(`^${trimmedName}$`, "i") },
+  });
+  if (existingCategory) {
+    throw ApiError.badRequest(
+      `A category named "${trimmedName}" already exists under this ${parentId ? "parent" : "root level"}.`
+    );
+  }
+
   // Ensure unique slug
-  let baseSlug = slugify(name, { lower: true, strict: true });
+  let baseSlug = slugify(trimmedName, { lower: true, strict: true });
   if (parentId && ancestors.length > 0) {
     baseSlug = `${ancestors[ancestors.length - 1].slug}-${baseSlug}`;
   }

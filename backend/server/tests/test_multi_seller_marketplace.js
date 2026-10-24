@@ -1202,4 +1202,190 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
       User.findById = originalUserFindById;
     }
   });
+
+  test("TEST-MS-14: SuperAdmin Account Deletion & Permanent Email Blacklist", async () => {
+    const Session = require("../models/Session");
+    const originalRevoke = Session.revokeAllUserSessions;
+    Session.revokeAllUserSessions = async () => {};
+
+    const originalFindById = User.findById;
+    const originalFindOne = User.findOne;
+    const originalProductUpdateMany = Product.updateMany;
+
+    try {
+      const sellerId = new mongoose.Types.ObjectId();
+      const customerId = new mongoose.Types.ObjectId();
+
+      const sellerDoc = {
+        _id: sellerId,
+        email: "terminated_seller@example.com",
+        role: "seller",
+        isActive: true,
+        sellerProfile: { businessName: "Old Shop", isVacationMode: false },
+        save: async function () { return this; },
+      };
+
+      const customerDoc = {
+        _id: customerId,
+        email: "terminated_customer@example.com",
+        role: "customer",
+        isActive: true,
+        save: async function () { return this; },
+      };
+
+      User.findOne = (query) => ({
+        then: (resolve) => {
+          if (query?.email) {
+            resolve({ email: query.email, isDeleted: true });
+          } else if (query?.role === "seller") {
+            resolve(sellerDoc);
+          } else if (query?.role === "customer") {
+            resolve(customerDoc);
+          } else {
+            resolve(null);
+          }
+        },
+      });
+
+      let productsDeactivated = false;
+      Product.updateMany = async () => {
+        productsDeactivated = true;
+        return { modifiedCount: 3 };
+      };
+
+      // 1. Delete seller
+      const { req: reqS, res: resS, next: nextS } = createMockReqRes({
+        user: { role: "admin" },
+        params: { id: sellerId.toString() },
+      });
+      await adminController.deleteSellerAccount(reqS, resS, nextS);
+      assert.strictEqual(sellerDoc.isDeleted, true);
+      assert.strictEqual(sellerDoc.isActive, false);
+      assert.strictEqual(sellerDoc.sellerProfile.isVacationMode, true);
+      assert.strictEqual(productsDeactivated, true);
+
+      // 2. Delete customer
+      const { req: reqC, res: resC, next: nextC } = createMockReqRes({
+        user: { role: "admin" },
+        params: { id: customerId.toString() },
+      });
+      await adminController.deleteCustomerAccount(reqC, resC, nextC);
+      assert.strictEqual(customerDoc.isDeleted, true);
+      assert.strictEqual(customerDoc.isActive, false);
+
+      // 3. Invite seller with blacklisted email throws 400
+      const { req: reqInv, res: resInv, next: nextInv } = createMockReqRes({
+        user: { role: "admin" },
+        body: { email: "terminated_seller@example.com", name: "Terminated" },
+      });
+      await assert.rejects(
+        async () => {
+          await adminController.inviteSeller(reqInv, resInv, nextInv);
+        },
+        (err) => err.statusCode === 400 && err.message.includes("previously terminated")
+      );
+    } finally {
+      Session.revokeAllUserSessions = originalRevoke;
+      User.findById = originalFindById;
+      User.findOne = originalFindOne;
+      Product.updateMany = originalProductUpdateMany;
+    }
+  });
+
+  test("TEST-MS-15: Brand Governance - Duplicate Check and Product Reference Integrity", async () => {
+    const Brand = require("../models/Brand");
+    const originalBrandFindOne = Brand.findOne;
+    const originalBrandFindById = Brand.findById;
+    const originalProductCountDocuments = Product.countDocuments;
+
+    try {
+      const brandId = new mongoose.Types.ObjectId();
+      const existingBrand = { _id: brandId, name: "Puma", logo: { publicId: "" } };
+
+      // 1. Duplicate check throws 400
+      Brand.findOne = () => ({
+        then: (resolve) => resolve(existingBrand),
+      });
+      const { req: reqCreate, res: resCreate, next: nextCreate } = createMockReqRes({
+        user: { role: "seller" },
+        body: { name: "puma" },
+      });
+      const brandController = require("../controllers/brandController");
+      await assert.rejects(
+        async () => {
+          await brandController.createBrand(reqCreate, resCreate, nextCreate);
+        },
+        (err) => err.statusCode === 400 && err.message.includes("already exists")
+      );
+
+      // 2. Deleting brand with associated products throws 400
+      Brand.findById = () => ({
+        then: (resolve) => resolve(existingBrand),
+      });
+      Product.countDocuments = async () => 5;
+      const { req: reqDel, res: resDel, next: nextDel } = createMockReqRes({
+        user: { role: "admin" },
+        params: { id: brandId.toString() },
+      });
+      await assert.rejects(
+        async () => {
+          await brandController.deleteBrand(reqDel, resDel, nextDel);
+        },
+        (err) => err.statusCode === 400 && err.message.includes("currently assigned to 5 product(s)")
+      );
+    } finally {
+      Brand.findOne = originalBrandFindOne;
+      Brand.findById = originalBrandFindById;
+      Product.countDocuments = originalProductCountDocuments;
+    }
+  });
+
+  test("TEST-MS-16: Checkout Service - Populated Seller Object Does Not Crash SubOrder Creation", async () => {
+    const Cart = require("../models/Cart");
+    const originalProductFindById = Product.findById;
+    const originalCartFindOne = Cart.findOne;
+
+    try {
+      const sellerId = new mongoose.Types.ObjectId();
+      const productId = new mongoose.Types.ObjectId();
+
+      // Product has populated seller object
+      const productMock = {
+        _id: productId,
+        title: "Classic Watch",
+        price: 500,
+        discountPrice: 450,
+        stock: 10,
+        isActive: true,
+        seller: {
+          _id: sellerId,
+          sellerProfile: { businessName: "Watch Store", isVacationMode: false },
+        },
+      };
+
+      Product.findById = (id) => ({
+        populate: () => ({
+          then: (resolve) => resolve(productMock),
+        }),
+      });
+
+      Cart.findOne = () => ({
+        then: (resolve) =>
+          resolve({
+            items: [{ product: productId, quantity: 1, name: "Classic Watch" }],
+          }),
+      });
+
+      const snapshot = await checkoutService.buildCheckoutSnapshot({
+        _id: new mongoose.Types.ObjectId(),
+        role: "customer",
+      });
+
+      assert.strictEqual(snapshot.items[0].seller.toString(), sellerId.toString());
+      assert.strictEqual(snapshot.items[0].seller.sellerProfile, undefined, "sellerProfile must not leak into item.seller");
+    } finally {
+      Product.findById = originalProductFindById;
+      Cart.findOne = originalCartFindOne;
+    }
+  });
 });

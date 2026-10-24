@@ -85,5 +85,15 @@ export const adminService = {
     const res = await api.put(`/admin/customers/${id}/status`, { isActive });
     return res.data;
   },
+
+  deleteSeller: async (id) => {
+    const res = await api.delete(`/admin/sellers/${id}`);
+    return res.data;
+  },
+
+  deleteCustomer: async (id) => {
+    const res = await api.delete(`/admin/customers/${id}`);
+    return res.data;
+  },
 };
 
