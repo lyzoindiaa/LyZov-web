@@ -10,6 +10,10 @@ const snapshotItemSchema = new mongoose.Schema(
     color: { type: String, default: "" },
     size: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
+    // Required so prepaid orders split into the correct seller sub-orders / payouts
+    gstRate: { type: String, default: null },
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
   },
   { _id: false }
 );

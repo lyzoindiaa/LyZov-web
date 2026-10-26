@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.get("/validate/:code", protect, validateCoupon);
 
-router.use(protect, authorize("seller"));
+router.use(protect, authorize("seller", "admin"));
 
 router.get("/", getCoupons);
 router.post(
