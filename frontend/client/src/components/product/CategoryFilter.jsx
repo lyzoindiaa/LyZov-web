@@ -156,19 +156,7 @@ const CategoryFilter = () => {
       }}
     >
       <div className="container-page" style={{ width: "100%" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "1.5rem",
-            overflowX: "auto",
-            padding: "0.5rem 0",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            width: "100%",
-            justifyContent: "center",
-          }}
-          className="category-scroll"
-        >
+        <div className="category-scroll">
           {categories.map((category) => (
             <button
               key={category.id}
@@ -176,19 +164,9 @@ const CategoryFilter = () => {
               onClick={() => handleCategoryClick(category.id)}
               className="category-filter-card"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "0.5rem",
-                minWidth: "5rem",
-                padding: "0.75rem",
-                borderRadius: "1.5rem",
                 backgroundColor: selectedCategory === category.id ? "var(--accent-bg)" : "var(--surface)",
                 border: selectedCategory === category.id ? "2px solid var(--accent)" : "1px solid var(--border)",
                 cursor: "pointer",
-                transition: "all 0.2s ease",
-                textDecoration: "none",
-                flexShrink: 0,
                 boxShadow: "var(--shadow-sm)",
               }}
               onMouseEnter={(e) => {
@@ -209,15 +187,7 @@ const CategoryFilter = () => {
               <div
                 className="category-filter-image"
                 style={{
-                  width: "3.5rem",
-                  height: "3.5rem",
-                  borderRadius: "1rem",
                   backgroundColor: selectedCategory === category.id ? "var(--accent)" : "var(--bg-subtle)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                  transition: "all 0.2s ease",
                 }}
               >
                 <CategoryIcon
@@ -232,8 +202,10 @@ const CategoryFilter = () => {
                   fontWeight: 600,
                   color: selectedCategory === category.id ? "var(--accent)" : "var(--ink)",
                   textAlign: "center",
-                  maxWidth: "5rem",
+                  lineHeight: 1.25,
+                  width: "100%",
                 }}
+                className="line-clamp-2"
               >
                 {category.name}
               </span>

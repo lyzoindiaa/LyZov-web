@@ -140,6 +140,7 @@ const SellerCredentialsModal = ({
         style={{
           width: "100%",
           maxWidth: "32rem",
+          maxHeight: "90vh",
           backgroundColor: "var(--surface)",
           borderRadius: "1.25rem",
           border: "1px solid var(--border)",
@@ -223,7 +224,7 @@ const SellerCredentialsModal = ({
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem", overflowY: "auto" }}>
           {!credentials ? (
             /* Step 1: Confirmation Prompt (Replaces window.confirm) */
             <>

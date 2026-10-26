@@ -94,7 +94,7 @@ const AdminProductsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="eyebrow">Catalog</span>
           <h1 className="mt-1 font-display text-3xl tracking-tightest">Products</h1>

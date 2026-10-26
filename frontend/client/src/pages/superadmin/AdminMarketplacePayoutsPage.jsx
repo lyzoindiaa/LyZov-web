@@ -274,7 +274,7 @@ const AdminMarketplacePayoutsPage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
@@ -395,7 +395,7 @@ const AdminMarketplacePayoutsPage = () => {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] pb-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("monthly")}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${

@@ -263,7 +263,7 @@ const ShopPage = () => {
         )}
 
         <div>
-          <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" />
+          <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" hasSidebar={true} />
           <div ref={loadMoreRef} style={{ minHeight: "1px", marginTop: "2rem" }} aria-hidden="true" />
           {isLoadingMore && (
             <p style={{ textAlign: "center", color: "var(--ink-muted)", fontSize: "0.8rem" }}>Loading more products...</p>

@@ -355,7 +355,7 @@ const LandingPage = () => {
 
           {/* Product Grid */}
           <div>
-            <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your filters" />
+            <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your filters" hasSidebar={isFilterOpen} />
             <div ref={loadMoreRef} style={{ minHeight: "1px", marginTop: "2rem" }} aria-hidden="true" />
             {isLoadingMore && (
               <p style={{ textAlign: "center", color: "var(--ink-muted)", fontSize: "0.8rem" }}>Loading more products...</p>

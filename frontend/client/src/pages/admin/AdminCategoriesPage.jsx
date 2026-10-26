@@ -339,7 +339,7 @@ const AdminCategoriesPage = () => {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-hairline bg-ivory dark:border-hairline-dark dark:bg-charcoal shadow-sm">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full min-w-[760px] text-left text-sm border-collapse">
             <thead className="border-b border-hairline bg-cream/30 text-xs font-semibold uppercase text-stone dark:border-hairline-dark dark:bg-charcoal/60">
               <tr>
                 <th className="px-6 py-3.5">Category Structure & Name</th>

@@ -122,9 +122,9 @@ const Footer = () => {
 
       {/* ── Main Links ── */}
       <div className="container-page" style={{ paddingTop: "3.5rem", paddingBottom: "3rem" }}>
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-6 lg:gap-10">
           {/* Brand column */}
-          <div className="sm:col-span-2 lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="sm:col-span-2 md:col-span-2 lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <p style={{ maxWidth: "24rem", fontSize: "0.875rem", color: "var(--ink-muted)", lineHeight: 1.7 }}>
               Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery.
             </p>

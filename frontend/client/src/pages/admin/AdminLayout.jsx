@@ -73,6 +73,14 @@ const AdminLayout = () => {
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="flex-col lg:flex-row">
 
+      {/* Mobile / Tablet Drawer Backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ──────────────────────────────────────── */}
       <aside
         style={{
@@ -80,8 +88,9 @@ const AdminLayout = () => {
           backgroundColor: "var(--surface)",
           padding: "1.25rem",
         }}
-        className={`w-full lg:w-64 shrink-0 flex flex-col justify-between ${mobileOpen ? "block" : "hidden lg:flex"
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex flex-col justify-between overflow-y-auto shadow-2xl transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:w-64 lg:max-w-none lg:shadow-none ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
         <div>
           {/* Brand / Logo */}

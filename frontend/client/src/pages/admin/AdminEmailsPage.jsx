@@ -285,7 +285,7 @@ const AdminEmailsPage = () => {
         }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+          <table style={{ width: "100%", minWidth: "700px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
                 <th style={{ padding: "0.875rem 1.25rem", fontWeight: 700, color: "var(--ink-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>

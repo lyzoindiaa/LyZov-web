@@ -786,7 +786,7 @@ const AdminOrderDetailsPage = () => {
                       {isGeneratingPreview ? "Building Email Preview..." : "Preview rendered Email Modal"}
                     </button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleSaveShipment({ sendEmail: true })}
