@@ -332,7 +332,7 @@ const AdminSellerDetailsPage = () => {
       </div>
 
       {/* Main Grid: Details & Compliance */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: "1.5rem" }}>
         {/* Left Column: Business & Profile Information */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {/* Card: Account & Business Profile */}

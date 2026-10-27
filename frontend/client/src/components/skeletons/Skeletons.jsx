@@ -1,18 +1,29 @@
 export const ProductCardSkeleton = () => (
-  <div className="flex flex-col gap-3">
-    <div className="skeleton aspect-[3/4] w-full rounded-xl2" />
-    <div className="skeleton h-3.5 w-3/4 rounded-full" />
-    <div className="skeleton h-3.5 w-1/3 rounded-full" />
+  <div className="card-surface p-2.5 sm:p-4 flex flex-col gap-3 rounded-2xl">
+    <div className="skeleton aspect-square w-full rounded-xl" />
+    <div className="skeleton h-3 w-1/4 rounded-full mt-1" />
+    <div className="skeleton h-4 w-3/4 rounded-full" />
+    <div className="skeleton h-3.5 w-1/2 rounded-full" />
   </div>
 );
 
-export const ProductGridSkeleton = ({ count = 8 }) => (
-  <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-    {Array.from({ length: count }).map((_, i) => (
-      <ProductCardSkeleton key={i} />
-    ))}
-  </div>
-);
+export const ProductGridSkeleton = ({ count = 8, columns, hasSidebar = false }) => {
+  const gridClasses = columns
+    ? columns === 3
+      ? "grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-3"
+      : "grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5"
+    : hasSidebar
+    ? "grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
+    : "grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5";
+
+  return (
+    <div className={gridClasses}>
+      {Array.from({ length: count }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+};
 
 export const ProductDetailsSkeleton = () => (
   <div className="container-page grid grid-cols-1 gap-10 py-10 lg:grid-cols-2 lg:gap-16 lg:py-16">

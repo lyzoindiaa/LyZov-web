@@ -640,9 +640,9 @@ const ProductDetailsPage = () => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-8 lg:gap-14 items-start">
           {/* Gallery */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="flex flex-col gap-4 md:sticky md:top-24">
             <div
               className="gallery-main"
               style={{
@@ -1464,7 +1464,7 @@ const ProductDetailsPage = () => {
 
           {activeTab === "shipping" && (
             <div className="card-surface tab-pane p-6 sm:p-8">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 <div>
                   <h4 style={{ fontWeight: 800, fontSize: "1rem", color: "var(--ink)", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <Truck size={18} style={{ color: "var(--accent)" }} /> Fast Doorstep Delivery Across India

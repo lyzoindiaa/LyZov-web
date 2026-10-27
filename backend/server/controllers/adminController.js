@@ -7,6 +7,13 @@ const Address = require("../models/Address");
 const Product = require("../models/Product");
 const Payout = require("../models/Payout");
 const SubOrder = require("../models/SubOrder");
+const CommissionRule = require("../models/CommissionRule");
+const {
+  getMonthlySettlementBatch,
+  releaseMonthlySettlementBatch,
+  generateBankNeftCsv,
+  promoteMaturedCoolingOffPayouts,
+} = require("../services/settlementService");
 const { generateSignedKycUrl } = require("../services/kycDocumentService");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
@@ -579,6 +586,10 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
     filter.seller = req.query.seller;
   }
 
+  if (req.query.period) {
+    filter.settlementPeriod = req.query.period;
+  }
+
   const total = await Payout.countDocuments(filter);
   const payouts = await Payout.find(filter)
     .populate("seller", "name email phone sellerProfile.businessName sellerProfile.bankDetails")
@@ -593,11 +604,18 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
     ? { seller: req.user._id }
     : (req.query.seller && mongoose.isValidObjectId(req.query.seller) ? { seller: new mongoose.Types.ObjectId(req.query.seller) } : {});
 
+  if (req.query.period) {
+    summaryFilter.settlementPeriod = req.query.period;
+  }
+
   let escrowBalance = 0;
+  let coolingOffBalance = 0;
   let eligibleBalance = 0;
   let paidBalance = 0;
   let totalGross = 0;
   let totalCommission = 0;
+  let totalGstOnCommission = 0;
+  let totalTcs = 0;
 
   try {
     const metrics = await Payout.aggregate([
@@ -608,6 +626,8 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
           totalNet: { $sum: "$netAmount" },
           totalGross: { $sum: "$grossAmount" },
           totalCommission: { $sum: "$commissionAmount" },
+          totalGstOnCommission: { $sum: "$gstOnCommission" },
+          totalTcs: { $sum: "$tcsAmount" },
           count: { $sum: 1 },
         },
       },
@@ -616,7 +636,10 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
     metrics.forEach((m) => {
       totalGross += m.totalGross || 0;
       totalCommission += m.totalCommission || 0;
+      totalGstOnCommission += m.totalGstOnCommission || 0;
+      totalTcs += m.totalTcs || 0;
       if (m._id === "pending") escrowBalance += m.totalNet || 0;
+      else if (m._id === "cooling_off") coolingOffBalance += m.totalNet || 0;
       else if (m._id === "eligible") eligibleBalance += m.totalNet || 0;
       else if (m._id === "completed") paidBalance += m.totalNet || 0;
     });
@@ -631,10 +654,13 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
     totalPages: Math.ceil(total / limit) || 1,
     financials: {
       escrowBalance,
+      coolingOffBalance,
       eligibleBalance,
       paidBalance,
       totalGross,
       totalCommission,
+      totalGstOnCommission,
+      totalTcs,
     },
   });
 });
@@ -656,6 +682,7 @@ const releaseSellerPayout = asyncHandler(async (req, res) => {
   payout.status = "completed";
   payout.paidAt = new Date();
   payout.transactionReference = transactionReference || `TXN-${Date.now()}`;
+  payout.utrNumber = payout.transactionReference;
   payout.notes = notes || "";
   payout.processedBy = req.user._id;
   await payout.save();
@@ -667,6 +694,158 @@ const releaseSellerPayout = asyncHandler(async (req, res) => {
   }
 
   return sendSuccess(res, 200, "Seller payout released successfully", { payout });
+});
+
+// @desc    Get monthly settlement summary batch (grouped by seller)
+// @route   GET /api/admin/payouts/monthly-summary
+// @access  Private/Admin
+const getMonthlySettlementSummary = asyncHandler(async (req, res) => {
+  const period = req.query.period || "";
+  const sellerId = req.query.seller || null;
+
+  const batches = await getMonthlySettlementBatch({ period, sellerId });
+  return sendSuccess(res, 200, "Monthly settlement summary retrieved", batches);
+});
+
+// @desc    Export RBI compliant bulk NEFT CSV for a monthly batch
+// @route   GET /api/admin/payouts/export-neft
+// @access  Private/Admin
+const exportMonthlySettlementCsv = asyncHandler(async (req, res) => {
+  const period = req.query.period || "";
+  const sellerId = req.query.seller || null;
+
+  const batches = await getMonthlySettlementBatch({ period, sellerId });
+  const csvContent = generateBankNeftCsv(batches, period);
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="LyZov_Settlement_${period || "Current"}.csv"`
+  );
+  return res.status(200).send(csvContent);
+});
+
+// @desc    Release monthly batch with Bank UTR reference
+// @route   POST /api/admin/payouts/release-monthly-batch
+// @access  Private/Admin
+const releaseMonthlyBatch = asyncHandler(async (req, res) => {
+  const { period, sellerId, utrNumber, notes } = req.body;
+
+  if (!utrNumber || !String(utrNumber).trim()) {
+    throw ApiError.badRequest("Bank UTR reference number is required to release settlement batch");
+  }
+
+  const result = await releaseMonthlySettlementBatch({
+    period,
+    sellerId,
+    utrNumber,
+    processedBy: req.user._id,
+    notes,
+  });
+
+  return sendSuccess(res, 200, `Monthly settlement released for ${result.releasedCount} payouts`, result);
+});
+
+// @desc    Trigger cooling-off maturity scan on demand
+// @route   POST /api/admin/payouts/run-maturity-job
+// @access  Private/Admin
+const triggerSettlementMaturityJob = asyncHandler(async (req, res) => {
+  const result = await promoteMaturedCoolingOffPayouts();
+  return sendSuccess(res, 200, `Maturity job executed. Promoted ${result.promotedCount} payout(s) to eligible.`, result);
+});
+
+// ── Commission Rules CRUD ──
+
+// @desc    Get all commission rules
+// @route   GET /api/admin/commission-rules
+// @access  Private/Admin
+const getCommissionRules = asyncHandler(async (req, res) => {
+  const rules = await CommissionRule.find()
+    .populate("category", "name slug")
+    .populate("seller", "name email sellerProfile.businessName")
+    .sort("-createdAt");
+
+  return sendSuccess(res, 200, "Commission rules fetched successfully", rules);
+});
+
+// @desc    Create a commission rule
+// @route   POST /api/admin/commission-rules
+// @access  Private/Admin
+const createCommissionRule = asyncHandler(async (req, res) => {
+  const {
+    name,
+    scope,
+    category,
+    seller,
+    rateType,
+    percentage,
+    fixedFee,
+    gstOnCommissionRate,
+    tcsRate,
+    description,
+  } = req.body;
+
+  if (!name || !scope) {
+    throw ApiError.badRequest("Name and Scope are required");
+  }
+
+  const rule = await CommissionRule.create({
+    name: String(name).trim(),
+    scope,
+    category: category || null,
+    seller: seller || null,
+    rateType: rateType || "percentage",
+    percentage: Number(percentage) || 10,
+    fixedFee: Number(fixedFee) || 0,
+    gstOnCommissionRate: gstOnCommissionRate !== undefined ? Number(gstOnCommissionRate) : 18.0,
+    tcsRate: tcsRate !== undefined ? Number(tcsRate) : 1.0,
+    description: description || "",
+    createdBy: req.user._id,
+  });
+
+  return sendSuccess(res, 201, "Commission rule created successfully", rule);
+});
+
+// @desc    Update a commission rule
+// @route   PUT /api/admin/commission-rules/:id
+// @access  Private/Admin
+const updateCommissionRule = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const rule = await CommissionRule.findById(id);
+  if (!rule) throw ApiError.notFound("Commission rule not found");
+
+  const fields = [
+    "name",
+    "scope",
+    "category",
+    "seller",
+    "rateType",
+    "percentage",
+    "fixedFee",
+    "gstOnCommissionRate",
+    "tcsRate",
+    "isActive",
+    "description",
+  ];
+
+  fields.forEach((f) => {
+    if (req.body[f] !== undefined) rule[f] = req.body[f];
+  });
+
+  await rule.save();
+  return sendSuccess(res, 200, "Commission rule updated successfully", rule);
+});
+
+// @desc    Delete a commission rule
+// @route   DELETE /api/admin/commission-rules/:id
+// @access  Private/Admin
+const deleteCommissionRule = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const rule = await CommissionRule.findById(id);
+  if (!rule) throw ApiError.notFound("Commission rule not found");
+
+  await CommissionRule.findByIdAndDelete(id);
+  return sendSuccess(res, 200, "Commission rule deleted successfully");
 });
 
 // @desc    Get products awaiting moderation
@@ -739,6 +918,14 @@ module.exports = {
   getSellerKycDocument,
   getMarketplacePayouts,
   releaseSellerPayout,
+  getMonthlySettlementSummary,
+  exportMonthlySettlementCsv,
+  releaseMonthlyBatch,
+  triggerSettlementMaturityJob,
+  getCommissionRules,
+  createCommissionRule,
+  updateCommissionRule,
+  deleteCommissionRule,
   getProductModerationQueue,
   moderateProduct,
 };

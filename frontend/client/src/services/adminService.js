@@ -65,6 +65,49 @@ export const adminService = {
     return res.data;
   },
 
+  getMonthlySettlementSummary: async (params = {}) => {
+    const res = await api.get("/admin/payouts/monthly-summary", { params });
+    return res.data;
+  },
+
+  exportMonthlySettlementCsv: async (params = {}) => {
+    const res = await api.get("/admin/payouts/export-neft", {
+      params,
+      responseType: "blob",
+    });
+    return res;
+  },
+
+  releaseMonthlyBatch: async (data) => {
+    const res = await api.post("/admin/payouts/release-monthly-batch", data);
+    return res.data;
+  },
+
+  triggerSettlementMaturityJob: async () => {
+    const res = await api.post("/admin/payouts/run-maturity-job");
+    return res.data;
+  },
+
+  getCommissionRules: async () => {
+    const res = await api.get("/admin/commission-rules");
+    return res.data;
+  },
+
+  createCommissionRule: async (data) => {
+    const res = await api.post("/admin/commission-rules", data);
+    return res.data;
+  },
+
+  updateCommissionRule: async (id, data) => {
+    const res = await api.put(`/admin/commission-rules/${id}`, data);
+    return res.data;
+  },
+
+  deleteCommissionRule: async (id) => {
+    const res = await api.delete(`/admin/commission-rules/${id}`);
+    return res.data;
+  },
+
   getProductsForModeration: async (params = {}) => {
     const res = await api.get("/admin/products/moderation", { params });
     return res.data;

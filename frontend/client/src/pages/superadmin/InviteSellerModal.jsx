@@ -113,6 +113,9 @@ const InviteSellerModal = ({ isOpen, onClose, onSellerCreated }) => {
         style={{
           width: "100%",
           maxWidth: "34rem",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
           backgroundColor: "var(--surface)",
           borderRadius: "1.25rem",
           border: "1px solid var(--border)",
@@ -174,7 +177,7 @@ const InviteSellerModal = ({ isOpen, onClose, onSellerCreated }) => {
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: "1.5rem" }}>
+        <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1 }}>
           {!createdData ? (
             /* Step 1: Input Form */
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

@@ -21,6 +21,12 @@ const reviewController = require("../controllers/reviewController");
 const userController = require("../controllers/userController");
 const checkoutService = require("../services/checkoutService");
 const stockService = require("../services/stockService");
+const { calculateSubOrderFinancials, getSettlementPeriod } = require("../services/commissionService");
+const {
+  handleSubOrderDelivery,
+  promoteMaturedCoolingOffPayouts,
+  generateBankNeftCsv,
+} = require("../services/settlementService");
 
 // Mock Express req, res, next helper
 function createMockReqRes({ user, params = {}, body = {}, query = {} } = {}) {
@@ -1388,4 +1394,140 @@ describe("Multi-Seller Marketplace Architecture & Isolation Test Suite", () => {
       Cart.findOne = originalCartFindOne;
     }
   });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-17: Dynamic Tiered Commission with GST (18%) & TCS (1%)
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-17: Dynamic Tiered Commission with GST (18%) & TCS (1%)", () => {
+    const rule = {
+      name: "Standard Apparel Tier",
+      scope: "category",
+      percentage: 10,
+      fixedFee: 0,
+      gstOnCommissionRate: 18.0,
+      tcsRate: 1.0,
+    };
+
+    const financials = calculateSubOrderFinancials({
+      sellerItemsPrice: 10000,
+      sellerTotal: 10000,
+      rule,
+    });
+
+    assert.strictEqual(financials.commissionRate, 10);
+    assert.strictEqual(financials.commissionAmount, 1000, "10% commission on 10,000 is 1,000");
+    assert.strictEqual(financials.gstOnCommission, 180, "18% GST on 1,000 commission is 180");
+    assert.strictEqual(financials.tcsAmount, 100, "1% TCS on 10,000 items is 100");
+    assert.strictEqual(financials.totalDeductions, 1280, "Total deductions = 1000 + 180 + 100 = 1280");
+    assert.strictEqual(financials.sellerEarnings, 8720, "Net payout = 10000 - 1280 = 8720");
+    assert.ok(financials.settlementPeriod.match(/^\d{4}-\d{2}$/), "Settlement period must be YYYY-MM");
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-18: SubOrder Delivery Cooling-Off (T+7d) & Maturity
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-18: SubOrder Delivery Cooling-Off (T+7d) & Maturity", async () => {
+    const originalPayoutFindByIdAndUpdate = Payout.findByIdAndUpdate;
+    const originalPayoutFind = Payout.find;
+    const originalSubOrderFindByIdAndUpdate = SubOrder.findByIdAndUpdate;
+
+    try {
+      const payoutId = new mongoose.Types.ObjectId();
+      const subOrderId = new mongoose.Types.ObjectId();
+      let payoutUpdatedStatus = null;
+      let payoutUpdatedEligibleAt = null;
+
+      Payout.findByIdAndUpdate = (id, update) => {
+        payoutUpdatedStatus = update.$set.status;
+        payoutUpdatedEligibleAt = update.$set.eligibleAt;
+        return Promise.resolve({ _id: id });
+      };
+
+      const mockSubOrder = {
+        _id: subOrderId,
+        payoutId,
+        isDelivered: false,
+        payoutStatus: "pending",
+      };
+
+      const deliveredAt = new Date("2026-10-01T12:00:00Z");
+      await handleSubOrderDelivery({ subOrder: mockSubOrder, deliveredAt });
+
+      assert.strictEqual(mockSubOrder.isDelivered, true);
+      assert.strictEqual(mockSubOrder.payoutStatus, "cooling_off");
+      assert.strictEqual(payoutUpdatedStatus, "cooling_off");
+
+      const expectedEligible = new Date(deliveredAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+      assert.strictEqual(mockSubOrder.coolingOffUntil.getTime(), expectedEligible.getTime());
+      assert.strictEqual(payoutUpdatedEligibleAt.getTime(), expectedEligible.getTime());
+
+      // Test maturity promotion
+      const mockMaturedPayout = {
+        _id: payoutId,
+        subOrder: subOrderId,
+        status: "cooling_off",
+        eligibleAt: new Date(Date.now() - 1000), // In the past
+        save: async function () {
+          this.status = "eligible";
+          return this;
+        },
+      };
+
+      Payout.find = () => Promise.resolve([mockMaturedPayout]);
+      let subOrderMaturedPayoutStatus = null;
+      SubOrder.findByIdAndUpdate = (id, update) => {
+        subOrderMaturedPayoutStatus = update.$set.payoutStatus;
+        return Promise.resolve({ _id: id });
+      };
+
+      const result = await promoteMaturedCoolingOffPayouts();
+      assert.strictEqual(result.promotedCount, 1);
+      assert.strictEqual(mockMaturedPayout.status, "eligible");
+      assert.strictEqual(subOrderMaturedPayoutStatus, "eligible");
+    } finally {
+      Payout.findByIdAndUpdate = originalPayoutFindByIdAndUpdate;
+      Payout.find = originalPayoutFind;
+      SubOrder.findByIdAndUpdate = originalSubOrderFindByIdAndUpdate;
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     TEST-MS-19: Monthly Settlement Batch Aggregation & RBI NEFT CSV
+  ───────────────────────────────────────────────────────────── */
+  test("TEST-MS-19: Monthly Settlement Batch Aggregation & RBI NEFT CSV", () => {
+    const mockBatches = [
+      {
+        sellerId: new mongoose.Types.ObjectId(),
+        businessName: "Artisan Silks",
+        bankDetails: {
+          accountHolderName: "Artisan Silks Pvt Ltd",
+          accountNumber: "50200012345678",
+          ifscCode: "HDFC0001234",
+          bankName: "HDFC Bank",
+        },
+        orderCount: 15,
+        totalNet: 45600.5,
+      },
+      {
+        sellerId: new mongoose.Types.ObjectId(),
+        businessName: "Heritage Cotton",
+        bankDetails: {
+          accountHolderName: "Heritage Cotton LLP",
+          accountNumber: "91900087654321",
+          ifscCode: "ICIC0000999",
+          bankName: "ICICI Bank",
+        },
+        orderCount: 8,
+        totalNet: 18250.0,
+      },
+    ];
+
+    const csv = generateBankNeftCsv(mockBatches, "2026-10");
+    assert.ok(csv.includes("Beneficiary Name"), "CSV must include headers");
+    assert.ok(csv.includes("50200012345678"), "CSV must contain merchant account number");
+    assert.ok(csv.includes("HDFC0001234"), "CSV must contain IFSC code");
+    assert.ok(csv.includes("45600.50"), "CSV must contain formatted net amount");
+    assert.ok(csv.includes("2026-10"), "CSV must contain settlement period");
+  });
 });
+

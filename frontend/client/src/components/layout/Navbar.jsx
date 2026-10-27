@@ -180,10 +180,10 @@ const Navbar = () => {
         transition: "background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
       }}
     >
-      <div className="container-page flex w-full max-w-full min-h-[4rem] items-center justify-between gap-4 py-2 lg:gap-6 lg:py-2.5">
+      <div className="container-page flex w-full min-h-[4rem] items-center justify-between gap-2 sm:gap-4 py-2 lg:gap-4 xl:gap-8 lg:py-2.5">
 
         {/* Left: Brand & Navigation */}
-        <div className="flex min-w-0 items-center gap-4 sm:gap-6 lg:gap-8">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-5 lg:gap-4 xl:gap-7">
           <button
             onClick={() => dispatch(toggleMobileMenu())}
             className="btn-icon lg:hidden"
@@ -192,12 +192,12 @@ const Navbar = () => {
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <Logo size="nav" className="navbar-logo" />
+          <Logo size="nav" className="navbar-logo shrink-0" />
 
           <span style={{ color: "var(--border)", fontSize: "1.25rem", userSelect: "none" }} className="hidden xl:inline">|</span>
 
           {/* Nav Links */}
-          <nav className="hidden lg:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-xs xl:text-sm font-medium">
             {isAdmin ? (
               <>
                 <Link to="/admin" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.375rem" }}>
@@ -222,13 +222,13 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/" className="nav-link-animated">Home</Link>
-                <Link to="/?sort=popular" className="nav-link-animated">Featured</Link>
+                <Link to="/?sort=popular" className="nav-link-animated hidden xl:inline-block">Featured</Link>
 
                 {/* Categories Dropdown & Mega-Menu */}
                 <div style={{ position: "relative" }} ref={catRef}>
                   <button
                     onClick={() => setCatMenuOpen((v) => !v)}
-                    style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.875rem", fontWeight: 500, color: catMenuOpen ? "var(--ink)" : "var(--ink-muted)", background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
+                    style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "inherit", fontWeight: 500, color: catMenuOpen ? "var(--ink)" : "var(--ink-muted)", background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
                   >
                     <span>Categories</span>
                     <ChevronDown size={13} style={{ transition: "transform 0.2s", transform: catMenuOpen ? "rotate(180deg)" : "none", color: "var(--ink-subtle)" }} />
@@ -239,7 +239,7 @@ const Navbar = () => {
                       style={{
                         position: "absolute",
                         top: "calc(100% + 0.75rem)",
-                        left: "-6rem",
+                        left: "max(-8rem, min(0px, calc(50vw - 24rem)))",
                         width: "min(46rem, calc(100vw - 2rem))",
                         borderRadius: "1.25rem",
                         backgroundColor: "var(--surface)",
@@ -366,20 +366,22 @@ const Navbar = () => {
 
                 <Link to="/shop" className="nav-link-animated">All Products</Link>
                 <Link to="/track" className="nav-link-animated" style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <Truck size={13} /> Track Order
+                  <Truck size={13} />
+                  <span className="hidden xl:inline">Track Order</span>
+                  <span className="xl:hidden">Track</span>
                 </Link>
-                <Link to="/contact" className="nav-link-animated">Contact</Link>
+                <Link to="/contact" className="nav-link-animated hidden xl:inline-block">Contact</Link>
 
                 {/* Shop CTA */}
                 <Link
                   to="/shop"
+                  className="hidden xl:inline-flex items-center gap-1.5"
                   style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                    padding: "0.45rem 1rem",
+                    padding: "0.4rem 0.875rem",
                     background: "var(--accent)",
                     color: "#fff",
                     borderRadius: "9999px",
-                    fontSize: "0.8125rem",
+                    fontSize: "0.75rem",
                     fontWeight: 700,
                     textDecoration: "none",
                     transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
@@ -388,7 +390,7 @@ const Navbar = () => {
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "scale(1.04)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.transform = ""; }}
                 >
-                  <ShoppingBag size={13} /> Shop
+                  <ShoppingBag size={12} /> Shop
                 </Link>
               </>
             )}

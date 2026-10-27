@@ -124,12 +124,18 @@ const seedAdminAndTestUsers = async () => {
         role: "customer",
         isEmailVerified: true,
         phone: "+91 9123456789",
+        isActive: true,
+        isDeleted: false,
+        profileComplete: true,
       });
       console.log(`[Created] Customer account: ${customerEmail}`);
     } else {
       customer.role = "customer";
       customer.password = customerPassword;
       customer.isEmailVerified = true;
+      customer.isActive = true;
+      customer.isDeleted = false;
+      customer.profileComplete = true;
       await customer.save();
       console.log(`[Updated] Customer account: ${customerEmail}`);
     }

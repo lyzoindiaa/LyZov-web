@@ -57,7 +57,7 @@ const DashboardLayout = () => {
   const isRoot = location.pathname === "/dashboard" || location.pathname === "/dashboard/orders";
 
   return (
-    <div className="container-page w-full max-w-full py-8 lg:py-12">
+    <div className="container-page py-8 lg:py-12">
 
       {/* ── Welcome Hero Banner ───────────────────────────── */}
       <div
@@ -213,7 +213,7 @@ const DashboardLayout = () => {
       )}
 
       {/* ── Main Layout: Sidebar + Content ──────────────── */}
-      <div className="grid w-full max-w-full grid-cols-1 gap-8 lg:grid-cols-[220px_1fr]">
+      <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[200px_1fr] lg:grid-cols-[230px_1fr] lg:gap-8">
 
         {/* Sidebar */}
         <aside
@@ -226,7 +226,7 @@ const DashboardLayout = () => {
             alignSelf: "start",
             minWidth: 0,
           }}
-          className="flex min-w-0 flex-row gap-1.5 overflow-x-auto lg:flex-col lg:overflow-visible no-scrollbar lg:sticky lg:top-6"
+          className="flex min-w-0 flex-row gap-1.5 overflow-x-auto md:flex-col md:overflow-visible no-scrollbar md:sticky md:top-6"
         >
           {navItems.map((item) => (
             <NavLink
@@ -240,7 +240,7 @@ const DashboardLayout = () => {
           ))}
 
           {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden lg:block" />
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
 
           {/* Shop link in sidebar */}
           <Link
@@ -253,7 +253,7 @@ const DashboardLayout = () => {
           </Link>
 
           {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden lg:block" />
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
 
           {/* Logout */}
           <button

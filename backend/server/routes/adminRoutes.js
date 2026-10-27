@@ -18,6 +18,14 @@ const {
   getSellerKycDocument,
   getMarketplacePayouts,
   releaseSellerPayout,
+  getMonthlySettlementSummary,
+  exportMonthlySettlementCsv,
+  releaseMonthlyBatch,
+  triggerSettlementMaturityJob,
+  getCommissionRules,
+  createCommissionRule,
+  updateCommissionRule,
+  deleteCommissionRule,
   getProductModerationQueue,
   moderateProduct,
 } = require("../controllers/adminController");
@@ -56,6 +64,16 @@ router.post("/sellers/:id/resend-invite", resendSellerInvite);
 
 // ── Marketplace Financials & Payouts ──
 router.post("/payouts/:id/release", releaseSellerPayout);
+router.get("/payouts/monthly-summary", getMonthlySettlementSummary);
+router.get("/payouts/export-neft", exportMonthlySettlementCsv);
+router.post("/payouts/release-monthly-batch", releaseMonthlyBatch);
+router.post("/payouts/run-maturity-job", triggerSettlementMaturityJob);
+
+// ── Dynamic Commission Rules ──
+router.get("/commission-rules", getCommissionRules);
+router.post("/commission-rules", createCommissionRule);
+router.put("/commission-rules/:id", updateCommissionRule);
+router.delete("/commission-rules/:id", deleteCommissionRule);
 
 // ── Product Moderation Queue ──
 router.get("/products/moderation", getProductModerationQueue);

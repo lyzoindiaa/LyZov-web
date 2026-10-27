@@ -235,7 +235,7 @@ const AdminCustomersPage = () => {
         }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.8125rem" }}>
+          <table style={{ width: "100%", minWidth: "680px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.8125rem" }}>
             <thead>
               <tr style={{ backgroundColor: "var(--bg-raised)", borderBottom: "1px solid var(--border)" }}>
                 <th style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.06em" }}>

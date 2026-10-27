@@ -261,12 +261,11 @@ const ProductCard = ({ product }) => {
             style={{
               fontWeight: 600,
               color: "var(--ink)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
               transition: "color 0.15s",
+              lineHeight: 1.35,
             }}
-            className="text-xs sm:text-sm group-hover:text-[var(--accent)]"
+            className="text-xs sm:text-sm line-clamp-2 min-h-[2.7em] group-hover:text-[var(--accent)]"
+            title={product.title || product.name}
           >
             {product.title || product.name}
           </h3>
