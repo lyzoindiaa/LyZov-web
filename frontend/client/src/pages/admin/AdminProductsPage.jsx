@@ -7,6 +7,7 @@ import { adminProductService } from "../../services/adminProductService";
 import { formatCurrency } from "../../utils/formatters";
 import Button from "../../components/ui/Button";
 import ProductImageGalleryModal from "../../components/admin/ProductImageGalleryModal";
+import Pagination from "../../components/common/Pagination";
 import { getDraftIndex, loadDraft, clearDraft } from "../../hooks/useDraft";
 
 const AdminProductsPage = () => {
@@ -15,6 +16,7 @@ const AdminProductsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 1 });
 
   // Draft state
   const [drafts, setDrafts] = useState([]);
@@ -29,11 +31,20 @@ const AdminProductsPage = () => {
     setDrafts(loaded);
   };
 
-  const loadProducts = async () => {
+  const loadProducts = async (page = pagination.page, limit = pagination.limit) => {
     setIsLoading(true);
     try {
-      const res = await adminProductService.getMyProducts({ limit: 50 });
-      setProducts(res.data);
+      const res = await adminProductService.getMyProducts({ page, limit });
+      setProducts(res.data || []);
+      const meta = res.meta || res.pagination;
+      if (meta) {
+        setPagination({
+          page: meta.page || page,
+          limit: meta.limit || limit,
+          total: meta.total || 0,
+          totalPages: meta.totalPages || 1,
+        });
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load seller products");
     } finally {
@@ -42,7 +53,7 @@ const AdminProductsPage = () => {
   };
 
   useEffect(() => {
-    loadProducts();
+    loadProducts(1, pagination.limit);
     refreshDrafts();
   }, []);
 
@@ -277,6 +288,18 @@ const AdminProductsPage = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        itemLabel="products"
+        showLimitSelector={true}
+        limitOptions={[12, 24, 48]}
+        onPageChange={(newPage) => loadProducts(newPage, pagination.limit)}
+        onLimitChange={(newLimit) => loadProducts(1, newLimit)}
+      />
 
       <ProductImageGalleryModal
         isOpen={isGalleryOpen}

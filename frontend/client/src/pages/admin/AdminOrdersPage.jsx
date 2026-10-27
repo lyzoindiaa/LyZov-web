@@ -7,6 +7,7 @@ import { orderService } from "../../services/cartService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import Pagination from "../../components/common/Pagination";
 
 const ALL_STATUS_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"];
 
@@ -27,6 +28,7 @@ const AdminOrdersPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [manifestingId, setManifestingId] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
 
   // Delivered confirmation modal state
   const [pendingDelivery, setPendingDelivery] = useState(null); // { orderId, order }
@@ -34,18 +36,29 @@ const AdminOrdersPage = () => {
 
   // [DELHIVERY PAUSED] const [manifestingId, setManifestingId] = useState(null);
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = pagination.page, limit = pagination.limit) => {
     setIsLoading(true);
     try {
-      const res = await orderService.getAllOrders(statusFilter ? { status: statusFilter } : {});
-      setOrders(res.data);
+      const params = { page, limit };
+      if (statusFilter) params.status = statusFilter;
+      const res = await orderService.getAllOrders(params);
+      setOrders(res.data || []);
+      const meta = res.meta || res.pagination;
+      if (meta) {
+        setPagination({
+          page: meta.page || page,
+          limit: meta.limit || limit,
+          total: meta.total || 0,
+          totalPages: meta.totalPages || 1,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadOrders();
+    loadOrders(1, pagination.limit);
   }, [statusFilter]);
 
   const handleStatusChange = async (orderId, newStatus, order) => {
@@ -249,6 +262,20 @@ const AdminOrdersPage = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="p-4 border-t border-[var(--border)]">
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            itemLabel="orders"
+            showLimitSelector={true}
+            limitOptions={[10, 15, 30, 50]}
+            onPageChange={(newPage) => loadOrders(newPage, pagination.limit)}
+            onLimitChange={(newLimit) => loadOrders(1, newLimit)}
+          />
         </div>
       </div>
     </>

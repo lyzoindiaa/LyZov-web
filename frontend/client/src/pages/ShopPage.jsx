@@ -33,7 +33,7 @@ const ShopPage = () => {
     try {
       const queryFilters = { ...filters };
       delete queryFilters.page;
-      const res = await productService.getProducts({ ...queryFilters, page: 1, limit: 8 });
+      const res = await productService.getProducts({ ...queryFilters, page: 1, limit: 12 });
       setProducts(res.data || []);
       setMeta(res.meta || { page: 1, totalPages: 1, total: res.data?.length || 0 });
     } catch {
@@ -64,7 +64,7 @@ const ShopPage = () => {
       const res = await productService.getProducts({
         ...queryFilters,
         page: meta.page + 1,
-        limit: 8,
+        limit: 12,
       });
       setProducts((currentProducts) => [...currentProducts, ...(res.data || [])]);
       setMeta(res.meta || { ...meta, page: meta.page + 1 });
@@ -266,7 +266,15 @@ const ShopPage = () => {
           <ProductGrid products={products} isLoading={isLoading} emptyMessage="No products match your criteria" hasSidebar={true} />
           <div ref={loadMoreRef} style={{ minHeight: "1px", marginTop: "2rem" }} aria-hidden="true" />
           {isLoadingMore && (
-            <p style={{ textAlign: "center", color: "var(--ink-muted)", fontSize: "0.8rem" }}>Loading more products...</p>
+            <div className="flex items-center justify-center gap-2 py-6 text-[var(--ink-muted)] text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-ping" />
+              Loading more products...
+            </div>
+          )}
+          {!isLoading && !isLoadingMore && meta.page >= meta.totalPages && products.length > 0 && (
+            <div className="text-center py-8 text-xs text-[var(--ink-muted)] border-t border-[var(--border)] mt-8">
+              Showing all <strong className="text-[var(--ink)]">{meta.total}</strong> products in this collection
+            </div>
           )}
         </div>
       </div>
