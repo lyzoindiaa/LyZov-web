@@ -142,10 +142,10 @@ const SellerPayoutsPage = () => {
         <div>
           <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight flex items-center gap-2.5">
             <Wallet className="text-[var(--accent)]" size={26} />
-            Seller Financials & Monthly Settlements
+            Seller Financials & Payouts
           </h1>
           <p className="text-xs sm:text-sm text-[var(--ink-muted)] mt-1">
-            Real-time escrow hold balance, 7-day return cooling-off periods, monthly bank disbursements, and transparent platform fee schedules.
+            Real-time earnings tracking, 7-day customer return windows, consolidated bank payouts, and transparent platform fee schedules.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -165,11 +165,11 @@ const SellerPayoutsPage = () => {
 
       {/* Financial KPI Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* In-Transit Escrow */}
+        {/* In Delivery (Transit) */}
         <div className="card-surface p-5 rounded-xl border border-[var(--border)] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-              In-Transit Escrow
+              In Delivery (Transit)
             </span>
             <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
               <Clock size={16} />
@@ -183,7 +183,7 @@ const SellerPayoutsPage = () => {
           </p>
         </div>
 
-        {/* 7-Day Cooling Off */}
+        {/* 7-Day Customer Return Window */}
         <div
           onClick={() => {
             setActiveTab("disbursements");
@@ -194,11 +194,11 @@ const SellerPayoutsPage = () => {
               ? "border-indigo-500 bg-indigo-500/5 ring-1 ring-indigo-500"
               : "border-[var(--border)] hover:border-indigo-500/40"
           }`}
-          title="Click to filter orders in 7-day return cooling-off window"
+          title="Click to filter orders in 7-day customer return window"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-              Cooling Off (7d)
+              7-Day Return Window
             </span>
             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
               <ShieldCheck size={16} />
@@ -209,7 +209,7 @@ const SellerPayoutsPage = () => {
           </div>
           <div className="flex items-center justify-between mt-1">
             <p className="text-[11px] text-[var(--ink-muted)] flex items-center gap-1">
-              <ShieldCheck size={12} className="text-indigo-500" /> Held during 7-day return window
+              <ShieldCheck size={12} className="text-indigo-500" /> Protected during customer return window
             </p>
             <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
               {statusFilter === "cooling_off" && activeTab === "disbursements" ? "Filtered ✓" : "Filter →"}
@@ -217,11 +217,11 @@ const SellerPayoutsPage = () => {
           </div>
         </div>
 
-        {/* Ready for Monthly Release */}
+        {/* Ready for Next Payout */}
         <div className="card-surface p-5 rounded-xl border border-[var(--border)] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-              Eligible for Payout
+              Ready for Next Payout
             </span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
               <CheckCircle2 size={16} />
@@ -231,15 +231,15 @@ const SellerPayoutsPage = () => {
             {formatCurrency(meta.financials?.eligibleBalance || 0)}
           </div>
           <p className="text-[11px] text-[var(--ink-muted)] mt-1">
-            Cleared funds for next monthly payout
+            Cleared orders ready for weekly / batch bank transfer
           </p>
         </div>
 
-        {/* Total Paid Out */}
+        {/* Total Paid to Bank */}
         <div className="card-surface p-5 rounded-xl border border-[var(--border)] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-              Disbursed to Bank
+              Paid to Bank
             </span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <Landmark size={16} />
@@ -249,7 +249,7 @@ const SellerPayoutsPage = () => {
             {formatCurrency(meta.financials?.paidBalance || 0)}
           </div>
           <p className="text-[11px] text-[var(--ink-muted)] mt-1">
-            Transferred directly via bank NEFT / IMPS
+            Transferred directly to bank account via NEFT/RTGS
           </p>
         </div>
       </div>
@@ -298,7 +298,7 @@ const SellerPayoutsPage = () => {
           }`}
         >
           <FileText size={14} />
-          Disbursements & Escrow Ledger
+          Payouts & Order Ledger
         </button>
         <button
           onClick={() => setActiveTab("commission_schedule")}
@@ -313,17 +313,17 @@ const SellerPayoutsPage = () => {
         </button>
       </div>
 
-      {/* TAB 1: Disbursements & Escrow Ledger */}
+      {/* TAB 1: Payouts & Order Ledger */}
       {activeTab === "disbursements" && (
         <div className="flex flex-col gap-4">
           {/* Filter Sub-Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {[
-              { label: "All Disbursements", value: "" },
-              { label: "In Escrow (Transit)", value: "pending" },
-              { label: "In Cooling-Off (7d)", value: "cooling_off" },
-              { label: "Eligible for Settlement", value: "eligible" },
-              { label: "Disbursed (Completed)", value: "completed" },
+              { label: "All Orders", value: "" },
+              { label: "In Delivery", value: "pending" },
+              { label: "7-Day Return Window", value: "cooling_off" },
+              { label: "Ready for Payout", value: "eligible" },
+              { label: "Paid to Bank", value: "completed" },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -403,18 +403,18 @@ const SellerPayoutsPage = () => {
                         <td className="py-3.5 px-4">
                           {p.status === "completed" && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                              <CheckCircle2 size={11} /> Disbursed
+                              <CheckCircle2 size={11} /> Paid to Bank
                             </span>
                           )}
                           {p.status === "eligible" && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                              <CheckCircle2 size={11} /> Ready
+                              <CheckCircle2 size={11} /> Ready for Payout
                             </span>
                           )}
                           {p.status === "cooling_off" && (
                             <div className="flex flex-col gap-0.5">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800" title="Held during customer 7-day return/exchange window">
-                                <ShieldCheck size={11} /> Cooling Off
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800" title="Protected during customer 7-day return window">
+                                <ShieldCheck size={11} /> 7-Day Window
                               </span>
                               <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
                                 {getCoolingCountdown(p.eligibleAt, p.subOrder?.coolingOffUntil)}
@@ -423,7 +423,7 @@ const SellerPayoutsPage = () => {
                           )}
                           {p.status === "pending" && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                              <Clock size={11} /> In Transit
+                              <Clock size={11} /> In Delivery
                             </span>
                           )}
                         </td>
@@ -432,7 +432,7 @@ const SellerPayoutsPage = () => {
                           <div>Period: {p.settlementPeriod || "Current"}</div>
                           {p.eligibleAt && (
                             <div className="text-[10px]">
-                              Eligible: {formatDate(p.eligibleAt)}
+                              Ready: {formatDate(p.eligibleAt)}
                             </div>
                           )}
                         </td>
@@ -449,7 +449,7 @@ const SellerPayoutsPage = () => {
                             </div>
                           ) : (
                             <span className="text-[10px] font-bold text-[var(--ink-muted)]">
-                              Scheduled Month-End
+                              Next Batch Settlement
                             </span>
                           )}
                         </td>

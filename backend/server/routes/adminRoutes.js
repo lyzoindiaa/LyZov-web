@@ -21,6 +21,7 @@ const {
   getMonthlySettlementSummary,
   exportMonthlySettlementCsv,
   releaseMonthlyBatch,
+  getBatchOrdersManifestHandler,
   triggerSettlementMaturityJob,
   getCommissionRules,
   createCommissionRule,
@@ -67,7 +68,9 @@ router.post("/sellers/:id/resend-invite", resendSellerInvite);
 router.post("/payouts/:id/release", releaseSellerPayout);
 router.get("/payouts/monthly-summary", getMonthlySettlementSummary);
 router.get("/payouts/export-neft", exportMonthlySettlementCsv);
+router.get("/payouts/batch-orders", getBatchOrdersManifestHandler);
 router.post("/payouts/release-monthly-batch", releaseMonthlyBatch);
+router.post("/payouts/release-seller-batch", releaseMonthlyBatch);
 router.post("/payouts/run-maturity-job", triggerSettlementMaturityJob);
 
 // ── Dynamic Commission Rules ──

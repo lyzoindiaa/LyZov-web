@@ -11,6 +11,9 @@ const CommissionRule = require("../models/CommissionRule");
 const {
   getMonthlySettlementBatch,
   releaseMonthlySettlementBatch,
+  getConsolidatedSettlementBatches,
+  getBatchOrdersManifest,
+  releaseConsolidatedSellerBatch,
   generateBankNeftCsv,
   promoteMaturedCoolingOffPayouts,
 } = require("../services/settlementService");
@@ -699,42 +702,79 @@ const releaseSellerPayout = asyncHandler(async (req, res) => {
 // @desc    Get monthly settlement summary batch (grouped by seller)
 // @route   GET /api/admin/payouts/monthly-summary
 // @access  Private/Admin
+// @desc    Get settlement summary batches (weekly, monthly, or all-cleared balance)
+// @route   GET /api/admin/payouts/monthly-summary, GET /api/admin/payouts/consolidated-summary
+// @access  Private/Admin
 const getMonthlySettlementSummary = asyncHandler(async (req, res) => {
   const period = req.query.period || "";
+  const cycle = req.query.cycle || (period ? "monthly" : "weekly");
   const sellerId = req.query.seller || null;
 
-  const batches = await getMonthlySettlementBatch({ period, sellerId });
-  return sendSuccess(res, 200, "Monthly settlement summary retrieved", batches);
+  const batches = await getConsolidatedSettlementBatches({ cycle, period, sellerId });
+  return sendSuccess(res, 200, "Settlement summary batches retrieved", batches);
 });
 
-// @desc    Export RBI compliant bulk NEFT CSV for a monthly batch
+// @desc    Get manifest of individual sub-orders included in a seller's cleared batch
+// @route   GET /api/admin/payouts/batch-orders
+// @access  Private/Admin
+const getBatchOrdersManifestHandler = asyncHandler(async (req, res) => {
+  const sellerId = req.query.sellerId;
+  const payoutIds = req.query.payoutIds ? String(req.query.payoutIds).split(",").filter(Boolean) : [];
+  const status = req.query.status || "eligible";
+
+  const orders = await getBatchOrdersManifest({ sellerId, payoutIds, status });
+  return sendSuccess(res, 200, "Batch orders manifest retrieved", orders);
+});
+
+// @desc    Export RBI compliant bulk NEFT CSV for a settlement batch
 // @route   GET /api/admin/payouts/export-neft
 // @access  Private/Admin
 const exportMonthlySettlementCsv = asyncHandler(async (req, res) => {
   const period = req.query.period || "";
+  const cycle = req.query.cycle || (period ? "monthly" : "weekly");
   const sellerId = req.query.seller || null;
 
-  const batches = await getMonthlySettlementBatch({ period, sellerId });
-  const csvContent = generateBankNeftCsv(batches, period);
+  const batches = await getConsolidatedSettlementBatches({ cycle, period, sellerId });
+  const csvContent = generateBankNeftCsv(batches, period || cycle);
 
   res.setHeader("Content-Type", "text/csv");
   res.setHeader(
     "Content-Disposition",
-    `attachment; filename="LyZov_Settlement_${period || "Current"}.csv"`
+    `attachment; filename="LyZov_Settlement_${cycle}_${period || "Batch"}.csv"`
   );
   return res.status(200).send(csvContent);
 });
 
-// @desc    Release monthly batch with Bank UTR reference
-// @route   POST /api/admin/payouts/release-monthly-batch
+// @desc    Release single consolidated settlement batch for a seller (1 UTR for 1,000+ orders)
+// @route   POST /api/admin/payouts/release-monthly-batch, POST /api/admin/payouts/release-seller-batch
 // @access  Private/Admin
 const releaseMonthlyBatch = asyncHandler(async (req, res) => {
-  const { period, sellerId, utrNumber, notes } = req.body;
+  const { period, sellerId, payoutIds, utrNumber, notes, cycle } = req.body;
 
   if (!utrNumber || !String(utrNumber).trim()) {
     throw ApiError.badRequest("Bank UTR reference number is required to release settlement batch");
   }
 
+  // If sellerId provided, use consolidated single-seller release (supports 1,000 orders in 1 payment)
+  if (sellerId) {
+    const result = await releaseConsolidatedSellerBatch({
+      sellerId,
+      payoutIds: Array.isArray(payoutIds) ? payoutIds : [],
+      utrNumber: String(utrNumber).trim(),
+      processedBy: req.user._id,
+      notes,
+      cycle: cycle || (period ? "Monthly" : "Weekly"),
+    });
+
+    return sendSuccess(
+      res,
+      200,
+      `Settlement of ₹${result.totalAmount} successfully released for ${result.releasedCount} order(s)`,
+      result
+    );
+  }
+
+  // Fallback to period-wide batch
   const result = await releaseMonthlySettlementBatch({
     period,
     sellerId,
@@ -1035,6 +1075,7 @@ module.exports = {
   getMonthlySettlementSummary,
   exportMonthlySettlementCsv,
   releaseMonthlyBatch,
+  getBatchOrdersManifestHandler,
   triggerSettlementMaturityJob,
   getCommissionRules,
   createCommissionRule,

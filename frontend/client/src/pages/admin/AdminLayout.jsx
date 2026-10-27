@@ -35,7 +35,7 @@ const navItems = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Award },
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },
-  { label: "Payouts & Escrow", to: "/seller/payouts", icon: Wallet },
+  { label: "Payouts & Earnings", to: "/seller/payouts", icon: Wallet },
   { label: "Profile & KYC", to: "/seller/profile", icon: UserCheck },
   { label: "Email Logs", to: "/seller/emails", icon: Mail },
   { label: "Vacation & Settings", to: "/seller/settings", icon: Palmtree },
