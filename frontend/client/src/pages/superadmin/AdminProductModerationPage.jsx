@@ -17,6 +17,7 @@ import {
 import { adminService } from "../../services/adminService";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import { toast } from "react-toastify";
+import Pagination from "../../components/common/Pagination";
 
 const AdminProductModerationPage = () => {
   const [products, setProducts] = useState([]);
@@ -264,6 +265,18 @@ const AdminProductModerationPage = () => {
             );
           })}
         </div>
+      )}
+
+      {products.length > 0 && (
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          total={meta.total}
+          limit={meta.limit}
+          itemLabel="products"
+          showLimitSelector={false}
+          onPageChange={(newPage) => fetchModerationQueue(newPage, statusFilter)}
+        />
       )}
 
       {/* Reject with Feedback Modal */}
