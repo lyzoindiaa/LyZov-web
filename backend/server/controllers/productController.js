@@ -393,13 +393,20 @@ const updateProduct = asyncHandler(async (req, res) => {
     "packagingSizeHeight", "packagingSizeLength", "packagingSizeWidth", "packOf",
     "warranty", "country", "manufacturer", "packer", "hsnNumber", "gstRate",
     "brand", "category", "subCategory", "material", "careInstructions",
-    "price", "compareAtPrice", "costPrice", "sku", "barcode", "inventory",
+    "price", "discountPrice", "stock", "compareAtPrice", "costPrice", "sku", "barcode", "inventory",
     "variants", "isFeatured", "isActive", "status"
   ];
 
   allowedFields.forEach((key) => {
     if (req.body[key] !== undefined) {
-      product[key] = req.body[key];
+      if (key === "discountPrice") {
+        const val = req.body[key];
+        product[key] = val === "" || val === null || val === undefined ? 0 : Number(val);
+      } else if (key === "price" || key === "stock") {
+        product[key] = req.body[key] !== "" ? Number(req.body[key]) : product[key];
+      } else {
+        product[key] = req.body[key];
+      }
     }
   });
 
