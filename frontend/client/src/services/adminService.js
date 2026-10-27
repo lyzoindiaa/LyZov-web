@@ -83,6 +83,16 @@ export const adminService = {
     return res.data;
   },
 
+  releaseSellerBatch: async (data) => {
+    const res = await api.post("/admin/payouts/release-seller-batch", data);
+    return res.data;
+  },
+
+  getBatchOrders: async (params = {}) => {
+    const res = await api.get("/admin/payouts/batch-orders", { params });
+    return res.data;
+  },
+
   triggerSettlementMaturityJob: async () => {
     const res = await api.post("/admin/payouts/run-maturity-job");
     return res.data;

@@ -217,7 +217,9 @@ const ProductFormModal = ({ isOpen, onClose, onSaved, product }) => {
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (key === "discountPrice") {
+          formData.append(key, value !== undefined && value !== null ? value : "");
+        } else if (value !== undefined && value !== null && value !== "") {
           formData.append(key, value);
         }
       });

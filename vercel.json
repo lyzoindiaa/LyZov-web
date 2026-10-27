@@ -29,10 +29,6 @@
       "destination": "/api/index?__p=/robots.txt"
     },
     {
-      "source": "/product/:slug*",
-      "destination": "/api/index?__p=/product/:slug*"
-    },
-    {
       "source": "/api/:path*",
       "destination": "/api/index?__p=/api/:path*"
     },

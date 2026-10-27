@@ -260,13 +260,22 @@ const OrderDetailsPage = () => {
                 </p>
                 {(order.orderStatus === "delivered" || order.isPaid) && (
                   <div className="mt-2">
-                    <Link
-                      to={`/product/${item.slug || item.product || ""}?openReview=true`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50/70 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:opacity-90 transition-opacity"
-                    >
-                      <Star size={12} fill="currentColor" className="text-amber-500" />
-                      Write Verified Review
-                    </Link>
+                    {(() => {
+                      const productTarget =
+                        item.slug ||
+                        item.product?.slug ||
+                        (typeof item.product === "string" ? item.product : item.product?._id) ||
+                        "";
+                      return (
+                        <Link
+                          to={`/product/${productTarget}?openReview=true`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50/70 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:opacity-90 transition-opacity"
+                        >
+                          <Star size={12} fill="currentColor" className="text-amber-500" />
+                          Write Verified Review
+                        </Link>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

@@ -593,6 +593,93 @@ class EmailService {
       },
     });
   }
+
+  /**
+   * Send commission revision notice to a seller.
+   */
+  async sendCommissionScheduleNotice({
+    seller,
+    tierName,
+    percentage,
+    effectiveFrom,
+    effectiveTo,
+    scope,
+    categoryName,
+  }) {
+    const { subject, text, html } = templates.commissionScheduleNoticeTemplate({
+      sellerName: seller.name,
+      businessName: seller.sellerProfile?.businessName || seller.name,
+      tierName,
+      percentage,
+      effectiveFrom,
+      effectiveTo,
+      scope,
+      categoryName,
+    });
+
+    return this.dispatch({
+      to: seller.email,
+      recipientName: seller.name,
+      template: "commission_schedule_notice",
+      subject,
+      text,
+      html,
+      relatedUser: seller._id,
+      metadata: {
+        role: "seller",
+        tierName,
+        percentage,
+        effectiveFrom,
+        effectiveTo,
+        scope,
+      },
+    });
+  async sendWeeklyPayoutReceipt({
+    seller,
+    orderCount,
+    totalGross,
+    totalCommission,
+    totalGstOnCommission,
+    totalTcs,
+    totalNet,
+    utrNumber,
+    bankDetails,
+    cycleName = "Weekly Settlement",
+  }) {
+    if (!seller || !seller.email) return { success: false, reason: "No seller email" };
+
+    const { subject, text, html } = templates.weeklyPayoutReceiptTemplate({
+      sellerName: seller.name,
+      businessName: seller.sellerProfile?.businessName || seller.name,
+      orderCount,
+      totalGross,
+      totalCommission,
+      totalGstOnCommission,
+      totalTcs,
+      totalNet,
+      utrNumber,
+      bankDetails: bankDetails || seller.sellerProfile?.bankDetails || {},
+      cycleName,
+      payoutDate: new Date(),
+    });
+
+    return this.dispatch({
+      to: seller.email,
+      recipientName: seller.name,
+      template: "weekly_payout_receipt",
+      subject,
+      text,
+      html,
+      relatedUser: seller._id,
+      metadata: {
+        role: "seller",
+        orderCount,
+        totalNet,
+        utrNumber,
+        cycleName,
+      },
+    });
+  }
 }
 
 const emailService = new EmailService();

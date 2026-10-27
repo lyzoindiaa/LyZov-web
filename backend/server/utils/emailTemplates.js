@@ -907,6 +907,253 @@ const sellerInvitationTemplate = ({ sellerName, businessName, email, tempPasswor
   };
 };
 
+/**
+ * Notice of Commission / Platform Margin Revision Template
+ */
+const commissionScheduleNoticeTemplate = ({
+  sellerName,
+  businessName,
+  tierName,
+  percentage,
+  effectiveFrom,
+  effectiveTo,
+  scope = "global",
+  categoryName = "",
+}) => {
+  const url = process.env.CLIENT_URL || "https://lyzov.com";
+  const fromFormatted = effectiveFrom
+    ? new Date(effectiveFrom).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Immediate";
+  const toFormatted = effectiveTo
+    ? new Date(effectiveTo).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Ongoing";
+
+  const scopeLabel =
+    scope === "category" && categoryName
+      ? `Category: ${categoryName}`
+      : scope === "seller"
+      ? "Custom Partner Tier"
+      : "All Marketplace Categories";
+
+  const content = `
+    <h1 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 700; color: ${textDark};">
+      Platform Commission Revision Notice
+    </h1>
+    <p style="margin: 0 0 20px 0; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
+      Dear ${businessName || sellerName || "Valued Merchant"},
+    </p>
+    <p style="margin: 0 0 24px 0; font-size: 14px; color: ${textDark}; line-height: 1.6;">
+      Please be advised of an upcoming revision to your platform margin fees on the LyZov Gentlemen Marketplace. In accordance with platform governance, the revised commission structure outlined below will take effect from the scheduled date:
+    </p>
+
+    <!-- Highlighted Rates Card -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1.5px solid ${borderCol}; border-radius: 8px; margin-bottom: 28px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table width="100%" cellpadding="6" cellspacing="0">
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted}; width: 40%;">Commission Tier:</td>
+              <td style="font-size: 14px; font-weight: 700; color: ${textDark};">${tierName || "Standard Marketplace Fee"}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Revised Margin Fee:</td>
+              <td style="font-size: 20px; font-weight: 800; color: ${primaryGold};">${percentage}%</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Effective From:</td>
+              <td style="font-size: 14px; font-weight: 700; color: ${textDark};">${fromFormatted}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Effective Until:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textMuted};">${toFormatted}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Scope:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textDark};">${scopeLabel}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px 16px; border-radius: 4px; margin-bottom: 28px;">
+      <p style="margin: 0; font-size: 13px; color: #92400E; line-height: 1.5;">
+        <strong>Merchant Note:</strong> Orders placed before ${fromFormatted} will continue to be settled at your previously active commission rate. Only orders received on or after ${fromFormatted} will reflect the new margin fee.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0 16px 0;">
+      <a href="${url}/seller/payouts" class="btn-gold" target="_blank" style="color: #FFFFFF !important;">
+        View Fee Schedule in Portal
+      </a>
+    </div>
+
+    <p style="margin: 28px 0 0 0; font-size: 13px; color: ${textMuted}; line-height: 1.6;">
+      If you have questions regarding this schedule, please reach out directly through your Seller Support dashboard or reply to this notice.
+    </p>
+  `;
+
+  return {
+    subject: `Notice: Revised Platform Commission Fee (${percentage}%) Effective ${fromFormatted} — LyZov`,
+    text: `Platform Commission Revision Notice\n\nDear ${businessName || sellerName || "Merchant"},\n\nYour platform margin fee on LyZov is scheduled to be ${percentage}% effective from ${fromFormatted} to ${toFormatted}.\n\nScope: ${scopeLabel}\n\nReview your full schedule in the Seller Portal: ${url}/seller/payouts`,
+    html: baseEmailWrapper({
+      title: `Platform Margin Notice: ${percentage}% from ${fromFormatted}`,
+      preheader: `Important notice: Your platform fee is scheduled to update to ${percentage}% on ${fromFormatted}.`,
+      content,
+    }),
+  };
+};
+
+// 15. Weekly / Consolidated Settlement Payout Receipt
+const weeklyPayoutReceiptTemplate = ({
+  businessName,
+  sellerName,
+  orderCount = 1,
+  totalGross = 0,
+  totalCommission = 0,
+  totalGstOnCommission = 0,
+  totalTcs = 0,
+  totalNet = 0,
+  utrNumber,
+  bankDetails = {},
+  cycleName = "Weekly Settlement",
+  payoutDate = new Date(),
+}) => {
+  const url = process.env.CLIENT_URL || "https://lyzov.com";
+  const dateFormatted = new Date(payoutDate).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const fmt = (n) =>
+    "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; background-color: #ECFDF5; color: #059669; line-height: 56px; font-size: 28px;">
+        &#10003;
+      </div>
+      <h2 style="margin: 14px 0 6px 0; font-size: 22px; color: ${textDark}; font-weight: 800;">
+        Bank Payout Disbursed
+      </h2>
+      <p style="margin: 0; font-size: 14px; color: #059669; font-weight: 700;">
+        ${fmt(totalNet)} transferred to your account
+      </p>
+    </div>
+
+    <p style="margin: 0 0 20px 0; font-size: 14px; color: ${textMuted}; line-height: 1.6;">
+      Dear ${businessName || sellerName || "Valued Merchant"},
+    </p>
+    <p style="margin: 0 0 24px 0; font-size: 14px; color: ${textDark}; line-height: 1.6;">
+      Your <strong>${cycleName}</strong> of <strong>${fmt(totalNet)}</strong> covering <strong>${orderCount} cleared order${orderCount > 1 ? "s" : ""}</strong> has been successfully processed and transferred to your registered settlement bank account.
+    </p>
+
+    <!-- Bank & Transaction Details -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1.5px solid ${borderCol}; border-radius: 8px; margin-bottom: 24px;">
+      <tr>
+        <td style="padding: 18px 20px;">
+          <table width="100%" cellpadding="5" cellspacing="0">
+            <tr>
+              <td style="font-size: 12px; color: ${textMuted}; width: 42%;">Bank Reference (UTR):</td>
+              <td style="font-size: 13px; font-family: monospace; font-weight: 700; color: #059669;">${utrNumber || "NEFT-CONFIRMED"}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 12px; color: ${textMuted};">Disbursed Date:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textDark};">${dateFormatted}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 12px; color: ${textMuted};">Destination Bank:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textDark};">${bankDetails.bankName || "NEFT Account"}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 12px; color: ${textMuted};">Account Number:</td>
+              <td style="font-size: 13px; font-family: monospace; font-weight: 700; color: ${textDark};">
+                ${bankDetails.accountNumber ? `••••${String(bankDetails.accountNumber).slice(-4)}` : "Registered Account"}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-size: 12px; color: ${textMuted};">IFSC Code:</td>
+              <td style="font-size: 13px; font-family: monospace; font-weight: 600; color: ${textDark};">${bankDetails.ifscCode || "N/A"}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Financial Breakdown Table -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF; border: 1.5px solid ${borderCol}; border-radius: 8px; margin-bottom: 24px;">
+      <thead>
+        <tr style="background-color: #F8FAFC; border-bottom: 1px solid ${borderCol};">
+          <th align="left" style="padding: 12px 16px; font-size: 12px; color: ${textMuted}; text-transform: uppercase;">Financial Component</th>
+          <th align="right" style="padding: 12px 16px; font-size: 12px; color: ${textMuted}; text-transform: uppercase;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 12px 16px; font-size: 13px; color: ${textDark}; border-bottom: 1px solid #F1F5F9;">
+            Gross Product Sales (${orderCount} orders)
+          </td>
+          <td align="right" style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: ${textDark}; border-bottom: 1px solid #F1F5F9;">
+            ${fmt(totalGross)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 16px; font-size: 13px; color: #7C3AED; border-bottom: 1px solid #F1F5F9;">
+            LyZov Platform Margin Fee
+          </td>
+          <td align="right" style="padding: 12px 16px; font-size: 13px; font-weight: 600; color: #7C3AED; border-bottom: 1px solid #F1F5F9;">
+            - ${fmt(totalCommission)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 16px; font-size: 12px; color: ${textMuted}; border-bottom: 1px solid #F1F5F9;">
+            GST on Fee (18%) + TCS Sec 52 (1%)
+          </td>
+          <td align="right" style="padding: 12px 16px; font-size: 12px; color: ${textMuted}; border-bottom: 1px solid #F1F5F9;">
+            - ${fmt((totalGstOnCommission || 0) + (totalTcs || 0))}
+          </td>
+        </tr>
+        <tr style="background-color: #F8FAFC;">
+          <td style="padding: 14px 16px; font-size: 14px; font-weight: 800; color: ${textDark};">
+            Net Payout Transferred to Bank
+          </td>
+          <td align="right" style="padding: 14px 16px; font-size: 16px; font-weight: 900; color: #059669;">
+            ${fmt(totalNet)}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="text-align: center; margin: 32px 0 16px 0;">
+      <a href="${url}/seller/payouts" class="btn-gold" target="_blank" style="color: #FFFFFF !important;">
+        View Settlement Receipt in Portal
+      </a>
+    </div>
+
+    <p style="margin: 28px 0 0 0; font-size: 12px; color: ${textMuted}; line-height: 1.6; text-align: center;">
+      This payout covers all orders that have safely cleared the 7-day buyer return window. For complete order-by-order manifests, please visit your Seller Portal.
+    </p>
+  `;
+
+  return {
+    subject: `Bank Payout Confirmed (${fmt(totalNet)}) — UTR: ${utrNumber || "Confirmed"} — LyZov`,
+    text: `Bank Payout Receipt\n\nDear ${businessName || sellerName || "Merchant"},\n\nYour ${cycleName} of ${fmt(totalNet)} covering ${orderCount} cleared orders has been disbursed under UTR: ${utrNumber}.\n\nGross Sales: ${fmt(totalGross)}\nPlatform Fee: -${fmt(totalCommission)}\nTaxes: -${fmt((totalGstOnCommission || 0) + (totalTcs || 0))}\nNet Transferred: ${fmt(totalNet)}\n\nView details in Seller Portal: ${url}/seller/payouts`,
+    html: baseEmailWrapper({
+      title: `Payout Confirmed: ${fmt(totalNet)} (${orderCount} orders)`,
+      preheader: `Your ${cycleName} of ${fmt(totalNet)} has been transferred under UTR ${utrNumber}.`,
+      content,
+    }),
+  };
+};
+
 module.exports = {
   welcomeVerificationTemplate,
   verificationSuccessTemplate,
@@ -921,5 +1168,8 @@ module.exports = {
   testEmailTemplate,
   googleWelcomeWithTempPasswordTemplate,
   sellerInvitationTemplate,
+  commissionScheduleNoticeTemplate,
+  weeklyPayoutReceiptTemplate,
 };
+
 

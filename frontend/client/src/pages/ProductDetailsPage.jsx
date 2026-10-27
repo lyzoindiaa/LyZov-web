@@ -212,7 +212,7 @@ const ProductDetailsPage = () => {
         if (rv.meta) setReviewMeta(rv.meta);
 
         // Check verified buyer review eligibility
-        if (isAuthenticated && !isAdmin) {
+        if (isAuthenticated) {
           reviewService
             .checkReviewEligibility(prod._id)
             .then((eligRes) => {
@@ -224,9 +224,13 @@ const ProductDetailsPage = () => {
                   orderId: eligRes.data.orderId,
                   isLoading: false,
                 });
-                if (searchParams.get("openReview") === "true" && eligRes.data.canReview) {
+                if (searchParams.get("openReview") === "true") {
                   setActiveTab("reviews");
-                  setShowReviewModal(true);
+                  if (eligRes.data.canReview) {
+                    setShowReviewModal(true);
+                  } else if (eligRes.data.alreadyReviewed) {
+                    toast.info("You have already reviewed this product.");
+                  }
                 }
               }
             })

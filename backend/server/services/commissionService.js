@@ -25,7 +25,7 @@ function getSettlementPeriod(date = new Date()) {
  * 3. Global active rule
  * 4. Seller profile commissionRate or fallback 10%
  */
-async function resolveCommissionRule({ sellerId, categoryId, fallbackRate = 10 }) {
+async function resolveCommissionRule({ sellerId, categoryId, fallbackRate = 10, targetDate = new Date() }) {
   try {
     if (!CommissionRule.db || CommissionRule.db.readyState !== 1) {
       return {
@@ -39,31 +39,52 @@ async function resolveCommissionRule({ sellerId, categoryId, fallbackRate = 10 }
       };
     }
 
-    // 1. Check Seller custom rule
+    const checkDate = new Date(targetDate);
+    const dateQuery = {
+      $or: [
+        { effectiveFrom: { $lte: checkDate } },
+        { effectiveFrom: null },
+        { effectiveFrom: { $exists: false } },
+      ],
+      $and: [
+        {
+          $or: [
+            { effectiveTo: null },
+            { effectiveTo: { $exists: false } },
+            { effectiveTo: { $gte: checkDate } },
+          ],
+        },
+      ],
+    };
+
+    // 1. Check Seller custom rule (latest effective date first)
     if (sellerId) {
       const sellerRule = await CommissionRule.findOne({
         scope: "seller",
         seller: sellerId,
         isActive: true,
-      });
+        ...dateQuery,
+      }).sort({ effectiveFrom: -1, createdAt: -1 });
       if (sellerRule) return sellerRule;
     }
 
-    // 2. Check Category custom rule
+    // 2. Check Category custom rule (latest effective date first)
     if (categoryId) {
       const categoryRule = await CommissionRule.findOne({
         scope: "category",
         category: categoryId,
         isActive: true,
-      });
+        ...dateQuery,
+      }).sort({ effectiveFrom: -1, createdAt: -1 });
       if (categoryRule) return categoryRule;
     }
 
-    // 3. Check Global rule
+    // 3. Check Global rule (latest effective date first)
     const globalRule = await CommissionRule.findOne({
       scope: "global",
       isActive: true,
-    });
+      ...dateQuery,
+    }).sort({ effectiveFrom: -1, createdAt: -1 });
     if (globalRule) return globalRule;
   } catch (err) {
     console.error("[commissionService] Error fetching commission rule:", err.message);

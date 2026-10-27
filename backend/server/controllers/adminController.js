@@ -11,6 +11,9 @@ const CommissionRule = require("../models/CommissionRule");
 const {
   getMonthlySettlementBatch,
   releaseMonthlySettlementBatch,
+  getConsolidatedSettlementBatches,
+  getBatchOrdersManifest,
+  releaseConsolidatedSellerBatch,
   generateBankNeftCsv,
   promoteMaturedCoolingOffPayouts,
 } = require("../services/settlementService");
@@ -593,7 +596,7 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
   const total = await Payout.countDocuments(filter);
   const payouts = await Payout.find(filter)
     .populate("seller", "name email phone sellerProfile.businessName sellerProfile.bankDetails")
-    .populate("subOrder", "subOrderNumber orderStatus totalPrice commissionAmount sellerEarnings")
+    .populate("subOrder", "subOrderNumber orderStatus totalPrice commissionAmount sellerEarnings deliveredAt coolingOffUntil isDelivered items")
     .populate("parentOrder", "orderNumber paymentMethod paymentStatus")
     .sort("-createdAt")
     .skip((page - 1) * limit)
@@ -699,42 +702,79 @@ const releaseSellerPayout = asyncHandler(async (req, res) => {
 // @desc    Get monthly settlement summary batch (grouped by seller)
 // @route   GET /api/admin/payouts/monthly-summary
 // @access  Private/Admin
+// @desc    Get settlement summary batches (weekly, monthly, or all-cleared balance)
+// @route   GET /api/admin/payouts/monthly-summary, GET /api/admin/payouts/consolidated-summary
+// @access  Private/Admin
 const getMonthlySettlementSummary = asyncHandler(async (req, res) => {
   const period = req.query.period || "";
+  const cycle = req.query.cycle || (period ? "monthly" : "weekly");
   const sellerId = req.query.seller || null;
 
-  const batches = await getMonthlySettlementBatch({ period, sellerId });
-  return sendSuccess(res, 200, "Monthly settlement summary retrieved", batches);
+  const batches = await getConsolidatedSettlementBatches({ cycle, period, sellerId });
+  return sendSuccess(res, 200, "Settlement summary batches retrieved", batches);
 });
 
-// @desc    Export RBI compliant bulk NEFT CSV for a monthly batch
+// @desc    Get manifest of individual sub-orders included in a seller's cleared batch
+// @route   GET /api/admin/payouts/batch-orders
+// @access  Private/Admin
+const getBatchOrdersManifestHandler = asyncHandler(async (req, res) => {
+  const sellerId = req.query.sellerId;
+  const payoutIds = req.query.payoutIds ? String(req.query.payoutIds).split(",").filter(Boolean) : [];
+  const status = req.query.status || "eligible";
+
+  const orders = await getBatchOrdersManifest({ sellerId, payoutIds, status });
+  return sendSuccess(res, 200, "Batch orders manifest retrieved", orders);
+});
+
+// @desc    Export RBI compliant bulk NEFT CSV for a settlement batch
 // @route   GET /api/admin/payouts/export-neft
 // @access  Private/Admin
 const exportMonthlySettlementCsv = asyncHandler(async (req, res) => {
   const period = req.query.period || "";
+  const cycle = req.query.cycle || (period ? "monthly" : "weekly");
   const sellerId = req.query.seller || null;
 
-  const batches = await getMonthlySettlementBatch({ period, sellerId });
-  const csvContent = generateBankNeftCsv(batches, period);
+  const batches = await getConsolidatedSettlementBatches({ cycle, period, sellerId });
+  const csvContent = generateBankNeftCsv(batches, period || cycle);
 
   res.setHeader("Content-Type", "text/csv");
   res.setHeader(
     "Content-Disposition",
-    `attachment; filename="LyZov_Settlement_${period || "Current"}.csv"`
+    `attachment; filename="LyZov_Settlement_${cycle}_${period || "Batch"}.csv"`
   );
   return res.status(200).send(csvContent);
 });
 
-// @desc    Release monthly batch with Bank UTR reference
-// @route   POST /api/admin/payouts/release-monthly-batch
+// @desc    Release single consolidated settlement batch for a seller (1 UTR for 1,000+ orders)
+// @route   POST /api/admin/payouts/release-monthly-batch, POST /api/admin/payouts/release-seller-batch
 // @access  Private/Admin
 const releaseMonthlyBatch = asyncHandler(async (req, res) => {
-  const { period, sellerId, utrNumber, notes } = req.body;
+  const { period, sellerId, payoutIds, utrNumber, notes, cycle } = req.body;
 
   if (!utrNumber || !String(utrNumber).trim()) {
     throw ApiError.badRequest("Bank UTR reference number is required to release settlement batch");
   }
 
+  // If sellerId provided, use consolidated single-seller release (supports 1,000 orders in 1 payment)
+  if (sellerId) {
+    const result = await releaseConsolidatedSellerBatch({
+      sellerId,
+      payoutIds: Array.isArray(payoutIds) ? payoutIds : [],
+      utrNumber: String(utrNumber).trim(),
+      processedBy: req.user._id,
+      notes,
+      cycle: cycle || (period ? "Monthly" : "Weekly"),
+    });
+
+    return sendSuccess(
+      res,
+      200,
+      `Settlement of ₹${result.totalAmount} successfully released for ${result.releasedCount} order(s)`,
+      result
+    );
+  }
+
+  // Fallback to period-wide batch
   const result = await releaseMonthlySettlementBatch({
     period,
     sellerId,
@@ -758,17 +798,29 @@ const triggerSettlementMaturityJob = asyncHandler(async (req, res) => {
 
 // @desc    Get all commission rules
 // @route   GET /api/admin/commission-rules
-// @access  Private/Admin
+// @access  Private/Admin/Seller
 const getCommissionRules = asyncHandler(async (req, res) => {
-  const rules = await CommissionRule.find()
+  const isSeller = req.user.role === "seller";
+  const filter = {};
+
+  if (isSeller) {
+    filter.isActive = true;
+    filter.$or = [
+      { scope: "global" },
+      { scope: "category" },
+      { scope: "seller", seller: req.user._id },
+    ];
+  }
+
+  const rules = await CommissionRule.find(filter)
     .populate("category", "name slug")
     .populate("seller", "name email sellerProfile.businessName")
-    .sort("-createdAt");
+    .sort("-effectiveFrom -createdAt");
 
   return sendSuccess(res, 200, "Commission rules fetched successfully", rules);
 });
 
-// @desc    Create a commission rule
+// @desc    Create a commission rule with future scheduling & seller notification
 // @route   POST /api/admin/commission-rules
 // @access  Private/Admin
 const createCommissionRule = asyncHandler(async (req, res) => {
@@ -783,11 +835,17 @@ const createCommissionRule = asyncHandler(async (req, res) => {
     gstOnCommissionRate,
     tcsRate,
     description,
+    effectiveFrom,
+    effectiveTo,
+    notifySellers,
   } = req.body;
 
   if (!name || !scope) {
     throw ApiError.badRequest("Name and Scope are required");
   }
+
+  const effectiveFromDate = effectiveFrom ? new Date(effectiveFrom) : new Date();
+  const effectiveToDate = effectiveTo ? new Date(effectiveTo) : null;
 
   const rule = await CommissionRule.create({
     name: String(name).trim(),
@@ -800,8 +858,53 @@ const createCommissionRule = asyncHandler(async (req, res) => {
     gstOnCommissionRate: gstOnCommissionRate !== undefined ? Number(gstOnCommissionRate) : 18.0,
     tcsRate: tcsRate !== undefined ? Number(tcsRate) : 1.0,
     description: description || "",
+    effectiveFrom: effectiveFromDate,
+    effectiveTo: effectiveToDate,
     createdBy: req.user._id,
   });
+
+  // Asynchronous email notification to sellers if requested
+  if (notifySellers) {
+    try {
+      const emailService = require("../services/emailService");
+      const Category = require("../models/Category");
+
+      let categoryName = "";
+      if (category) {
+        const catObj = await Category.findById(category).select("name");
+        categoryName = catObj?.name || "";
+      }
+
+      let targetSellers = [];
+      if (scope === "seller" && seller) {
+        targetSellers = await User.find({ _id: seller, role: "seller", isBlocked: false });
+      } else {
+        targetSellers = await User.find({ role: "seller", isBlocked: false });
+      }
+
+      let sentCount = 0;
+      for (const s of targetSellers) {
+        if (s.email) {
+          await emailService.sendCommissionScheduleNotice({
+            seller: s,
+            tierName: rule.name,
+            percentage: rule.percentage,
+            effectiveFrom: rule.effectiveFrom,
+            effectiveTo: rule.effectiveTo,
+            scope: rule.scope,
+            categoryName,
+          });
+          sentCount++;
+        }
+      }
+
+      rule.notificationSentAt = new Date();
+      rule.notificationRecipientCount = sentCount;
+      await rule.save();
+    } catch (notifyErr) {
+      console.error("[createCommissionRule] Notification dispatch error:", notifyErr.message);
+    }
+  }
 
   return sendSuccess(res, 201, "Commission rule created successfully", rule);
 });
@@ -832,7 +935,58 @@ const updateCommissionRule = asyncHandler(async (req, res) => {
     if (req.body[f] !== undefined) rule[f] = req.body[f];
   });
 
+  if (req.body.effectiveFrom !== undefined) {
+    rule.effectiveFrom = req.body.effectiveFrom ? new Date(req.body.effectiveFrom) : new Date();
+  }
+  if (req.body.effectiveTo !== undefined) {
+    rule.effectiveTo = req.body.effectiveTo ? new Date(req.body.effectiveTo) : null;
+  }
+
   await rule.save();
+
+  // Asynchronous email notification to sellers if requested
+  if (req.body.notifySellers) {
+    try {
+      const emailService = require("../services/emailService");
+      const Category = require("../models/Category");
+
+      let categoryName = "";
+      if (rule.category) {
+        const catObj = await Category.findById(rule.category).select("name");
+        categoryName = catObj?.name || "";
+      }
+
+      let targetSellers = [];
+      if (rule.scope === "seller" && rule.seller) {
+        targetSellers = await User.find({ _id: rule.seller, role: "seller", isBlocked: false });
+      } else {
+        targetSellers = await User.find({ role: "seller", isBlocked: false });
+      }
+
+      let sentCount = 0;
+      for (const s of targetSellers) {
+        if (s.email) {
+          await emailService.sendCommissionScheduleNotice({
+            seller: s,
+            tierName: rule.name,
+            percentage: rule.percentage,
+            effectiveFrom: rule.effectiveFrom,
+            effectiveTo: rule.effectiveTo,
+            scope: rule.scope,
+            categoryName,
+          });
+          sentCount++;
+        }
+      }
+
+      rule.notificationSentAt = new Date();
+      rule.notificationRecipientCount = (rule.notificationRecipientCount || 0) + sentCount;
+      await rule.save();
+    } catch (notifyErr) {
+      console.error("[updateCommissionRule] Notification dispatch error:", notifyErr.message);
+    }
+  }
+
   return sendSuccess(res, 200, "Commission rule updated successfully", rule);
 });
 
@@ -921,6 +1075,7 @@ module.exports = {
   getMonthlySettlementSummary,
   exportMonthlySettlementCsv,
   releaseMonthlyBatch,
+  getBatchOrdersManifestHandler,
   triggerSettlementMaturityJob,
   getCommissionRules,
   createCommissionRule,
