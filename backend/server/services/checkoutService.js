@@ -76,25 +76,95 @@ const parseGstRate = (rateStr) => {
   return num > 1 ? num / 100 : num;
 };
 
+const PLATFORM_SELLER_KEY = "platform_admin";
+
+/** Normalises a seller reference (ObjectId | populated doc | string | null) into a string key. */
+const sellerKeyOf = (seller) => {
+  if (!seller) return PLATFORM_SELLER_KEY;
+  if (typeof seller === "object" && seller._id) return seller._id.toString();
+  return seller.toString();
+};
+
+/** A coupon is seller-scoped when it was created by a seller for their own store. */
+const isSellerScopedCoupon = (coupon) => Boolean(coupon && coupon.scope === "seller" && coupon.seller);
+
+/** Platform coupons apply to every item; seller coupons only to that seller's items. */
+const isCouponEligibleItem = (item, coupon) => {
+  if (!coupon) return false;
+  if (isSellerScopedCoupon(coupon)) return sellerKeyOf(item.seller) === sellerKeyOf(coupon.seller);
+  return true;
+};
+
+const getCouponEligibleSubtotal = (items = [], coupon = null) =>
+  round2(
+    items
+      .filter((i) => isCouponEligibleItem(i, coupon))
+      .reduce((sum, i) => sum + i.price * i.quantity, 0)
+  );
+
 const calculateTotals = (items = [], coupon = null) => {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const itemsPrice = round2(subtotal);
-  const discountAmount = calculateDiscount(itemsPrice, coupon);
+  const eligibleSubtotal = getCouponEligibleSubtotal(items, coupon);
+  const discountAmount = calculateDiscount(eligibleSubtotal, coupon);
   const discountedSubtotal = Math.max(itemsPrice - discountAmount, 0);
 
-  // Dynamically calculate GST based on stored product gstRate
+  // Dynamically calculate GST based on stored product gstRate.
+  // The discount only reduces the taxable value of the items it applies to.
   let taxPrice = 0;
-  const discountFactor = itemsPrice > 0 ? discountedSubtotal / itemsPrice : 1;
+  const eligibleFactor = eligibleSubtotal > 0 ? (eligibleSubtotal - discountAmount) / eligibleSubtotal : 1;
   for (const item of items) {
     const rate = parseGstRate(item.gstRate);
     const itemTotal = item.price * item.quantity;
-    taxPrice += itemTotal * discountFactor * rate;
+    const factor = isCouponEligibleItem(item, coupon) ? eligibleFactor : 1;
+    taxPrice += itemTotal * factor * rate;
   }
   taxPrice = round2(taxPrice);
 
   const shippingPrice = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_RATE;
   const totalPrice = round2(discountedSubtotal + taxPrice + shippingPrice);
-  return { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice };
+  return { itemsPrice, discountAmount, taxPrice, shippingPrice, totalPrice, couponEligibleSubtotal: eligibleSubtotal };
+};
+
+/**
+ * Splits the order-level coupon discount across seller sub-orders and records who funds it.
+ *  - seller coupon   -> 100% of the discount sits on the owning seller's sub-order, seller-funded
+ *  - platform coupon -> discount is shared proportionally (customer-facing), platform-funded,
+ *                       so seller payouts are computed on the pre-discount amount
+ * Returns Map<sellerKey, { amount, fundedBy }>.
+ */
+const allocateCouponDiscount = ({ sellerItemsMap, itemsPrice, discountAmount, coupon }) => {
+  const allocation = new Map();
+  const totalDiscount = round2(Number(discountAmount) || 0);
+
+  for (const sellerKey of sellerItemsMap.keys()) {
+    allocation.set(sellerKey, { amount: 0, fundedBy: "none" });
+  }
+  if (totalDiscount <= 0) return allocation;
+
+  if (isSellerScopedCoupon(coupon)) {
+    const ownerKey = sellerKeyOf(coupon.seller);
+    if (allocation.has(ownerKey)) {
+      allocation.set(ownerKey, { amount: totalDiscount, fundedBy: "seller" });
+    }
+    return allocation;
+  }
+
+  // Platform coupon: proportional split, last seller absorbs rounding so the sum is exact.
+  const keys = [...sellerItemsMap.keys()];
+  let allocated = 0;
+  keys.forEach((sellerKey, idx) => {
+    const sellerItemsPrice = round2(
+      sellerItemsMap.get(sellerKey).reduce((acc, it) => acc + it.price * it.quantity, 0)
+    );
+    const amount =
+      idx === keys.length - 1
+        ? round2(totalDiscount - allocated)
+        : round2(itemsPrice > 0 ? (totalDiscount * sellerItemsPrice) / itemsPrice : 0);
+    allocated = round2(allocated + amount);
+    allocation.set(sellerKey, { amount, fundedBy: "platform" });
+  });
+  return allocation;
 };
 
 const resetCartCoupon = async (cart) => {
@@ -172,8 +242,6 @@ const buildCheckoutSnapshot = async (user) => {
     });
   }
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
   let coupon = null;
   if (cart.coupon?.code) {
     coupon = await Coupon.findOne({ code: cart.coupon.code.toUpperCase() });
@@ -185,7 +253,12 @@ const buildCheckoutSnapshot = async (user) => {
       await resetCartCoupon(cart);
       throw ApiError.badRequest("You have already used this coupon.");
     }
-    if (subtotal < coupon.minPurchaseAmount) {
+    const eligibleSubtotal = getCouponEligibleSubtotal(items, coupon);
+    if (isSellerScopedCoupon(coupon) && eligibleSubtotal <= 0) {
+      await resetCartCoupon(cart);
+      throw ApiError.badRequest(`Coupon ${coupon.code} only applies to products from the store that issued it.`);
+    }
+    if (eligibleSubtotal < coupon.minPurchaseAmount) {
       await resetCartCoupon(cart);
       throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for coupon ${coupon.code}`);
     }
@@ -235,10 +308,11 @@ const releaseCoupon = async (code, userId) => {
 const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymentMethod, payment }) => {
   const deducted = await deductStockForItems(snapshot.items);
   let couponRedeemed = false;
+  let redeemedCoupon = null;
 
   try {
     if (snapshot.couponCode) {
-      await redeemCoupon(snapshot.couponCode, user._id);
+      redeemedCoupon = await redeemCoupon(snapshot.couponCode, user._id);
       couponRedeemed = true;
     }
 
@@ -298,6 +372,14 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
     const createdSubOrders = [];
     let subOrderIndex = 1;
 
+    // Who funds the coupon discount, per seller (platform vs seller coupon)
+    const discountAllocation = allocateCouponDiscount({
+      sellerItemsMap,
+      itemsPrice: snapshot.itemsPrice,
+      discountAmount: snapshot.discountAmount,
+      coupon: redeemedCoupon || snapshot.coupon || null,
+    });
+
     for (const [sellerKey, sellerItems] of sellerItemsMap.entries()) {
       let rawSellerId = sellerKey !== "platform_admin" ? sellerKey : await findAdmin();
       let sellerId =
@@ -314,13 +396,19 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         sellerItems.reduce((acc, it) => acc + it.price * it.quantity, 0)
       );
 
-      // Proportional discount and tax allocation
+      // Proportional tax/shipping allocation; discount follows the coupon funding model
       const proportion = snapshot.itemsPrice > 0 ? sellerItemsPrice / snapshot.itemsPrice : 1;
-      const sellerDiscount = round2(snapshot.discountAmount * proportion);
+      const sellerAllocation = discountAllocation.get(sellerKey) || { amount: 0, fundedBy: "none" };
+      const sellerDiscount = round2(sellerAllocation.amount);
+      const platformFundedDiscount = sellerAllocation.fundedBy === "platform" ? sellerDiscount : 0;
+      const sellerFundedDiscount = sellerAllocation.fundedBy === "seller" ? sellerDiscount : 0;
       const sellerTax = round2(snapshot.taxPrice * proportion);
       // Flat shipping assigned to first sub-order or shared proportionally
       const sellerShipping = round2(snapshot.shippingPrice * proportion);
+      // What the customer pays for this sub-order
       const sellerTotal = round2(sellerItemsPrice - sellerDiscount + sellerTax + sellerShipping);
+      // What the seller is settled on: platform-funded discounts are added back
+      const sellerGross = round2(sellerTotal + platformFundedDiscount);
 
       // Resolve dynamic commission rule (Seller > Category > Global > Fallback)
       const sampleCategoryId = sellerItems[0]?.category || sellerItems[0]?.product?.category || null;
@@ -332,7 +420,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
 
       const financials = calculateSubOrderFinancials({
         sellerItemsPrice,
-        sellerTotal,
+        sellerTotal: sellerGross,
         rule,
       });
 
@@ -351,6 +439,9 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         taxPrice: sellerTax,
         shippingPrice: sellerShipping,
         discountAmount: sellerDiscount,
+        couponFundedBy: sellerAllocation.fundedBy,
+        platformFundedDiscount,
+        sellerFundedDiscount,
         totalPrice: sellerTotal,
         commissionRate: financials.commissionRate,
         commissionAmount: financials.commissionAmount,
@@ -370,7 +461,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         seller: sellerId,
         subOrder: subOrder._id,
         parentOrder: order._id,
-        grossAmount: sellerTotal,
+        grossAmount: sellerGross,
         commissionRate: financials.commissionRate,
         commissionAmount: financials.commissionAmount,
         gstOnCommission: financials.gstOnCommission,
@@ -453,6 +544,11 @@ module.exports = {
   assertShippingAddress,
   calculateDiscount,
   calculateTotals,
+  sellerKeyOf,
+  isSellerScopedCoupon,
+  isCouponEligibleItem,
+  getCouponEligibleSubtotal,
+  allocateCouponDiscount,
   buildCheckoutSnapshot,
   redeemCoupon,
   releaseCoupon,

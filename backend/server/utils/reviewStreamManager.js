@@ -60,22 +60,36 @@ class ReviewStreamManager {
 
     const payload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
     for (const res of clients) {
+      if (!res.writable || res.writableEnded || res.destroyed) {
+        clients.delete(res);
+        continue;
+      }
       try {
         res.write(payload);
       } catch (err) {
         clients.delete(res);
       }
     }
+    if (clients.size === 0) {
+      this.productClients.delete(pid);
+    }
   }
 
   sendHeartbeat() {
-    for (const [, clients] of this.productClients) {
+    for (const [pid, clients] of this.productClients) {
       for (const res of clients) {
+        if (!res.writable || res.writableEnded || res.destroyed) {
+          clients.delete(res);
+          continue;
+        }
         try {
           res.write(": keep-alive\n\n");
         } catch (err) {
           clients.delete(res);
         }
+      }
+      if (clients.size === 0) {
+        this.productClients.delete(pid);
       }
     }
   }

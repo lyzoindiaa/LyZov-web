@@ -196,8 +196,29 @@ const applyCoupon = asyncHandler(async (req, res) => {
 
   const cart = await getOrCreateCart(req.user._id);
 
-  if (cart.subtotal < coupon.minPurchaseAmount) {
-    throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for this coupon`);
+  if (coupon.scope === "seller" && coupon.seller) {
+    const productIds = cart.items.map((it) => it.product);
+    const sellerProducts = await Product.find({
+      _id: { $in: productIds },
+      seller: coupon.seller,
+    }).select("_id");
+    const sellerProductIds = new Set(sellerProducts.map((p) => p._id.toString()));
+    const eligibleSubtotal = cart.items
+      .filter((it) => sellerProductIds.has(it.product.toString()))
+      .reduce((sum, it) => sum + (it.price * it.quantity), 0);
+
+    if (eligibleSubtotal <= 0) {
+      throw ApiError.badRequest("This coupon only applies to products from the issuing merchant");
+    }
+    if (eligibleSubtotal < coupon.minPurchaseAmount) {
+      throw ApiError.badRequest(
+        `Minimum purchase of ₹${coupon.minPurchaseAmount} required from this seller for coupon ${coupon.code}`
+      );
+    }
+  } else {
+    if (cart.subtotal < coupon.minPurchaseAmount) {
+      throw ApiError.badRequest(`Minimum purchase of ₹${coupon.minPurchaseAmount} required for this coupon`);
+    }
   }
 
   cart.coupon = {

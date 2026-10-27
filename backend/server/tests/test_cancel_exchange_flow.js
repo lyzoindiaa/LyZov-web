@@ -14,6 +14,7 @@ const Shipment = require("../models/Shipment");
 const Product = require("../models/Product");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
+const SubOrder = require("../models/SubOrder");
 const delhiveryService = require("../services/delhiveryService");
 
 // Helper to mock express req, res & next
@@ -70,6 +71,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
   let originalDelhiveryCancel;
   let originalDelhiveryReversePickup;
   let originalStripeRefund;
+  let originalSubOrderFind;
 
   beforeEach(() => {
     // Save original methods
@@ -85,6 +87,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
     originalNotificationCreate = Notification.create;
     originalDelhiveryCancel = delhiveryService.cancelOrder;
     originalDelhiveryReversePickup = delhiveryService.createReversePickup;
+    originalSubOrderFind = SubOrder.find;
 
     // Default mocks
     Notification.create = async () => ({ _id: new mongoose.Types.ObjectId() });
@@ -93,6 +96,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
     Product.findOneAndUpdate = async () => ({ _id: productId, stock: 10 });
     Order.prototype.save = async function () { return this; };
     Shipment.prototype.save = async function () { return this; };
+    SubOrder.find = async () => [];
 
     Order.findOneAndUpdate = async (query, update) => {
       const order = await Order.findById(query._id);
@@ -121,6 +125,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
     Notification.create = originalNotificationCreate;
     delhiveryService.cancelOrder = originalDelhiveryCancel;
     delhiveryService.createReversePickup = originalDelhiveryReversePickup;
+    SubOrder.find = originalSubOrderFind;
   });
 
   // -------------------------------------------------------------

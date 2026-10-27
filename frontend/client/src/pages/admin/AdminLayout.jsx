@@ -20,6 +20,7 @@ import {
   Settings,
   Wrench,
   Wallet,
+  Ticket,
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
@@ -30,6 +31,7 @@ import { useState } from "react";
 const navItems = [
   { label: "Analytics", to: "/seller", icon: BarChart3, end: true },
   { label: "Products", to: "/seller/products", icon: Boxes },
+  { label: "Coupons & Discounts", to: "/seller/coupons", icon: Ticket },
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Award },
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },

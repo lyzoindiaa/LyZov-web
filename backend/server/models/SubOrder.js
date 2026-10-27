@@ -73,6 +73,10 @@ const subOrderSchema = new mongoose.Schema(
     taxPrice: { type: Number, required: true, default: 0 },
     shippingPrice: { type: Number, required: true, default: 0 },
     discountAmount: { type: Number, default: 0 },
+    // Coupon funding split: platform coupons are added back to seller earnings, seller coupons are not
+    couponFundedBy: { type: String, enum: ["none", "platform", "seller"], default: "none" },
+    platformFundedDiscount: { type: Number, default: 0, min: 0 },
+    sellerFundedDiscount: { type: Number, default: 0, min: 0 },
     totalPrice: { type: Number, required: true, default: 0 },
 
     // Financial settlements

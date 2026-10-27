@@ -179,6 +179,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/customer/emails", customerEmailRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/settings", require("./routes/settingsRoutes"));
+app.use("/api/cron", require("./routes/cronRoutes"));
 
 // ── SEO Endpoints (Sitemap & Robots) ──
 app.use("/", seoRoutes);

@@ -47,6 +47,9 @@ const ConfirmActionModal = ({
         style={{
           width: "100%",
           maxWidth: "28rem",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
           backgroundColor: "var(--surface)",
           borderRadius: "1rem",
           border: "1px solid var(--border)",
@@ -60,6 +63,7 @@ const ConfirmActionModal = ({
             display: "flex",
             alignItems: "flex-start",
             gap: "0.875rem",
+            overflowY: "auto",
           }}
         >
           <div

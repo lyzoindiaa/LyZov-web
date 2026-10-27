@@ -200,7 +200,18 @@ const deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id);
   if (!review) throw ApiError.notFound("Review not found");
 
-  if (review.user.toString() !== req.user._id.toString() && req.user.role !== "seller" && req.user.role !== "admin") {
+  const isOwner = review.user.toString() === req.user._id.toString();
+  const isAdmin = req.user.role === "admin";
+  let isProductSeller = false;
+
+  if (req.user.role === "seller") {
+    const product = await Product.findById(review.product);
+    if (product && product.seller && product.seller.toString() === req.user._id.toString()) {
+      isProductSeller = true;
+    }
+  }
+
+  if (!isOwner && !isAdmin && !isProductSeller) {
     throw ApiError.forbidden("You do not have permission to delete this review");
   }
 

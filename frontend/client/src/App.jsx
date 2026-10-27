@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
@@ -9,60 +9,75 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import SuperAdminRoute from "./routes/SuperAdminRoute";
 
-import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
-import AdminDashboardPage from "./pages/superadmin/AdminDashboardPage";
-import AdminSellersPage from "./pages/superadmin/AdminSellersPage";
-import AdminSellerDetailsPage from "./pages/superadmin/AdminSellerDetailsPage";
-import AdminCustomersPage from "./pages/superadmin/AdminCustomersPage";
-import AdminProductModerationPage from "./pages/superadmin/AdminProductModerationPage";
-import AdminMarketplacePayoutsPage from "./pages/superadmin/AdminMarketplacePayoutsPage";
-import SellerPayoutsPage from "./pages/admin/SellerPayoutsPage";
-
+// Core eager pages for instant initial paint
 import LandingPage from "./pages/LandingPage";
 import ShopPage from "./pages/ShopPage";
-import ProductDetailsPage from "./pages/ProductDetailsPage";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import ContactPage from "./pages/ContactPage";
-import PolicyPage from "./pages/PolicyPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import TrackOrderPage from "./pages/TrackOrderPage";
-import SellerStorefrontPage from "./pages/SellerStorefrontPage";
-import SellerRegisterPage from "./pages/SellerRegisterPage";
 
-import DashboardLayout from "./pages/dashboard/DashboardLayout";
-import OrdersPage from "./pages/dashboard/OrdersPage";
-import OrderDetailsPage from "./pages/dashboard/OrderDetailsPage";
-import WishlistPage from "./pages/dashboard/WishlistPage";
-import ProfilePage from "./pages/dashboard/ProfilePage";
-import AddressesPage from "./pages/dashboard/AddressesPage";
-import EmailHistoryPage from "./pages/dashboard/EmailHistoryPage";
-import CompleteProfilePage from "./pages/CompleteProfilePage";
+// ── Lazy-loaded Route Chunks ──
+// Customer & Public Pages
+const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PolicyPage = lazy(() => import("./pages/PolicyPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
+const SellerStorefrontPage = lazy(() => import("./pages/SellerStorefrontPage"));
+const SellerRegisterPage = lazy(() => import("./pages/SellerRegisterPage"));
+const CompleteProfilePage = lazy(() => import("./pages/CompleteProfilePage"));
 
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
-import AdminProductsPage from "./pages/admin/AdminProductsPage";
-import AdminProductAddPage from "./pages/admin/AdminProductAddPage";
-import AdminProductEditPage from "./pages/admin/AdminProductEditPage";
-import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
-import AdminCategoryAddPage from "./pages/admin/AdminCategoryAddPage";
-import AdminCategoryEditPage from "./pages/admin/AdminCategoryEditPage";
-import AdminBrandsPage from "./pages/admin/AdminBrandsPage";
-import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
-import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
-import AdminEmailsPage from "./pages/admin/AdminEmailsPage";
-import AdminProfilePage from "./pages/admin/AdminProfilePage";
-import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
-import SellerSettingsPage from "./pages/admin/SellerSettingsPage";
+// Customer Dashboard
+const DashboardLayout = lazy(() => import("./pages/dashboard/DashboardLayout"));
+const OrdersPage = lazy(() => import("./pages/dashboard/OrdersPage"));
+const OrderDetailsPage = lazy(() => import("./pages/dashboard/OrderDetailsPage"));
+const WishlistPage = lazy(() => import("./pages/dashboard/WishlistPage"));
+const ProfilePage = lazy(() => import("./pages/dashboard/ProfilePage"));
+const AddressesPage = lazy(() => import("./pages/dashboard/AddressesPage"));
+const EmailHistoryPage = lazy(() => import("./pages/dashboard/EmailHistoryPage"));
+
+// Seller Portal
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
+const AdminProductsPage = lazy(() => import("./pages/admin/AdminProductsPage"));
+const AdminProductAddPage = lazy(() => import("./pages/admin/AdminProductAddPage"));
+const AdminProductEditPage = lazy(() => import("./pages/admin/AdminProductEditPage"));
+const AdminCategoriesPage = lazy(() => import("./pages/admin/AdminCategoriesPage"));
+const AdminCategoryAddPage = lazy(() => import("./pages/admin/AdminCategoryAddPage"));
+const AdminCategoryEditPage = lazy(() => import("./pages/admin/AdminCategoryEditPage"));
+const AdminBrandsPage = lazy(() => import("./pages/admin/AdminBrandsPage"));
+const AdminOrdersPage = lazy(() => import("./pages/admin/AdminOrdersPage"));
+const AdminOrderDetailsPage = lazy(() => import("./pages/admin/AdminOrderDetailsPage"));
+const SellerPayoutsPage = lazy(() => import("./pages/admin/SellerPayoutsPage"));
+const AdminEmailsPage = lazy(() => import("./pages/admin/AdminEmailsPage"));
+const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
+const SellerSettingsPage = lazy(() => import("./pages/admin/SellerSettingsPage"));
+const AdminCouponsPage = lazy(() => import("./pages/admin/AdminCouponsPage"));
+
+// SuperAdmin Console
+const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
+const AdminDashboardPage = lazy(() => import("./pages/superadmin/AdminDashboardPage"));
+const AdminSellersPage = lazy(() => import("./pages/superadmin/AdminSellersPage"));
+const AdminSellerDetailsPage = lazy(() => import("./pages/superadmin/AdminSellerDetailsPage"));
+const AdminCustomersPage = lazy(() => import("./pages/superadmin/AdminCustomersPage"));
+const AdminProductModerationPage = lazy(() => import("./pages/superadmin/AdminProductModerationPage"));
+const AdminMarketplacePayoutsPage = lazy(() => import("./pages/superadmin/AdminMarketplacePayoutsPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
 import { useAuth } from "./hooks/useAuth";
+
+const RouteLoadingFallback = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-8">
+    <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
+    <span className="text-xs font-semibold text-[var(--ink-muted)]">Loading view...</span>
+  </div>
+);
 
 function App() {
   const dispatch = useDispatch();
@@ -86,7 +101,12 @@ function App() {
   useEffect(() => {
     const handleLogout = () => {
       const pathname = window.location.pathname;
-      if (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/admin") || pathname.startsWith("/seller")) {
+      if (
+        pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/checkout") ||
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/seller")
+      ) {
         navigate("/login");
       }
     };
@@ -96,129 +116,132 @@ function App() {
 
   return (
     <>
-      <Routes>
-        {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/seller/register" element={<SellerRegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
-        <Route
-          path="/complete-profile"
-          element={
-            <ProtectedRoute>
-              <CompleteProfilePage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── Public & Storefront Routes with Navbar & Footer ── */}
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/products" element={<ShopPage />} />
-          <Route path="/product/:slug" element={<ProductDetailsPage />} />
-          <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/cart" element={<CartPage />} />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <Routes>
+          {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/seller/register" element={<SellerRegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route
-            path="/checkout"
+            path="/complete-profile"
             element={
               <ProtectedRoute>
-                <CheckoutPage />
+                <CompleteProfilePage />
               </ProtectedRoute>
             }
           />
 
+          {/* ── Public & Storefront Routes with Navbar & Footer ── */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/products" element={<ShopPage />} />
+            <Route path="/product/:slug" element={<ProductDetailsPage />} />
+            <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* ── Public Track Order ── */}
-          <Route path="/track" element={<TrackOrderPage />} />
+            {/* ── Public Track Order ── */}
+            <Route path="/track" element={<TrackOrderPage />} />
 
-          {/* ── Official Store Policies ── */}
-          <Route path="/policies" element={<Navigate to="/policies/privacy-policy" replace />} />
-          <Route path="/policies/:policySlug" element={<PolicyPage />} />
-          <Route path="/privacy-policy" element={<Navigate to="/policies/privacy-policy" replace />} />
-          <Route path="/terms-and-conditions" element={<Navigate to="/policies/terms-and-conditions" replace />} />
-          <Route path="/return-exchange-policy" element={<Navigate to="/policies/return-exchange-policy" replace />} />
-          <Route path="/refund-cancellation-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
-          <Route path="/shipping-delivery-policy" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
+            {/* ── Official Store Policies ── */}
+            <Route path="/policies" element={<Navigate to="/policies/privacy-policy" replace />} />
+            <Route path="/policies/:policySlug" element={<PolicyPage />} />
+            <Route path="/privacy-policy" element={<Navigate to="/policies/privacy-policy" replace />} />
+            <Route path="/terms-and-conditions" element={<Navigate to="/policies/terms-and-conditions" replace />} />
+            <Route path="/return-exchange-policy" element={<Navigate to="/policies/return-exchange-policy" replace />} />
+            <Route path="/refund-cancellation-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
+            <Route path="/shipping-delivery-policy" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
 
-          {/* ── Shorthand & Legacy Aliases ── */}
-          <Route path="/privacy" element={<Navigate to="/policies/privacy-policy" replace />} />
-          <Route path="/terms" element={<Navigate to="/policies/terms-and-conditions" replace />} />
-          <Route path="/returns" element={<Navigate to="/policies/return-exchange-policy" replace />} />
-          <Route path="/refund-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
-          <Route path="/shipping" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
+            {/* ── Shorthand & Legacy Aliases ── */}
+            <Route path="/privacy" element={<Navigate to="/policies/privacy-policy" replace />} />
+            <Route path="/terms" element={<Navigate to="/policies/terms-and-conditions" replace />} />
+            <Route path="/returns" element={<Navigate to="/policies/return-exchange-policy" replace />} />
+            <Route path="/refund-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
+            <Route path="/shipping" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<OrdersPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="orders/:orderId" element={<OrderDetailsPage />} />
-            <Route path="wishlist" element={<WishlistPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="addresses" element={<AddressesPage />} />
-            <Route path="emails" element={<EmailHistoryPage />} />
-            <Route path="support" element={<ContactPage isDashboard={true} />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<OrdersPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/:orderId" element={<OrderDetailsPage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="addresses" element={<AddressesPage />} />
+              <Route path="emails" element={<EmailHistoryPage />} />
+              <Route path="support" element={<ContactPage isDashboard={true} />} />
+            </Route>
+
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
+          {/* ── Seller Portal ── */}
+          <Route
+            path="/seller"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<AdminAnalyticsPage />} />
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="products/add" element={<AdminProductAddPage />} />
+            <Route path="products/:id/edit" element={<AdminProductEditPage />} />
+            <Route path="categories" element={<AdminCategoriesPage />} />
+            <Route path="categories/add" element={<AdminCategoryAddPage />} />
+            <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
+            <Route path="brands" element={<AdminBrandsPage />} />
+            <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
+            <Route path="coupons" element={<AdminCouponsPage />} />
+            <Route path="payouts" element={<SellerPayoutsPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
+            <Route path="emails" element={<AdminEmailsPage />} />
+            <Route path="settings" element={<SellerSettingsPage />} />
+          </Route>
 
-        {/* ── Seller Portal ── */}
-        <Route
-          path="/seller"
-          element={
-            <AdminRoute>
-              <AdminLayout />
-            </AdminRoute>
-          }
-        >
-          <Route index element={<AdminAnalyticsPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="products/add" element={<AdminProductAddPage />} />
-          <Route path="products/:id/edit" element={<AdminProductEditPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="categories/add" element={<AdminCategoryAddPage />} />
-          <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
-          <Route path="brands" element={<AdminBrandsPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
-          <Route path="payouts" element={<SellerPayoutsPage />} />
-          <Route path="profile" element={<AdminProfilePage />} />
-          <Route path="emails" element={<AdminEmailsPage />} />
-          <Route path="settings" element={<SellerSettingsPage />} />
-        </Route>
-
-        {/* ── Super Admin Console ── */}
-        <Route
-          path="/admin"
-          element={
-            <SuperAdminRoute>
-              <SuperAdminLayout />
-            </SuperAdminRoute>
-          }
-        >
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="sellers" element={<AdminSellersPage />} />
-          <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
-          <Route path="moderation" element={<AdminProductModerationPage />} />
-          <Route path="brands" element={<AdminBrandsPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="categories/add" element={<AdminCategoryAddPage />} />
-          <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
-          <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
-          <Route path="customers" element={<AdminCustomersPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-        </Route>
-      </Routes>
+          {/* ── Super Admin Console ── */}
+          <Route
+            path="/admin"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminLayout />
+              </SuperAdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="sellers" element={<AdminSellersPage />} />
+            <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
+            <Route path="moderation" element={<AdminProductModerationPage />} />
+            <Route path="coupons" element={<AdminCouponsPage />} />
+            <Route path="brands" element={<AdminBrandsPage />} />
+            <Route path="categories" element={<AdminCategoriesPage />} />
+            <Route path="categories/add" element={<AdminCategoryAddPage />} />
+            <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
+            <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
+            <Route path="customers" element={<AdminCustomersPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
 
       <ToastContainer
         position="top-right"

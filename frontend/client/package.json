@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "node scripts/check-syntax.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.7",
