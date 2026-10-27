@@ -593,6 +593,48 @@ class EmailService {
       },
     });
   }
+
+  /**
+   * Send commission revision notice to a seller.
+   */
+  async sendCommissionScheduleNotice({
+    seller,
+    tierName,
+    percentage,
+    effectiveFrom,
+    effectiveTo,
+    scope,
+    categoryName,
+  }) {
+    const { subject, text, html } = templates.commissionScheduleNoticeTemplate({
+      sellerName: seller.name,
+      businessName: seller.sellerProfile?.businessName || seller.name,
+      tierName,
+      percentage,
+      effectiveFrom,
+      effectiveTo,
+      scope,
+      categoryName,
+    });
+
+    return this.dispatch({
+      to: seller.email,
+      recipientName: seller.name,
+      template: "commission_schedule_notice",
+      subject,
+      text,
+      html,
+      relatedUser: seller._id,
+      metadata: {
+        role: "seller",
+        tierName,
+        percentage,
+        effectiveFrom,
+        effectiveTo,
+        scope,
+      },
+    });
+  }
 }
 
 const emailService = new EmailService();

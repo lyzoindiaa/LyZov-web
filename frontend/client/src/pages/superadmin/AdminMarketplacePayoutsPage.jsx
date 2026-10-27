@@ -23,13 +23,15 @@ import {
   Edit2,
   Layers,
   Sparkles,
+  Mail,
+  Bell,
 } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import { toast } from "react-toastify";
 
 const AdminMarketplacePayoutsPage = () => {
-  const [activeTab, setActiveTab] = useState("monthly"); // "monthly" | "ledger" | "rules"
+  const [activeTab, setActiveTab] = useState("monthly"); // "monthly" | "upcoming" | "ledger" | "rules"
   const [payouts, setPayouts] = useState([]);
   const [meta, setMeta] = useState({
     page: 1,
@@ -82,7 +84,71 @@ const AdminMarketplacePayoutsPage = () => {
     gstOnCommissionRate: 18,
     tcsRate: 1,
     description: "",
+    effectiveFrom: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    effectiveTo: "",
+    notifySellers: true,
   });
+
+  // Calculate 7-day cooling-off countdown
+  const getWindowCountdown = (eligibleAt, coolingOffUntil) => {
+    const target = new Date(eligibleAt || coolingOffUntil || Date.now());
+    const now = new Date();
+    const diffMs = target.getTime() - now.getTime();
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMs <= 0) {
+      return {
+        cleared: true,
+        text: "Matures Today",
+        subtext: "7-day policy period cleared",
+        badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800",
+      };
+    }
+
+    if (diffHours <= 24) {
+      return {
+        cleared: false,
+        text: `Matures in ${diffHours} hr${diffHours > 1 ? "s" : ""}`,
+        subtext: "Final hours of cooling hold",
+        badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800",
+      };
+    }
+
+    return {
+      cleared: false,
+      text: `Clears in ${diffDays} day${diffDays > 1 ? "s" : ""}`,
+      subtext: `${Math.max(1, 7 - diffDays)} of 7 days completed`,
+      badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-800",
+    };
+  };
+
+  // Commission Rule Status Indicator
+  const getRuleStatus = (rule) => {
+    const now = new Date();
+    const from = rule.effectiveFrom ? new Date(rule.effectiveFrom) : null;
+    const to = rule.effectiveTo ? new Date(rule.effectiveTo) : null;
+
+    if (from && from > now) {
+      return {
+        label: "Scheduled",
+        badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30",
+        description: `Starts ${formatDate(rule.effectiveFrom)}`,
+      };
+    }
+    if (to && to < now) {
+      return {
+        label: "Expired",
+        badgeClass: "bg-neutral-500/15 text-neutral-500 border border-neutral-500/30",
+        description: `Ended ${formatDate(rule.effectiveTo)}`,
+      };
+    }
+    return {
+      label: "Active Now",
+      badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30",
+      description: from ? `Active since ${formatDate(rule.effectiveFrom)}` : "Ongoing active tier",
+    };
+  };
 
   // Fetch individual payouts
   const fetchPayouts = async (page = 1, status = statusFilter) => {
@@ -130,6 +196,8 @@ const AdminMarketplacePayoutsPage = () => {
   useEffect(() => {
     if (activeTab === "ledger") {
       fetchPayouts(1, statusFilter);
+    } else if (activeTab === "upcoming") {
+      fetchPayouts(1, "cooling_off");
     } else if (activeTab === "monthly") {
       fetchMonthlyBatches();
       fetchPayouts(1, statusFilter);
@@ -255,6 +323,9 @@ const AdminMarketplacePayoutsPage = () => {
         gstOnCommissionRate: 18,
         tcsRate: 1,
         description: "",
+        effectiveFrom: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+        effectiveTo: "",
+        notifySellers: true,
       });
       fetchCommissionRules();
     } catch (err) {
@@ -340,21 +411,30 @@ const AdminMarketplacePayoutsPage = () => {
         </div>
 
         {/* 7-Day Cooling Off */}
-        <div className="card-surface p-5 rounded-xl border border-[var(--border)] shadow-xs">
+        <div
+          onClick={() => setActiveTab("upcoming")}
+          className="card-surface p-5 rounded-xl border border-[var(--border)] shadow-xs hover:border-indigo-500/50 cursor-pointer transition-all hover:shadow-md group"
+          title="Click to view all delivered orders currently undergoing the 7-day return cooling-off window"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)] group-hover:text-indigo-600 transition-colors">
               In Return Window (7d)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
               <ShieldCheck size={16} />
             </div>
           </div>
           <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-2">
             {formatCurrency(meta.financials?.coolingOffBalance || 0)}
           </div>
-          <p className="text-[11px] text-[var(--ink-muted)] mt-1">
-            Delivered orders awaiting 7-day policy clearance
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-[11px] text-[var(--ink-muted)]">
+              Delivered orders awaiting 7-day policy clearance
+            </p>
+            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline">
+              View Tab →
+            </span>
+          </div>
         </div>
 
         {/* Ready for Monthly Release */}
@@ -406,6 +486,22 @@ const AdminMarketplacePayoutsPage = () => {
         >
           <Layers size={14} />
           Monthly Seller Batches
+        </button>
+        <button
+          onClick={() => setActiveTab("upcoming")}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            activeTab === "upcoming"
+              ? "bg-[var(--accent)] text-white shadow-xs"
+              : "text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface)]"
+          }`}
+        >
+          <ShieldCheck size={14} />
+          Upcoming Settlements (7-Day Window)
+          {(meta.financials?.coolingOffBalance || 0) > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-500 text-white font-black">
+              {formatCurrency(meta.financials.coolingOffBalance)}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab("ledger")}
@@ -516,6 +612,148 @@ const AdminMarketplacePayoutsPage = () => {
                         </td>
                       </tr>
                     ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: Upcoming Settlements (7-Day Cooling Off Window) */}
+      {activeTab === "upcoming" && (
+        <div className="flex flex-col gap-4">
+          <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[var(--ink)]">
+                  7-Day Buyer Cooling-Off & Return Safeguard Window
+                </h3>
+                <p className="text-xs text-[var(--ink-muted)] mt-0.5">
+                  SubOrders here are delivered to customers and held for 7 days to protect against returns and exchanges. Once this cooling-off window matures, funds automatically advance to <strong>Eligible for Monthly Settlement</strong>.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleRunMaturity}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs transition-colors"
+                title="Scan database for any completed 7-day holds and promote them to eligible for payout"
+              >
+                <Sparkles size={13} />
+                Run Maturity Scan
+              </button>
+            </div>
+          </div>
+
+          <div className="card-surface rounded-xl border border-[var(--border)] overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-[var(--surface)] text-[var(--ink-muted)] uppercase tracking-wider font-semibold">
+                    <th className="py-3 px-4">Merchant Store</th>
+                    <th className="py-3 px-4">SubOrder #</th>
+                    <th className="py-3 px-4">Delivery Date</th>
+                    <th className="py-3 px-4">Settlement Maturity</th>
+                    <th className="py-3 px-4">Cooling Window Status</th>
+                    <th className="py-3 px-4">Gross Sale</th>
+                    <th className="py-3 px-4">Platform Fee</th>
+                    <th className="py-3 px-4">Net Seller Payout</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="9" className="py-12 text-center text-[var(--ink-muted)]">
+                        <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-[var(--accent)]" />
+                        Fetching cooling-off settlements...
+                      </td>
+                    </tr>
+                  ) : payouts.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="py-12 text-center text-[var(--ink-muted)]">
+                        <ShieldCheck size={28} className="mx-auto mb-2 text-indigo-500 opacity-60" />
+                        <p className="font-bold text-[var(--ink)]">No orders currently in 7-day cooling-off window</p>
+                        <p className="text-xs text-[var(--ink-muted)] mt-1">
+                          When customer orders are marked delivered, they will appear here with an active countdown.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    payouts.map((p) => {
+                      const sellerName = p.seller?.sellerProfile?.businessName || p.seller?.name || "Merchant";
+                      const countdown = getWindowCountdown(p.eligibleAt, p.subOrder?.coolingOffUntil);
+                      const deliveredDate = p.subOrder?.deliveredAt || p.coolingOffStartedAt;
+                      const maturityDate = p.eligibleAt || p.subOrder?.coolingOffUntil;
+
+                      return (
+                        <tr key={p._id} className="hover:bg-[var(--border)]/15 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-[var(--ink)]">
+                            <div className="flex items-center gap-1.5">
+                              <Store size={13} className="text-[var(--accent)] shrink-0" />
+                              <div>
+                                <div>{sellerName}</div>
+                                <div className="text-[10px] font-normal text-[var(--ink-muted)]">
+                                  {p.seller?.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-mono font-bold text-[var(--ink)]">
+                              {p.subOrder?.subOrderNumber || "SO-PENDING"}
+                            </div>
+                            <div className="text-[10px] text-[var(--ink-muted)]">
+                              {p.subOrder?.items?.length || 1} item(s)
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-[var(--ink)]">
+                            {deliveredDate ? formatDate(deliveredDate) : "Recently Delivered"}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-[var(--ink)]">
+                            {maturityDate ? formatDate(maturityDate) : "7 days after delivery"}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${countdown.badgeClass}`}
+                            >
+                              <Clock size={11} />
+                              {countdown.text}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-[var(--ink)]">
+                            {formatCurrency(p.grossAmount)}
+                          </td>
+                          <td className="py-3.5 px-4 text-[var(--ink-muted)]">
+                            <span className="font-semibold text-purple-600">
+                              {formatCurrency(p.commissionAmount)}
+                            </span>{" "}
+                            <span className="text-[10px]">({p.commissionRate}%)</span>
+                          </td>
+                          <td className="py-3.5 px-4 font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                            {formatCurrency(p.netAmount)}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedPayout(p);
+                                setUtrInput(`UTR-EARLY-${Date.now().toString().slice(-8)}`);
+                                setNotesInput(`Early release override by Super Admin for SubOrder ${p.subOrder?.subOrderNumber || p._id}`);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-[var(--surface-muted)] hover:bg-[var(--border)] text-[var(--ink)] border border-[var(--border)] transition-colors shadow-2xs"
+                              title="Override cooling-off hold and release early with bank UTR"
+                            >
+                              <ArrowUpRight size={12} className="text-indigo-600" />
+                              Early Release
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -683,48 +921,85 @@ const AdminMarketplacePayoutsPage = () => {
                   <tr className="border-b border-[var(--border)] bg-[var(--surface)] text-[var(--ink-muted)] uppercase tracking-wider font-semibold">
                     <th className="py-3 px-4">Tier Name</th>
                     <th className="py-3 px-4">Scope</th>
-                    <th className="py-3 px-4">Commission %</th>
-                    <th className="py-3 px-4">Fixed Fee</th>
-                    <th className="py-3 px-4">GST on Fee</th>
-                    <th className="py-3 px-4">TCS Rate</th>
+                    <th className="py-3 px-4">Commission Margin</th>
+                    <th className="py-3 px-4">Effective Period</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Merchant Notice</th>
+                    <th className="py-3 px-4">Taxes</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
                   {loadingRules ? (
                     <tr>
-                      <td colSpan="7" className="py-12 text-center text-[var(--ink-muted)]">
+                      <td colSpan="8" className="py-12 text-center text-[var(--ink-muted)]">
                         <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-[var(--accent)]" />
                         Loading commission tiers...
                       </td>
                     </tr>
                   ) : commissionRules.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="py-12 text-center text-[var(--ink-muted)]">
+                      <td colSpan="8" className="py-12 text-center text-[var(--ink-muted)]">
                         <Percent size={28} className="mx-auto mb-2 opacity-40" />
                         <p className="font-bold text-[var(--ink)]">No custom commission rules active</p>
                         <p className="text-xs text-[var(--ink-muted)] mt-1">Default 10% platform rate is currently applied globally.</p>
                       </td>
                     </tr>
                   ) : (
-                    commissionRules.map((r) => (
-                      <tr key={r._id} className="hover:bg-[var(--border)]/15 transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-[var(--ink)]">{r.name}</td>
-                        <td className="py-3.5 px-4 font-semibold uppercase text-[10px] text-[var(--accent)]">{r.scope}</td>
-                        <td className="py-3.5 px-4 font-black text-purple-600">{r.percentage}%</td>
-                        <td className="py-3.5 px-4 text-[var(--ink)]">{formatCurrency(r.fixedFee || 0)}</td>
-                        <td className="py-3.5 px-4 text-[var(--ink-muted)]">{r.gstOnCommissionRate || 18}%</td>
-                        <td className="py-3.5 px-4 text-[var(--ink-muted)]">{r.tcsRate || 1}%</td>
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleDeleteRule(r._id)}
-                            className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    commissionRules.map((r) => {
+                      const status = getRuleStatus(r);
+                      const effectiveStart = r.effectiveFrom ? formatDate(r.effectiveFrom) : "Immediate / Creation";
+                      const effectiveEnd = r.effectiveTo ? formatDate(r.effectiveTo) : "Ongoing";
+
+                      return (
+                        <tr key={r._id} className="hover:bg-[var(--border)]/15 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-[var(--ink)]">
+                            <div>{r.name}</div>
+                            {r.description && (
+                              <div className="text-[10px] font-normal text-[var(--ink-muted)]">{r.description}</div>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold uppercase text-[10px] text-[var(--accent)]">{r.scope}</td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-black text-purple-600 text-sm">{r.percentage}%</span>
+                            {r.fixedFee > 0 && (
+                              <span className="text-[10px] text-[var(--ink-muted)] block">+ {formatCurrency(r.fixedFee)} fee</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-[11px] text-[var(--ink)]">
+                            <div className="font-medium">From: {effectiveStart}</div>
+                            <div className="text-[10px] text-[var(--ink-muted)]">Until: {effectiveEnd}</div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${status.badgeClass}`}>
+                              {status.label}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-[11px]">
+                            {r.notificationRecipientCount > 0 ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold" title={`Email sent on ${r.notificationSentAt ? formatDate(r.notificationSentAt) : "creation"}`}>
+                                <Mail size={12} /> {r.notificationRecipientCount} merchants
+                              </span>
+                            ) : (
+                              <span className="text-[var(--ink-muted)] text-[10px]">No broadcast</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-[11px] text-[var(--ink-muted)]">
+                            <div>GST: {r.gstOnCommissionRate || 18}%</div>
+                            <div>TCS: {r.tcsRate || 1}%</div>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => handleDeleteRule(r._id)}
+                              className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                              title="Delete tier rule"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -926,9 +1201,22 @@ const AdminMarketplacePayoutsPage = () => {
                   required
                   value={ruleForm.name}
                   onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })}
-                  placeholder="e.g. Apparel & Accessories Tier"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)]"
+                  placeholder="e.g. Q4 Festive Apparel Tier"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] focus:outline-hidden focus:ring-1 focus:ring-[var(--accent)]"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[var(--ink)] mb-1">Scope</label>
+                <select
+                  value={ruleForm.scope}
+                  onChange={(e) => setRuleForm({ ...ruleForm, scope: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] focus:outline-hidden focus:ring-1 focus:ring-[var(--accent)]"
+                >
+                  <option value="global">Global (All Sellers & Categories)</option>
+                  <option value="category">Category-Specific</option>
+                  <option value="seller">Seller-Specific Merchant Tier</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -942,7 +1230,7 @@ const AdminMarketplacePayoutsPage = () => {
                     required
                     value={ruleForm.percentage}
                     onChange={(e) => setRuleForm({ ...ruleForm, percentage: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)]"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] focus:outline-hidden focus:ring-1 focus:ring-[var(--accent)]"
                   />
                 </div>
                 <div>
@@ -952,10 +1240,67 @@ const AdminMarketplacePayoutsPage = () => {
                     min="0"
                     value={ruleForm.fixedFee}
                     onChange={(e) => setRuleForm({ ...ruleForm, fixedFee: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)]"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] focus:outline-hidden focus:ring-1 focus:ring-[var(--accent)]"
                   />
                 </div>
               </div>
+
+              {/* Scheduled Future-Dating */}
+              <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] flex flex-col gap-2.5">
+                <div className="flex items-center gap-1.5 font-bold text-[var(--ink)] text-[11px]">
+                  <Calendar size={13} className="text-[var(--accent)]" />
+                  Scheduled Timeline & Effective Window
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[var(--ink-muted)] mb-1">
+                      Effective From *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={ruleForm.effectiveFrom}
+                      onChange={(e) => setRuleForm({ ...ruleForm, effectiveFrom: e.target.value })}
+                      className="w-full px-2 py-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] text-[11px] focus:outline-hidden"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[var(--ink-muted)] mb-1">
+                      Effective Until (Optional)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={ruleForm.effectiveTo}
+                      onChange={(e) => setRuleForm({ ...ruleForm, effectiveTo: e.target.value })}
+                      placeholder="Indefinite"
+                      className="w-full px-2 py-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] text-[11px] focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-[var(--ink-muted)]">
+                  Orders placed on or after the &ldquo;Effective From&rdquo; date will automatically apply this margin rate at checkout.
+                </p>
+              </div>
+
+              {/* Email Notification Checkbox */}
+              <label className="flex items-start gap-2.5 p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] cursor-pointer hover:bg-[var(--surface-muted)] transition-colors">
+                <input
+                  type="checkbox"
+                  checked={ruleForm.notifySellers}
+                  onChange={(e) => setRuleForm({ ...ruleForm, notifySellers: e.target.checked })}
+                  className="mt-0.5 rounded text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
+                />
+                <div className="flex flex-col">
+                  <span className="font-bold text-[var(--ink)] flex items-center gap-1 text-[11px]">
+                    <Mail size={12} className="text-[var(--accent)]" />
+                    Notify active merchants via email
+                  </span>
+                  <span className="text-[10px] text-[var(--ink-muted)]">
+                    Automatically dispatches an official branded notice to registered sellers with effective dates and margin details.
+                  </span>
+                </div>
+              </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -978,11 +1323,22 @@ const AdminMarketplacePayoutsPage = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block font-bold text-[var(--ink)] mb-1">Notes / Description (Optional)</label>
+                <textarea
+                  rows={2}
+                  value={ruleForm.description}
+                  onChange={(e) => setRuleForm({ ...ruleForm, description: e.target.value })}
+                  placeholder="e.g. Standard holiday campaign rate update"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)]"
+                />
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
                 <button
                   type="button"
                   onClick={() => setRuleModalOpen(false)}
-                  className="px-4 py-2 font-bold rounded-lg border border-[var(--border)] text-[var(--ink)]"
+                  className="px-4 py-2 font-bold rounded-lg border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--border)]/30"
                 >
                   Cancel
                 </button>

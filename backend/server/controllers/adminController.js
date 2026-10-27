@@ -593,7 +593,7 @@ const getMarketplacePayouts = asyncHandler(async (req, res) => {
   const total = await Payout.countDocuments(filter);
   const payouts = await Payout.find(filter)
     .populate("seller", "name email phone sellerProfile.businessName sellerProfile.bankDetails")
-    .populate("subOrder", "subOrderNumber orderStatus totalPrice commissionAmount sellerEarnings")
+    .populate("subOrder", "subOrderNumber orderStatus totalPrice commissionAmount sellerEarnings deliveredAt coolingOffUntil isDelivered items")
     .populate("parentOrder", "orderNumber paymentMethod paymentStatus")
     .sort("-createdAt")
     .skip((page - 1) * limit)
@@ -758,17 +758,29 @@ const triggerSettlementMaturityJob = asyncHandler(async (req, res) => {
 
 // @desc    Get all commission rules
 // @route   GET /api/admin/commission-rules
-// @access  Private/Admin
+// @access  Private/Admin/Seller
 const getCommissionRules = asyncHandler(async (req, res) => {
-  const rules = await CommissionRule.find()
+  const isSeller = req.user.role === "seller";
+  const filter = {};
+
+  if (isSeller) {
+    filter.isActive = true;
+    filter.$or = [
+      { scope: "global" },
+      { scope: "category" },
+      { scope: "seller", seller: req.user._id },
+    ];
+  }
+
+  const rules = await CommissionRule.find(filter)
     .populate("category", "name slug")
     .populate("seller", "name email sellerProfile.businessName")
-    .sort("-createdAt");
+    .sort("-effectiveFrom -createdAt");
 
   return sendSuccess(res, 200, "Commission rules fetched successfully", rules);
 });
 
-// @desc    Create a commission rule
+// @desc    Create a commission rule with future scheduling & seller notification
 // @route   POST /api/admin/commission-rules
 // @access  Private/Admin
 const createCommissionRule = asyncHandler(async (req, res) => {
@@ -783,11 +795,17 @@ const createCommissionRule = asyncHandler(async (req, res) => {
     gstOnCommissionRate,
     tcsRate,
     description,
+    effectiveFrom,
+    effectiveTo,
+    notifySellers,
   } = req.body;
 
   if (!name || !scope) {
     throw ApiError.badRequest("Name and Scope are required");
   }
+
+  const effectiveFromDate = effectiveFrom ? new Date(effectiveFrom) : new Date();
+  const effectiveToDate = effectiveTo ? new Date(effectiveTo) : null;
 
   const rule = await CommissionRule.create({
     name: String(name).trim(),
@@ -800,8 +818,53 @@ const createCommissionRule = asyncHandler(async (req, res) => {
     gstOnCommissionRate: gstOnCommissionRate !== undefined ? Number(gstOnCommissionRate) : 18.0,
     tcsRate: tcsRate !== undefined ? Number(tcsRate) : 1.0,
     description: description || "",
+    effectiveFrom: effectiveFromDate,
+    effectiveTo: effectiveToDate,
     createdBy: req.user._id,
   });
+
+  // Asynchronous email notification to sellers if requested
+  if (notifySellers) {
+    try {
+      const emailService = require("../services/emailService");
+      const Category = require("../models/Category");
+
+      let categoryName = "";
+      if (category) {
+        const catObj = await Category.findById(category).select("name");
+        categoryName = catObj?.name || "";
+      }
+
+      let targetSellers = [];
+      if (scope === "seller" && seller) {
+        targetSellers = await User.find({ _id: seller, role: "seller", isBlocked: false });
+      } else {
+        targetSellers = await User.find({ role: "seller", isBlocked: false });
+      }
+
+      let sentCount = 0;
+      for (const s of targetSellers) {
+        if (s.email) {
+          await emailService.sendCommissionScheduleNotice({
+            seller: s,
+            tierName: rule.name,
+            percentage: rule.percentage,
+            effectiveFrom: rule.effectiveFrom,
+            effectiveTo: rule.effectiveTo,
+            scope: rule.scope,
+            categoryName,
+          });
+          sentCount++;
+        }
+      }
+
+      rule.notificationSentAt = new Date();
+      rule.notificationRecipientCount = sentCount;
+      await rule.save();
+    } catch (notifyErr) {
+      console.error("[createCommissionRule] Notification dispatch error:", notifyErr.message);
+    }
+  }
 
   return sendSuccess(res, 201, "Commission rule created successfully", rule);
 });
@@ -832,7 +895,58 @@ const updateCommissionRule = asyncHandler(async (req, res) => {
     if (req.body[f] !== undefined) rule[f] = req.body[f];
   });
 
+  if (req.body.effectiveFrom !== undefined) {
+    rule.effectiveFrom = req.body.effectiveFrom ? new Date(req.body.effectiveFrom) : new Date();
+  }
+  if (req.body.effectiveTo !== undefined) {
+    rule.effectiveTo = req.body.effectiveTo ? new Date(req.body.effectiveTo) : null;
+  }
+
   await rule.save();
+
+  // Asynchronous email notification to sellers if requested
+  if (req.body.notifySellers) {
+    try {
+      const emailService = require("../services/emailService");
+      const Category = require("../models/Category");
+
+      let categoryName = "";
+      if (rule.category) {
+        const catObj = await Category.findById(rule.category).select("name");
+        categoryName = catObj?.name || "";
+      }
+
+      let targetSellers = [];
+      if (rule.scope === "seller" && rule.seller) {
+        targetSellers = await User.find({ _id: rule.seller, role: "seller", isBlocked: false });
+      } else {
+        targetSellers = await User.find({ role: "seller", isBlocked: false });
+      }
+
+      let sentCount = 0;
+      for (const s of targetSellers) {
+        if (s.email) {
+          await emailService.sendCommissionScheduleNotice({
+            seller: s,
+            tierName: rule.name,
+            percentage: rule.percentage,
+            effectiveFrom: rule.effectiveFrom,
+            effectiveTo: rule.effectiveTo,
+            scope: rule.scope,
+            categoryName,
+          });
+          sentCount++;
+        }
+      }
+
+      rule.notificationSentAt = new Date();
+      rule.notificationRecipientCount = (rule.notificationRecipientCount || 0) + sentCount;
+      await rule.save();
+    } catch (notifyErr) {
+      console.error("[updateCommissionRule] Notification dispatch error:", notifyErr.message);
+    }
+  }
+
   return sendSuccess(res, 200, "Commission rule updated successfully", rule);
 });
 

@@ -907,6 +907,111 @@ const sellerInvitationTemplate = ({ sellerName, businessName, email, tempPasswor
   };
 };
 
+/**
+ * Notice of Commission / Platform Margin Revision Template
+ */
+const commissionScheduleNoticeTemplate = ({
+  sellerName,
+  businessName,
+  tierName,
+  percentage,
+  effectiveFrom,
+  effectiveTo,
+  scope = "global",
+  categoryName = "",
+}) => {
+  const url = process.env.CLIENT_URL || "https://lyzov.com";
+  const fromFormatted = effectiveFrom
+    ? new Date(effectiveFrom).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Immediate";
+  const toFormatted = effectiveTo
+    ? new Date(effectiveTo).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Ongoing";
+
+  const scopeLabel =
+    scope === "category" && categoryName
+      ? `Category: ${categoryName}`
+      : scope === "seller"
+      ? "Custom Partner Tier"
+      : "All Marketplace Categories";
+
+  const content = `
+    <h1 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 700; color: ${textDark};">
+      Platform Commission Revision Notice
+    </h1>
+    <p style="margin: 0 0 20px 0; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
+      Dear ${businessName || sellerName || "Valued Merchant"},
+    </p>
+    <p style="margin: 0 0 24px 0; font-size: 14px; color: ${textDark}; line-height: 1.6;">
+      Please be advised of an upcoming revision to your platform margin fees on the LyZov Gentlemen Marketplace. In accordance with platform governance, the revised commission structure outlined below will take effect from the scheduled date:
+    </p>
+
+    <!-- Highlighted Rates Card -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1.5px solid ${borderCol}; border-radius: 8px; margin-bottom: 28px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table width="100%" cellpadding="6" cellspacing="0">
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted}; width: 40%;">Commission Tier:</td>
+              <td style="font-size: 14px; font-weight: 700; color: ${textDark};">${tierName || "Standard Marketplace Fee"}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Revised Margin Fee:</td>
+              <td style="font-size: 20px; font-weight: 800; color: ${primaryGold};">${percentage}%</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Effective From:</td>
+              <td style="font-size: 14px; font-weight: 700; color: ${textDark};">${fromFormatted}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Effective Until:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textMuted};">${toFormatted}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 13px; color: ${textMuted};">Scope:</td>
+              <td style="font-size: 13px; font-weight: 600; color: ${textDark};">${scopeLabel}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px 16px; border-radius: 4px; margin-bottom: 28px;">
+      <p style="margin: 0; font-size: 13px; color: #92400E; line-height: 1.5;">
+        <strong>Merchant Note:</strong> Orders placed before ${fromFormatted} will continue to be settled at your previously active commission rate. Only orders received on or after ${fromFormatted} will reflect the new margin fee.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0 16px 0;">
+      <a href="${url}/seller/payouts" class="btn-gold" target="_blank" style="color: #FFFFFF !important;">
+        View Fee Schedule in Portal
+      </a>
+    </div>
+
+    <p style="margin: 28px 0 0 0; font-size: 13px; color: ${textMuted}; line-height: 1.6;">
+      If you have questions regarding this schedule, please reach out directly through your Seller Support dashboard or reply to this notice.
+    </p>
+  `;
+
+  return {
+    subject: `Notice: Revised Platform Commission Fee (${percentage}%) Effective ${fromFormatted} — LyZov`,
+    text: `Platform Commission Revision Notice\n\nDear ${businessName || sellerName || "Merchant"},\n\nYour platform margin fee on LyZov is scheduled to be ${percentage}% effective from ${fromFormatted} to ${toFormatted}.\n\nScope: ${scopeLabel}\n\nReview your full schedule in the Seller Portal: ${url}/seller/payouts`,
+    html: baseEmailWrapper({
+      title: `Platform Margin Notice: ${percentage}% from ${fromFormatted}`,
+      preheader: `Important notice: Your platform fee is scheduled to update to ${percentage}% on ${fromFormatted}.`,
+      content,
+    }),
+  };
+};
+
 module.exports = {
   welcomeVerificationTemplate,
   verificationSuccessTemplate,
@@ -921,5 +1026,6 @@ module.exports = {
   testEmailTemplate,
   googleWelcomeWithTempPasswordTemplate,
   sellerInvitationTemplate,
+  commissionScheduleNoticeTemplate,
 };
 

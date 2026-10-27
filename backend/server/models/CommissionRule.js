@@ -65,6 +65,26 @@ const commissionRuleSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    effectiveFrom: {
+      type: Date,
+      default: Date.now,
+      index: true,
+      comment: "Future or immediate date from which this commission percentage takes effect",
+    },
+    effectiveTo: {
+      type: Date,
+      default: null,
+      index: true,
+      comment: "Optional expiration date after which this tier no longer applies",
+    },
+    notificationSentAt: {
+      type: Date,
+      default: null,
+    },
+    notificationRecipientCount: {
+      type: Number,
+      default: 0,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -73,6 +93,8 @@ const commissionRuleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+commissionRuleSchema.index({ scope: 1, effectiveFrom: -1, isActive: 1 });
 
 commissionRuleSchema.index({ scope: 1, isActive: 1 });
 commissionRuleSchema.index({ category: 1, isActive: 1 });

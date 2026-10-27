@@ -47,6 +47,7 @@ router.get("/revenue", authorize("admin", "seller"), getRevenueByDay);
 router.get("/orders-status", authorize("admin", "seller"), getOrdersByStatus);
 router.get("/recent-orders", authorize("admin", "seller"), getRecentOrders);
 router.get("/payouts", authorize("admin", "seller"), getMarketplacePayouts);
+router.get("/commission-rules", authorize("admin", "seller"), getCommissionRules);
 
 // ── SuperAdmin Protected Routes ──
 router.use(authorize("admin"));
@@ -70,7 +71,6 @@ router.post("/payouts/release-monthly-batch", releaseMonthlyBatch);
 router.post("/payouts/run-maturity-job", triggerSettlementMaturityJob);
 
 // ── Dynamic Commission Rules ──
-router.get("/commission-rules", getCommissionRules);
 router.post("/commission-rules", createCommissionRule);
 router.put("/commission-rules/:id", updateCommissionRule);
 router.delete("/commission-rules/:id", deleteCommissionRule);
