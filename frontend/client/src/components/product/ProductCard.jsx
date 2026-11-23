@@ -6,6 +6,7 @@ import { toggleWishlistItem } from "../../features/wishlist/wishlistSlice";
 import { addToCart } from "../../features/cart/cartSlice";
 import { formatCurrency } from "../../utils/formatters";
 import { toast } from "react-toastify";
+import LazyImage from "../common/LazyImage";
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
@@ -97,44 +98,20 @@ const ProductCard = ({ product }) => {
 
       {/* Image Container (1:1 Aspect Ratio) */}
       <div style={{ position: "relative", aspectRatio: "1/1", width: "100%", overflow: "hidden", backgroundColor: "var(--img-tile)" }}>
-        {!imageError && currentImage ? (
-          <img
-            src={currentImage}
-            alt={product.images?.[currentImageIndex]?.altText || product.title || product.name}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={() => setImageError(true)}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transition: "opacity 0.3s ease",
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-              background: "linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(15,23,42,0.6) 100%)",
-              color: "var(--ink-muted)",
-              padding: "1rem",
-              textAlign: "center",
-            }}
-          >
-            <ShoppingBag size={32} color="var(--accent)" opacity={0.6} />
-            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              {product.brand?.name || "LyZov Exclusive"}
-            </span>
-          </div>
-        )}
+        <LazyImage
+          src={currentImage}
+          alt={product.images?.[currentImageIndex]?.altText || product.title || product.name}
+          aspectRatio="1/1"
+          objectFit="cover"
+          fallbackComponent={
+            <div className="flex flex-col items-center justify-center gap-2 p-4 text-center">
+              <ShoppingBag size={32} color="var(--accent)" opacity={0.6} />
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {product.brand?.name || "LyZov Exclusive"}
+              </span>
+            </div>
+          }
+        />
 
         {/* Image Dots Indicator */}
         {productImages.length > 1 && isHovered && (

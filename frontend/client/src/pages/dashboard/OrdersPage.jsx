@@ -4,6 +4,7 @@ import { Package, ArrowRight, ChevronRight, Clock, Truck } from "lucide-react";
 import { orderService } from "../../services/cartService";
 import { formatCurrency, formatDateTime } from "../../utils/formatters";
 import Badge from "../../components/ui/Badge";
+import Pagination from "../../components/common/Pagination";
 
 const statusTones = {
   pending: "warning",
@@ -17,12 +18,29 @@ const statusTones = {
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+
+  const fetchMyOrders = async (page = pagination.page, limit = pagination.limit) => {
+    setIsLoading(true);
+    try {
+      const res = await orderService.getMyOrders({ page, limit });
+      setOrders(res.data || []);
+      const meta = res.meta || res.pagination;
+      if (meta) {
+        setPagination({
+          page: meta.page || page,
+          limit: meta.limit || limit,
+          total: meta.total || 0,
+          totalPages: meta.totalPages || 1,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    orderService
-      .getMyOrders()
-      .then((res) => setOrders(res.data || []))
-      .finally(() => setIsLoading(false));
+    fetchMyOrders(1, pagination.limit);
   }, []);
 
   if (isLoading) {
@@ -125,6 +143,16 @@ const OrdersPage = () => {
           </div>
         </Link>
       ))}
+
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        itemLabel="orders"
+        showLimitSelector={false}
+        onPageChange={(newPage) => fetchMyOrders(newPage, pagination.limit)}
+      />
     </div>
   );
 };

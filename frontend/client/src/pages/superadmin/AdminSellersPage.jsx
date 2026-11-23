@@ -23,6 +23,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { adminService } from "../../services/adminService";
 import InviteSellerModal from "./InviteSellerModal";
 import SellerCredentialsModal from "./SellerCredentialsModal";
+import Pagination from "../../components/common/Pagination";
 import ConfirmActionModal from "./ConfirmActionModal";
 import { toast } from "react-toastify";
 
@@ -541,55 +542,22 @@ const AdminSellersPage = () => {
         </div>
 
         {/* Pagination Bar */}
-        {pagination.totalPages > 1 && (
-          <div
-            style={{
-              padding: "0.75rem 1rem",
-              borderTop: "1px solid var(--border)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              fontSize: "0.8125rem",
-              color: "var(--ink-muted)",
+        <div className="p-4 border-t border-[var(--border)]">
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            itemLabel="sellers"
+            showLimitSelector={true}
+            limitOptions={[12, 24, 48]}
+            onPageChange={(newPage) => fetchSellers(newPage)}
+            onLimitChange={(newLimit) => {
+              setPagination((prev) => ({ ...prev, limit: newLimit }));
+              fetchSellers(1);
             }}
-          >
-            <span>
-              Page {pagination.page} of {pagination.totalPages} ({pagination.total} sellers)
-            </span>
-            <div style={{ display: "flex", gap: "0.35rem" }}>
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => fetchSellers(pagination.page - 1)}
-                style={{
-                  padding: "0.35rem 0.65rem",
-                  borderRadius: "0.375rem",
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--surface)",
-                  color: "var(--ink)",
-                  cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
-                  opacity: pagination.page <= 1 ? 0.5 : 1,
-                }}
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                disabled={pagination.page >= pagination.totalPages}
-                onClick={() => fetchSellers(pagination.page + 1)}
-                style={{
-                  padding: "0.35rem 0.65rem",
-                  borderRadius: "0.375rem",
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--surface)",
-                  color: "var(--ink)",
-                  cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
-                  opacity: pagination.page >= pagination.totalPages ? 0.5 : 1,
-                }}
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        )}
+          />
+        </div>
       </div>
 
       {/* Invite Modal */}
