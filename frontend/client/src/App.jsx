@@ -27,8 +27,8 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PolicyPage = lazy(() => import("./pages/PolicyPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
-const SellerStorefrontPage = lazy(() => import("./pages/SellerStorefrontPage"));
-const SellerRegisterPage = lazy(() => import("./pages/SellerRegisterPage"));
+// [SINGLE-SELLER MODE] const SellerStorefrontPage = lazy(() => import("./pages/SellerStorefrontPage"));
+// [SINGLE-SELLER MODE] const SellerRegisterPage = lazy(() => import("./pages/SellerRegisterPage"));
 const CompleteProfilePage = lazy(() => import("./pages/CompleteProfilePage"));
 
 // Customer Dashboard
@@ -52,7 +52,7 @@ const AdminCategoryEditPage = lazy(() => import("./pages/admin/AdminCategoryEdit
 const AdminBrandsPage = lazy(() => import("./pages/admin/AdminBrandsPage"));
 const AdminOrdersPage = lazy(() => import("./pages/admin/AdminOrdersPage"));
 const AdminOrderDetailsPage = lazy(() => import("./pages/admin/AdminOrderDetailsPage"));
-const SellerPayoutsPage = lazy(() => import("./pages/admin/SellerPayoutsPage"));
+// [SINGLE-SELLER MODE] const SellerPayoutsPage = lazy(() => import("./pages/admin/SellerPayoutsPage"));
 const AdminEmailsPage = lazy(() => import("./pages/admin/AdminEmailsPage"));
 const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
 const SellerSettingsPage = lazy(() => import("./pages/admin/SellerSettingsPage"));
@@ -61,11 +61,11 @@ const AdminCouponsPage = lazy(() => import("./pages/admin/AdminCouponsPage"));
 // SuperAdmin Console
 const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
 const AdminDashboardPage = lazy(() => import("./pages/superadmin/AdminDashboardPage"));
-const AdminSellersPage = lazy(() => import("./pages/superadmin/AdminSellersPage"));
-const AdminSellerDetailsPage = lazy(() => import("./pages/superadmin/AdminSellerDetailsPage"));
+// [SINGLE-SELLER MODE] const AdminSellersPage = lazy(() => import("./pages/superadmin/AdminSellersPage"));
+// [SINGLE-SELLER MODE] const AdminSellerDetailsPage = lazy(() => import("./pages/superadmin/AdminSellerDetailsPage"));
 const AdminCustomersPage = lazy(() => import("./pages/superadmin/AdminCustomersPage"));
-const AdminProductModerationPage = lazy(() => import("./pages/superadmin/AdminProductModerationPage"));
-const AdminMarketplacePayoutsPage = lazy(() => import("./pages/superadmin/AdminMarketplacePayoutsPage"));
+// [SINGLE-SELLER MODE] const AdminProductModerationPage = lazy(() => import("./pages/superadmin/AdminProductModerationPage"));
+// [SINGLE-SELLER MODE] const AdminMarketplacePayoutsPage = lazy(() => import("./pages/superadmin/AdminMarketplacePayoutsPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
@@ -121,7 +121,7 @@ function App() {
           {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/seller/register" element={<SellerRegisterPage />} />
+          {/* [SINGLE-SELLER MODE] <Route path="/seller/register" element={<SellerRegisterPage />} /> */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
@@ -140,7 +140,7 @@ function App() {
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/products" element={<ShopPage />} />
             <Route path="/product/:slug" element={<ProductDetailsPage />} />
-            <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} />
+            {/* [SINGLE-SELLER MODE] <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} /> */}
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route
@@ -212,7 +212,7 @@ function App() {
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
             <Route path="coupons" element={<AdminCouponsPage />} />
-            <Route path="payouts" element={<SellerPayoutsPage />} />
+            {/* [SINGLE-SELLER MODE] <Route path="payouts" element={<SellerPayoutsPage />} /> */}
             <Route path="profile" element={<AdminProfilePage />} />
             <Route path="emails" element={<AdminEmailsPage />} />
             <Route path="settings" element={<SellerSettingsPage />} />
@@ -228,15 +228,15 @@ function App() {
             }
           >
             <Route index element={<AdminDashboardPage />} />
-            <Route path="sellers" element={<AdminSellersPage />} />
-            <Route path="sellers/:id" element={<AdminSellerDetailsPage />} />
-            <Route path="moderation" element={<AdminProductModerationPage />} />
+            {/* [SINGLE-SELLER MODE] <Route path="sellers" element={<AdminSellersPage />} /> */}
+            {/* [SINGLE-SELLER MODE] <Route path="sellers/:id" element={<AdminSellerDetailsPage />} /> */}
+            {/* [SINGLE-SELLER MODE] <Route path="moderation" element={<AdminProductModerationPage />} /> */}
             <Route path="coupons" element={<AdminCouponsPage />} />
             <Route path="brands" element={<AdminBrandsPage />} />
             <Route path="categories" element={<AdminCategoriesPage />} />
             <Route path="categories/add" element={<AdminCategoryAddPage />} />
             <Route path="categories/:id/edit" element={<AdminCategoryEditPage />} />
-            <Route path="payouts" element={<AdminMarketplacePayoutsPage />} />
+            {/* [SINGLE-SELLER MODE] <Route path="payouts" element={<AdminMarketplacePayoutsPage />} /> */}
             <Route path="customers" element={<AdminCustomersPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
           </Route>

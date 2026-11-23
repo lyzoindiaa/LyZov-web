@@ -47,12 +47,16 @@ router.get("/stats", authorize("admin", "seller"), getDashboardStats);
 router.get("/revenue", authorize("admin", "seller"), getRevenueByDay);
 router.get("/orders-status", authorize("admin", "seller"), getOrdersByStatus);
 router.get("/recent-orders", authorize("admin", "seller"), getRecentOrders);
-router.get("/payouts", authorize("admin", "seller"), getMarketplacePayouts);
-router.get("/commission-rules", authorize("admin", "seller"), getCommissionRules);
+// [SINGLE-SELLER MODE] Payouts & commission routes disabled. Uncomment to re-enable multi-vendor.
+// router.get("/payouts", authorize("admin", "seller"), getMarketplacePayouts);
+// router.get("/commission-rules", authorize("admin", "seller"), getCommissionRules);
 
 // ── SuperAdmin Protected Routes ──
 router.use(authorize("admin"));
 
+// [SINGLE-SELLER MODE] Multi-vendor Seller Management, Payouts, Commission Rules & Product Moderation disabled.
+// Uncomment the blocks below when re-enabling multi-vendor marketplace mode.
+/*
 // ── Seller Management & KYC ──
 router.get("/sellers", getSellers);
 router.post("/sellers", inviteSeller);
@@ -81,6 +85,7 @@ router.delete("/commission-rules/:id", deleteCommissionRule);
 // ── Product Moderation Queue ──
 router.get("/products/moderation", getProductModerationQueue);
 router.put("/products/:id/moderation", moderateProduct);
+*/
 
 // ── Customer Management ──
 router.get("/customers", getCustomers);

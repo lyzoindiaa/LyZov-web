@@ -28,12 +28,12 @@ import Logo from "../../components/ui/Logo";
 
 const navItems = [
   { label: "Dashboard Overview", to: "/admin", icon: BarChart3, end: true },
-  { label: "Sellers Directory", to: "/admin/sellers", icon: Store },
-  { label: "Product Moderation", to: "/admin/moderation", icon: ShieldCheck },
+  // [SINGLE-SELLER MODE] { label: "Sellers Directory", to: "/admin/sellers", icon: Store },
+  // [SINGLE-SELLER MODE] { label: "Product Moderation", to: "/admin/moderation", icon: ShieldCheck },
   { label: "Coupons & Discounts", to: "/admin/coupons", icon: Ticket },
   { label: "Brands Catalog", to: "/admin/brands", icon: Award },
   { label: "Categories Catalog", to: "/admin/categories", icon: Layers },
-  { label: "Marketplace Payouts", to: "/admin/payouts", icon: Wallet },
+  // [SINGLE-SELLER MODE] { label: "Marketplace Payouts", to: "/admin/payouts", icon: Wallet },
   { label: "Customer Accounts", to: "/admin/customers", icon: Users },
   { label: "Maintenance & Banner", to: "/admin/settings", icon: Settings },
 ];

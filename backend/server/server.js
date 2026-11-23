@@ -18,8 +18,9 @@ process.on("uncaughtException", (err) => {
 const startServer = async () => {
   await connectDB();
 
-  const { startSettlementScheduler } = require("./jobs/settlementCron");
-  startSettlementScheduler();
+  // [SINGLE-SELLER MODE] Payout settlement cron disabled. Uncomment to re-enable multi-vendor payouts.
+  // const { startSettlementScheduler } = require("./jobs/settlementCron");
+  // startSettlementScheduler();
 
   const server = app.listen(PORT, () => {
     console.log(`LyZov API running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);

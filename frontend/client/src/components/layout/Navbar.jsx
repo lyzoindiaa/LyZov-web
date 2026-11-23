@@ -203,7 +203,7 @@ const Navbar = () => {
                 <Link to="/admin" className="nav-link-animated" style={{ color: "var(--accent)", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <Crown size={14} className="text-amber-500" /> Admin Console
                 </Link>
-                <Link to="/admin/sellers" className="nav-link-animated">Sellers</Link>
+                {/* [SINGLE-SELLER MODE] <Link to="/admin/sellers" className="nav-link-animated">Sellers</Link> */}
                 <Link to="/admin/customers" className="nav-link-animated">Customers</Link>
               </>
             ) : isSeller ? (
@@ -499,7 +499,7 @@ const Navbar = () => {
                     {isAdmin && (
                       <>
                         <DropItem to="/admin" icon={Crown} accent>{"Super Admin Console"}</DropItem>
-                        <DropItem to="/admin/sellers" icon={FolderPlus}>{"Manage Sellers"}</DropItem>
+                        {/* [SINGLE-SELLER MODE] <DropItem to="/admin/sellers" icon={FolderPlus}>{"Manage Sellers"}</DropItem> */}
                         <DropItem to="/admin/customers" icon={LayoutDashboard}>{"Manage Customers"}</DropItem>
                       </>
                     )}
@@ -652,7 +652,7 @@ const Navbar = () => {
             {isAdmin ? (
               <>
                 <MobileNavLink to="/admin" accent>Admin Console</MobileNavLink>
-                <MobileNavLink to="/admin/sellers">Manage Sellers</MobileNavLink>
+                {/* [SINGLE-SELLER MODE] <MobileNavLink to="/admin/sellers">Manage Sellers</MobileNavLink> */}
                 <MobileNavLink to="/admin/customers">Manage Customers</MobileNavLink>
               </>
             ) : isSeller ? (

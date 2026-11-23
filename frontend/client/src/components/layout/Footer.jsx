@@ -37,7 +37,7 @@ const footerColumns = [
       { label: "My Orders", to: "/dashboard/orders" },
       { label: "Wishlist", to: "/dashboard/wishlist" },
       { label: "Saved Addresses", to: "/dashboard/addresses" },
-      { label: "Sell on LyZov", to: "/seller/register" },
+      // [SINGLE-SELLER MODE] { label: "Sell on LyZov", to: "/seller/register" },
     ],
   },
 ];

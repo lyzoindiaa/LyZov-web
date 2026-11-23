@@ -35,8 +35,8 @@ const navItems = [
   { label: "Categories", to: "/seller/categories", icon: Tags },
   { label: "Brands", to: "/seller/brands", icon: Award },
   { label: "Orders", to: "/seller/orders", icon: ClipboardList },
-  { label: "Payouts & Earnings", to: "/seller/payouts", icon: Wallet },
-  { label: "Profile & KYC", to: "/seller/profile", icon: UserCheck },
+  // [SINGLE-SELLER MODE] { label: "Payouts & Earnings", to: "/seller/payouts", icon: Wallet },
+  { label: "Store Profile", to: "/seller/profile", icon: UserCheck }, // [SINGLE-SELLER MODE] was "Profile & KYC"
   { label: "Email Logs", to: "/seller/emails", icon: Mail },
   { label: "Vacation & Settings", to: "/seller/settings", icon: Palmtree },
 ];
@@ -55,8 +55,8 @@ const AdminLayout = () => {
   else if (currentPath.includes("/categories")) activeTitle = "Categories Management";
   else if (currentPath.includes("/brands")) activeTitle = "Brands Management";
   else if (currentPath.includes("/orders")) activeTitle = "Orders Management";
-  else if (currentPath.includes("/payouts")) activeTitle = "Seller Financials & Payouts";
-  else if (currentPath.includes("/profile")) activeTitle = "Seller Profile & KYC";
+  // [SINGLE-SELLER MODE] else if (currentPath.includes("/payouts")) activeTitle = "Seller Financials & Payouts";
+  else if (currentPath.includes("/profile")) activeTitle = "Store Profile"; // [SINGLE-SELLER MODE] was "Seller Profile & KYC"
   else if (currentPath.includes("/emails")) activeTitle = "Email Communications";
   else if (currentPath.includes("/settings")) activeTitle = "Store Vacation & Settings";
 

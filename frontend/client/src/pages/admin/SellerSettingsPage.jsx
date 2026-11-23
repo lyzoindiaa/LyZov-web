@@ -205,6 +205,7 @@ const SellerSettingsPage = () => {
               Global marketplace maintenance and development banners are governed exclusively by LyZov SuperAdmin.
               As a merchant, you have complete control over your individual store&apos;s vacation mode and product availability.
             </p>
+            {/* [SINGLE-SELLER MODE] Public multi-vendor storefront link disabled
             {sp.storeSlug && (
               <a
                 href={`/store/${sp.storeSlug}`}
@@ -215,6 +216,7 @@ const SellerSettingsPage = () => {
                 <Store size={13} /> View Public Storefront <ExternalLink size={11} />
               </a>
             )}
+            */}
           </div>
         </div>
       </div>
