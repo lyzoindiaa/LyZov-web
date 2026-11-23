@@ -19,15 +19,17 @@ const router = express.Router();
 
 router.get("/", getProducts);
 router.get("/collections/:type", getProductCollection);
-router.get("/store/:storeSlug", getSellerStorefront);
+// [SINGLE-SELLER MODE] Disabled public multi-vendor storefront endpoint. Uncomment to re-enable multi-vendor.
+// router.get("/store/:storeSlug", getSellerStorefront);
 router.get("/seller/mine", protect, authorize("seller", "admin"), getMyProducts);
 router.get("/:slug", getProductBySlug);
 
+// [SINGLE-SELLER MODE] Bypassed requireVerifiedSeller KYC gate for single-seller catalog management.
 router.post(
   "/",
   protect,
   authorize("seller"),
-  requireVerifiedSeller,
+  // requireVerifiedSeller,
   upload.array("images", 6),
   createProductValidator,
   validate,
@@ -38,15 +40,15 @@ router.put(
   "/:id",
   protect,
   authorize("seller"),
-  requireVerifiedSeller,
+  // requireVerifiedSeller,
   upload.array("images", 6),
   updateProductValidator,
   validate,
   updateProduct
 );
 
-router.delete("/:id/images/:imageId", protect, authorize("seller"), requireVerifiedSeller, deleteProductImage);
-router.delete("/:id", protect, authorize("seller"), requireVerifiedSeller, deleteProduct);
+router.delete("/:id/images/:imageId", protect, authorize("seller"), /* requireVerifiedSeller, */ deleteProductImage);
+router.delete("/:id", protect, authorize("seller"), /* requireVerifiedSeller, */ deleteProduct);
 
 module.exports = router;
 

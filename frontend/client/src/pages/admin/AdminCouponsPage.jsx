@@ -205,8 +205,9 @@ const AdminCouponsPage = () => {
             {isSuperAdmin ? "Marketplace Coupons & Promotions" : "Store Coupons & Vouchers"}
           </h1>
           <p className="text-xs sm:text-sm text-[var(--ink-muted)] mt-1">
+            {/* [SINGLE-SELLER MODE] monitor seller-created vouchers copy replaced */}
             {isSuperAdmin
-              ? "Create platform-wide promotional discounts and monitor seller-created store vouchers across the marketplace."
+              ? "Create and manage promotional discounts and customer vouchers across the store."
               : "Create exclusive discount codes for your store to increase conversions and reward loyal customers."}
           </p>
         </div>
@@ -333,7 +334,7 @@ const AdminCouponsPage = () => {
               >
                 <option value="all">All Scopes</option>
                 <option value="platform">Platform-Wide (Admin)</option>
-                <option value="seller">Seller Stores Only</option>
+                {/* [SINGLE-SELLER MODE] <option value="seller">Seller Stores Only</option> */}
               </select>
             </div>
           )}

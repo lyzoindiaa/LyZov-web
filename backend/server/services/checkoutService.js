@@ -386,11 +386,13 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         rawSellerId && typeof rawSellerId === "object" && rawSellerId._id
           ? rawSellerId._id
           : rawSellerId;
+      /* [SINGLE-SELLER MODE] Commission/GST/TCS deductions disabled — 0% goes to admin, 100% to seller.
       const sellerUser = await User.findById(sellerId).select("sellerProfile");
       const fallbackRate =
         typeof sellerUser?.sellerProfile?.commissionRate === "number"
           ? sellerUser.sellerProfile.commissionRate
           : 10; // Default platform commission: 10%
+      */
 
       const sellerItemsPrice = round2(
         sellerItems.reduce((acc, it) => acc + it.price * it.quantity, 0)
@@ -408,8 +410,9 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
       // What the customer pays for this sub-order
       const sellerTotal = round2(sellerItemsPrice - sellerDiscount + sellerTax + sellerShipping);
       // What the seller is settled on: platform-funded discounts are added back
-      const sellerGross = round2(sellerTotal + platformFundedDiscount);
+      // const sellerGross = round2(sellerTotal + platformFundedDiscount);
 
+      /* [SINGLE-SELLER MODE] Multi-vendor commission rule & statutory deductions commented out.
       // Resolve dynamic commission rule (Seller > Category > Global > Fallback)
       const sampleCategoryId = sellerItems[0]?.category || sellerItems[0]?.product?.category || null;
       const rule = await resolveCommissionRule({
@@ -423,6 +426,15 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         sellerTotal: sellerGross,
         rule,
       });
+      */
+      const financials = {
+        commissionRate: 0,
+        commissionAmount: 0,
+        gstOnCommission: 0,
+        tcsAmount: 0,
+        sellerEarnings: sellerTotal,
+        settlementPeriod: "",
+      };
 
       const subOrderNumber = `${order.orderNumber}-S${String(subOrderIndex++).padStart(2, "0")}`;
 
@@ -454,6 +466,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
         statusHistory: [{ status: "pending", note: "Sub-order created and waiting for seller processing" }],
       });
 
+      /* [SINGLE-SELLER MODE] Multi-vendor Payout ledger creation disabled. Uncomment when re-enabling multi-vendor.
       // Create linked Payout ledger entry
       const returnWindowDays = 7;
       const eligibleDate = new Date(Date.now() + returnWindowDays * 24 * 60 * 60 * 1000);
@@ -476,6 +489,7 @@ const createOrderFromSnapshot = async ({ user, snapshot, shippingAddress, paymen
 
       subOrder.payoutId = payout._id;
       await subOrder.save();
+      */
       createdSubOrders.push(subOrder._id);
     }
 

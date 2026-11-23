@@ -215,7 +215,7 @@ const OrderDetailsPage = () => {
         </div>
       )}
 
-      {/* Multi-Seller Package Tracking */}
+      {/* [SINGLE-SELLER MODE] Multi-Seller Package Tracking
       {order.subOrders && order.subOrders.length > 1 && (
         <div className="card-surface p-4 border border-hairline flex flex-col gap-3 dark:border-hairline-dark">
           <div className="flex items-center gap-2">
@@ -245,6 +245,7 @@ const OrderDetailsPage = () => {
           </div>
         </div>
       )}
+      */}
 
       {/* Items Section */}
       <div className="card-surface flex flex-col divide-y divide-hairline p-5 dark:divide-hairline-dark">

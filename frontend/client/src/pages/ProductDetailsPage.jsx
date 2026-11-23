@@ -893,7 +893,7 @@ const ProductDetailsPage = () => {
                 )}
               </div>
 
-              {/* Multi-Seller Attribution */}
+              {/* [SINGLE-SELLER MODE] Multi-Seller Attribution
               {product.seller && (
                 <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8125rem", color: "var(--ink-muted)" }}>
                   <ShieldCheck size={14} style={{ color: "var(--accent)" }} />
@@ -912,6 +912,7 @@ const ProductDetailsPage = () => {
                   </Link>
                 </div>
               )}
+              */}
             </div>
 
 

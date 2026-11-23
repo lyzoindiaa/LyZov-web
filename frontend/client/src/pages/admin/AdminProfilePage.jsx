@@ -271,8 +271,8 @@ const AdminProfilePage = () => {
       if (res.data?.user) dispatch(setUser(res.data.user));
       else dispatch(fetchCurrentUser());
 
-      toast.success("Store details saved! Moving to Step 2: KYC Identification...");
-      setActiveTab("kyc");
+      toast.success("Store details saved!");
+      // [SINGLE-SELLER MODE] setActiveTab("kyc");
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update store profile");
     }
@@ -447,13 +447,17 @@ const AdminProfilePage = () => {
       {/* Page Header */}
       <div>
         <h1 className="font-display text-2xl lg:text-3xl tracking-tightest">Seller Profile & Business Settings</h1>
+        {/* [SINGLE-SELLER MODE] KYC & bank payout tabs hidden
         <p className="text-sm text-stone mt-1">
           Complete mandatory store info, PAN/Aadhaar identification (AES-256 encrypted), and bank payout details.
         </p>
+        */}
+        <p className="text-sm text-stone mt-1">
+          Update your store details, official contact info, and account password.
+        </p>
       </div>
 
-      {/* KYC Status Banner */}
-      {renderKycStatusBanner()}
+      {/* [SINGLE-SELLER MODE] KYC Status Banner disabled: {renderKycStatusBanner()} */}
 
       {/* Progressive Step Tabs Bar */}
       <div className="flex flex-wrap gap-2 border-b border-hairline pb-2 dark:border-hairline-dark">
@@ -477,7 +481,7 @@ const AdminProfilePage = () => {
           )}
         </button>
 
-        {/* Step 2 Tab */}
+        {/* [SINGLE-SELLER MODE] Step 2 (PAN & KYC) and Step 3 (Address & Bank Payouts) tabs hidden
         <button
           type="button"
           onClick={() => handleTabClick("kyc")}
@@ -501,7 +505,6 @@ const AdminProfilePage = () => {
           )}
         </button>
 
-        {/* Step 3 Tab */}
         <button
           type="button"
           onClick={() => handleTabClick("bank")}
@@ -524,6 +527,7 @@ const AdminProfilePage = () => {
             <span className="w-2 h-2 rounded-full bg-amber-500 ml-1" title="Incomplete" />
           )}
         </button>
+        */}
 
         {/* Security Tab */}
         <button
@@ -544,9 +548,9 @@ const AdminProfilePage = () => {
         <div className="card-surface p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
             <div>
-              <h3 className="font-display text-lg font-bold">Step 1: Store & Official Contact</h3>
+              <h3 className="font-display text-lg font-bold">Store & Official Contact</h3>
               <p className="text-xs text-stone mt-0.5">
-                All fields marked with <span className="text-rose-500 font-bold">*</span> are mandatory to unlock Step 2.
+                All fields marked with <span className="text-rose-500 font-bold">*</span> are required.
               </p>
             </div>
             {isStep1Complete && (
@@ -651,9 +655,9 @@ const AdminProfilePage = () => {
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-stone">Saving will automatically unlock Step 2 (KYC)</span>
+              <span className="text-xs text-stone">Update your store name and contact details</span>
               <Button type="submit" isLoading={storeForm.formState.isSubmitting} className="flex items-center gap-2">
-                <span>Save & Continue to Step 2</span>
+                <span>Save Store Info</span>
                 <ArrowRight size={16} />
               </Button>
             </div>
@@ -661,8 +665,8 @@ const AdminProfilePage = () => {
         </div>
       )}
 
-      {/* Tab 2: PAN & KYC Identification */}
-      {activeTab === "kyc" && (
+      {/* [SINGLE-SELLER MODE] Tab 2 (PAN & KYC Identification) hidden in single-seller mode */}
+      {false && activeTab === "kyc" && (
         <div className="card-surface p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
             <div>
@@ -1009,8 +1013,8 @@ const AdminProfilePage = () => {
         </div>
       )}
 
-      {/* Tab 3: Address & Bank Settlement */}
-      {activeTab === "bank" && (
+      {/* [SINGLE-SELLER MODE] Tab 3 (Address & Bank Settlement) hidden in single-seller mode */}
+      {false && activeTab === "bank" && (
         <div className="card-surface p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
             <div>

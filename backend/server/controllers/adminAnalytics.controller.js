@@ -24,14 +24,17 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       await Promise.all([
         SubOrder.aggregate([
           { $match: sellerFilter },
-          { $group: { _id: null, total: { $sum: "$sellerEarnings" } } },
+          // [SINGLE-SELLER MODE] 100% revenue goes to the seller (no commission/tax deduction).
+          // { $group: { _id: null, total: { $sum: "$sellerEarnings" } } },
+          { $group: { _id: null, total: { $sum: "$totalPrice" } } },
         ]),
         SubOrder.aggregate([
           { $match: sellerFilter },
           {
             $group: {
               _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-              revenue: { $sum: "$sellerEarnings" },
+              // revenue: { $sum: "$sellerEarnings" },
+              revenue: { $sum: "$totalPrice" },
             },
           },
           { $sort: { _id: 1 } },
@@ -121,7 +124,9 @@ exports.getRevenueByDay = asyncHandler(async (req, res) => {
     : { orderStatus: { $nin: ["cancelled", "refunded"] } };
 
   const Model = isSeller ? SubOrder : Order;
-  const sumField = isSeller ? "$sellerEarnings" : "$totalPrice";
+  // [SINGLE-SELLER MODE] 100% revenue belongs to the seller (no commission/tax deduction).
+  // const sumField = isSeller ? "$sellerEarnings" : "$totalPrice";
+  const sumField = "$totalPrice";
 
   const revenueByDay = await Model.aggregate([
     { $match: matchFilter },

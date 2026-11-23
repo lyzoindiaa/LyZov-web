@@ -420,10 +420,10 @@ class EmailService {
       subject,
       text,
       html,
-      relatedUser: user?._id || order.user,
-      relatedOrder: order._id,
+      relatedUser: user?._id || order.user || order.customer,
+      relatedOrder: order.parentOrder || order._id,
       metadata: {
-        orderNumber: order.orderNumber,
+        orderNumber: order.subOrderNumber || order.orderNumber,
         platformLabel,
         trackingNumber,
         trackingUrl,
@@ -634,6 +634,8 @@ class EmailService {
         scope,
       },
     });
+  }
+
   async sendWeeklyPayoutReceipt({
     seller,
     orderCount,

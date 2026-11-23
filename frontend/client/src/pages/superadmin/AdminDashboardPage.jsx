@@ -15,13 +15,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { adminService } from "../../services/adminService";
-import InviteSellerModal from "./InviteSellerModal";
+// [SINGLE-SELLER MODE] import InviteSellerModal from "./InviteSellerModal";
 import { toast } from "react-toastify";
 
 const AdminDashboardPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  // [SINGLE-SELLER MODE] const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const fetchOverview = async () => {
     try {
@@ -69,8 +69,9 @@ const AdminDashboardPage = () => {
               Super Admin Dashboard
             </h1>
           </div>
+          {/* [SINGLE-SELLER MODE] <p style={{ margin: "0.25rem 0 0", fontSize: "0.875rem", color: "var(--ink-muted)" }}>Platform governance, merchant onboarding, and customer directory</p> */}
           <p style={{ margin: "0.25rem 0 0", fontSize: "0.875rem", color: "var(--ink-muted)" }}>
-            Platform governance, merchant onboarding, and customer directory
+            Store overview and customer directory
           </p>
         </div>
 
@@ -96,6 +97,7 @@ const AdminDashboardPage = () => {
             Refresh
           </button>
 
+          {/* [SINGLE-SELLER MODE] Invite seller button disabled
           <button
             onClick={() => setInviteModalOpen(true)}
             className="btn-accent"
@@ -113,6 +115,7 @@ const AdminDashboardPage = () => {
             <UserPlus size={16} />
             <span>Invite New Seller</span>
           </button>
+          */}
         </div>
       </div>
 
@@ -156,7 +159,7 @@ const AdminDashboardPage = () => {
           </div>
         </div>
 
-        {/* Total Sellers */}
+        {/* [SINGLE-SELLER MODE] Multi-vendor KPI cards (Total Merchants, KYC Pending, Add Seller) hidden
         <div
           style={{
             backgroundColor: "var(--surface)",
@@ -188,7 +191,6 @@ const AdminDashboardPage = () => {
           </div>
         </div>
 
-        {/* KYC Pending Reviews */}
         <div
           style={{
             backgroundColor: "var(--surface)",
@@ -218,7 +220,6 @@ const AdminDashboardPage = () => {
           </div>
         </div>
 
-        {/* Quick Actions Card */}
         <div
           style={{
             backgroundColor: "var(--surface)",
@@ -261,11 +262,12 @@ const AdminDashboardPage = () => {
             <UserPlus size={14} /> Open Invite Modal
           </button>
         </div>
+        */}
       </div>
 
-      {/* Grid: Recent Sellers & Recent Customers */}
+      {/* Grid: Recent Customers */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: "1.5rem" }}>
-        {/* Recent Sellers */}
+        {/* [SINGLE-SELLER MODE] Recent Sellers card hidden
         <div
           style={{
             backgroundColor: "var(--surface)",
@@ -370,6 +372,7 @@ const AdminDashboardPage = () => {
             )}
           </div>
         </div>
+        */}
 
         {/* Recent Customers */}
         <div
@@ -465,12 +468,13 @@ const AdminDashboardPage = () => {
         </div>
       </div>
 
-      {/* Invite Seller Modal */}
+      {/* [SINGLE-SELLER MODE] Invite Seller Modal disabled
       <InviteSellerModal
         isOpen={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         onSellerCreated={() => fetchOverview()}
       />
+      */}
     </div>
   );
 };

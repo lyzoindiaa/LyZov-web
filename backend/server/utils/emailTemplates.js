@@ -533,7 +533,8 @@ const shipmentTrackingTemplate = ({
   emailSubject,
 }) => {
   const clientUrl = process.env.CLIENT_URL || "https://lyzov.com";
-  const orderUrl = `${clientUrl}/dashboard/orders/${order._id}`;
+  const orderNum = order.subOrderNumber || order.orderNumber;
+  const orderUrl = `${clientUrl}/dashboard/orders/${order.parentOrder || order._id}`;
   const trackPageUrl = `${clientUrl}/track`;
   const recipientName = order.shippingAddress?.fullName || user?.name || "Valued Customer";
   const platform = platformLabel || "Courier";
@@ -553,7 +554,7 @@ const shipmentTrackingTemplate = ({
       Shipment Dispatched
     </span>
     <h2 style="margin: 6px 0 12px; font-size: 22px; color: ${textDark}; font-weight: 700;">
-      Tracking for Order #${order.orderNumber}
+      Tracking for Order #${orderNum}
     </h2>
     ${bodyParagraphs || `<p style="margin: 0 0 12px; font-size: 15px; color: ${textMuted}; line-height: 1.65;">Hello ${recipientName}, your order has been shipped.</p>`}
 
@@ -587,14 +588,14 @@ const shipmentTrackingTemplate = ({
     </div>
   `;
 
-  const defaultSubject = `Order #${order.orderNumber} shipped — ${platform} tracking ${trackingNumber}`;
+  const defaultSubject = `Order #${orderNum} shipped — ${platform} tracking ${trackingNumber}`;
 
   return {
     subject: emailSubject?.trim() || defaultSubject,
-    text: emailBody || `Order #${order.orderNumber}\nPlatform: ${platform}\nTracking: ${trackingNumber}\n${trackingUrl ? `Track: ${trackingUrl}\n` : ""}${orderUrl}`,
+    text: emailBody || `Order #${orderNum}\nPlatform: ${platform}\nTracking: ${trackingNumber}\n${trackingUrl ? `Track: ${trackingUrl}\n` : ""}${orderUrl}`,
     html: baseEmailWrapper({
-      title: `Shipment #${order.orderNumber}`,
-      preheader: `Your order #${order.orderNumber} tracking via ${platform}.`,
+      title: `Shipment #${orderNum}`,
+      preheader: `Your order #${orderNum} tracking via ${platform}.`,
       content,
     }),
   };

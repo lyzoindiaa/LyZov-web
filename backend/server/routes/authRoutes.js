@@ -47,7 +47,8 @@ const refreshLimiter = rateLimit({
 });
 
 router.post("/register", authLimiter, registerValidator, validate, register);
-router.post("/seller/register", authLimiter, registerSellerValidator, validate, registerSeller);
+// [SINGLE-SELLER MODE] Disabled public multi-vendor seller registration. Uncomment to re-enable multi-vendor.
+// router.post("/seller/register", authLimiter, registerSellerValidator, validate, registerSeller);
 router.post("/login", authLimiter, loginValidator, validate, login);
 router.get("/google", googleLogin);
 router.get("/google/callback", googleCallback);

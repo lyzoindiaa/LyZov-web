@@ -43,10 +43,11 @@ const verifyCronAuth = (req, res, next) => {
 // @route   GET /api/cron/process-settlements
 router.all("/process-settlements", verifyCronAuth, async (req, res, next) => {
   try {
-    const result = await runSettlementMaturityJob();
-    return sendSuccess(res, 200, "Settlement maturity job executed successfully", {
+    // [SINGLE-SELLER MODE] Payout maturity job disabled; uncomment below to re-enable multi-vendor settlements.
+    // const result = await runSettlementMaturityJob();
+    return sendSuccess(res, 200, "Settlement maturity job skipped (single-seller mode)", {
       executedAt: new Date(),
-      ...result,
+      skipped: true,
     });
   } catch (err) {
     next(err);

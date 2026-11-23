@@ -6,11 +6,12 @@ const emailService = require("../services/emailService");
  */
 async function loadCustomerContext(order) {
   let customer = null;
-  if (order.user) {
-    if (typeof order.user === "object" && order.user.email) {
-      customer = order.user;
+  const userRef = order.user || order.customer;
+  if (userRef) {
+    if (typeof userRef === "object" && userRef.email) {
+      customer = userRef;
     } else if (typeof User.findById === "function") {
-      const query = User.findById(order.user);
+      const query = User.findById(userRef);
       if (query && typeof query.select === "function") {
         customer = await query.select("name email emailPreferences").lean();
       } else {
@@ -25,7 +26,7 @@ async function loadCustomerContext(order) {
   if (!email) return null;
 
   const recipientUser = {
-    _id: customer?._id || order.user,
+    _id: customer?._id || userRef,
     name: customer?.name || order.shippingAddress?.fullName || "Valued Customer",
     email,
     emailPreferences: customer?.emailPreferences,
@@ -38,9 +39,10 @@ async function loadCustomerContext(order) {
  * Send order status / tracking update email to the customer (non-blocking friendly).
  */
 async function emailCustomerOrderStatusUpdate(order, { newStatus, note, trackingNumber } = {}) {
+  const orderNum = order.subOrderNumber || order.orderNumber;
   const ctx = await loadCustomerContext(order);
   if (!ctx) {
-    console.warn(`[OrderEmail] Skipped status email — no recipient for order #${order.orderNumber}`);
+    console.warn(`[OrderEmail] Skipped status email — no recipient for order #${orderNum}`);
     return { success: false, skipped: true, reason: "no_email" };
   }
 
@@ -53,12 +55,12 @@ async function emailCustomerOrderStatusUpdate(order, { newStatus, note, tracking
   });
 
   if (result?.success && !result?.simulated) {
-    console.log(`[OrderEmail] Status/tracking email sent for #${order.orderNumber} → ${ctx.email}`);
+    console.log(`[OrderEmail] Status/tracking email sent for #${orderNum} → ${ctx.email}`);
   } else if (result?.simulated) {
-    console.log(`[OrderEmail] Status email simulated for #${order.orderNumber} → ${ctx.email}`);
+    console.log(`[OrderEmail] Status email simulated for #${orderNum} → ${ctx.email}`);
   } else if (!result?.success) {
     console.error(
-      `[OrderEmail] Failed status email for #${order.orderNumber} → ${ctx.email}:`,
+      `[OrderEmail] Failed status email for #${orderNum} → ${ctx.email}:`,
       result?.error || "unknown error"
     );
   }
@@ -67,9 +69,10 @@ async function emailCustomerOrderStatusUpdate(order, { newStatus, note, tracking
 }
 
 async function emailCustomerOrderCancelled(order, reason) {
+  const orderNum = order.subOrderNumber || order.orderNumber;
   const ctx = await loadCustomerContext(order);
   if (!ctx) {
-    console.warn(`[OrderEmail] Skipped cancellation email — no recipient for order #${order.orderNumber}`);
+    console.warn(`[OrderEmail] Skipped cancellation email — no recipient for order #${orderNum}`);
     return { success: false, skipped: true, reason: "no_email" };
   }
 
@@ -81,9 +84,10 @@ async function emailCustomerOrderCancelled(order, reason) {
 }
 
 async function emailCustomerShipmentTracking(order, payload) {
+  const orderNum = order.subOrderNumber || order.orderNumber;
   const ctx = await loadCustomerContext(order);
   if (!ctx) {
-    console.warn(`[OrderEmail] Skipped shipment email — no recipient for order #${order.orderNumber}`);
+    console.warn(`[OrderEmail] Skipped shipment email — no recipient for order #${orderNum}`);
     return { success: false, skipped: true, reason: "no_email" };
   }
 

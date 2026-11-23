@@ -111,9 +111,9 @@ const AdminOrderDetailsPage = () => {
     };
   };
 
-  const loadOrder = async () => {
+  const loadOrder = async ({ silent = false } = {}) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const res = await orderService.getOrderById(orderId);
       const o = res.data;
       setOrder(o);
@@ -131,10 +131,12 @@ const AdminOrderDetailsPage = () => {
         setEmailBody(initialTpl.body);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Could not load order");
-      navigate("/seller/orders");
+      if (!silent) {
+        toast.error(err.response?.data?.message || "Could not load order");
+        navigate("/seller/orders");
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -218,9 +220,7 @@ const AdminOrderDetailsPage = () => {
       if (sendEmail) {
         setIsSendingEmail(true);
         const res = await orderService.notifyOrderShipment(orderId, payload);
-        if (res.data?.order) {
-          setOrder(res.data.order);
-        }
+        await loadOrder({ silent: true });
         if (res.data?.emailSent) {
           toast.success(`Shipment details saved & email sent to customer! ✓`);
         } else if (res.data?.emailError) {
@@ -230,10 +230,8 @@ const AdminOrderDetailsPage = () => {
         }
       } else {
         setIsSavingShipment(true);
-        const res = await orderService.saveOrderShipment(orderId, payload);
-        if (res.data?.order) {
-          setOrder(res.data.order);
-        }
+        await orderService.saveOrderShipment(orderId, payload);
+        await loadOrder({ silent: true });
         toast.success(`Shipment details saved & in-app notification sent to customer! ✓`);
       }
       setIsEditingTracking(false);
@@ -255,8 +253,8 @@ const AdminOrderDetailsPage = () => {
   const updateOrder = async (payload, message) => {
     try {
       setIsUpdatingStatus(true);
-      const res = await orderService.updateOrderStatus(orderId, payload);
-      setOrder(res.data);
+      await orderService.updateOrderStatus(orderId, payload);
+      await loadOrder({ silent: true });
       toast.success(message);
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update order");

@@ -129,6 +129,54 @@ const getMyOrders = asyncHandler(async (req, res) => {
   });
 });
 
+// [SINGLE-SELLER MODE] Resolve SubOrder._id -> parent Order._id when connected, and attach parent return/tracking metadata cleanly.
+const resolveParentOrderId = async (id) => {
+  if (mongoose.connection?.readyState === 1 && mongoose.isValidObjectId(id)) {
+    const sub = await SubOrder.findById(id).select("parentOrder").lean();
+    if (sub?.parentOrder) return sub.parentOrder;
+  }
+  return id;
+};
+
+const attachParentReturnMetadata = async (formatted, parentOrderId) => {
+  if (!parentOrderId || mongoose.connection?.readyState !== 1) return formatted;
+  const parent = await Order.findById(parentOrderId)
+    .select("orderNumber returnStatus returnReason isExchange exchangeDetails")
+    .lean();
+  if (parent) {
+    formatted.parentOrderNumber = parent.orderNumber;
+    formatted.returnStatus = parent.returnStatus;
+    formatted.returnReason = parent.returnReason;
+    formatted.isExchange = parent.isExchange;
+    formatted.exchangeDetails = parent.exchangeDetails;
+  }
+  return formatted;
+};
+
+const syncSubOrderShipmentToParent = async (subOrder, { platformLabel }) => {
+  if (!subOrder?.parentOrder) return;
+  const trackingPatch = {
+    trackingNumber: subOrder.trackingNumber,
+    shippingPlatform: subOrder.shippingPlatform,
+    shippingPlatformLabel: subOrder.shippingPlatformLabel,
+    trackingUrl: subOrder.trackingUrl,
+    trackingAssignedAt: subOrder.trackingAssignedAt,
+  };
+  const siblings = await SubOrder.find({ parentOrder: subOrder.parentOrder });
+  const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
+  const updateOps = { $set: trackingPatch };
+  if (allShipped) {
+    updateOps.$set.orderStatus = "shipped";
+    updateOps.$push = {
+      statusHistory: {
+        status: "shipped",
+        note: `Dispatched via ${platformLabel}. AWB: ${subOrder.trackingNumber}`,
+      },
+    };
+  }
+  await Order.findByIdAndUpdate(subOrder.parentOrder, updateOps);
+};
+
 // @desc    Get single order by id
 // @route   GET /api/orders/:id
 // @access  Private
@@ -150,6 +198,7 @@ const getOrderById = asyncHandler(async (req, res) => {
       const formatted = subOrder.toObject();
       formatted.orderNumber = subOrder.subOrderNumber;
       formatted.user = subOrder.customer;
+      await attachParentReturnMetadata(formatted, subOrder.parentOrder);
       return sendSuccess(res, 200, "Sub-order fetched successfully", formatted);
     }
   }
@@ -178,6 +227,7 @@ const getOrderById = asyncHandler(async (req, res) => {
     const formatted = sellerSubOrder.toObject();
     formatted.orderNumber = sellerSubOrder.subOrderNumber;
     formatted.user = sellerSubOrder.customer;
+    await attachParentReturnMetadata(formatted, sellerSubOrder.parentOrder);
     return sendSuccess(res, 200, "Sub-order fetched successfully", formatted);
   }
 
@@ -304,9 +354,10 @@ const cancelOrder = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/admin-cancel
 // @access  Private/Admin
 const adminCancelOrder = asyncHandler(async (req, res) => {
+  const targetOrderId = await resolveParentOrderId(req.params.id);
   const claimedOrder = await Order.findOneAndUpdate(
     {
-      _id: req.params.id,
+      _id: targetOrderId,
       cancellationClaimedAt: null,
       orderStatus: { $in: ["pending", "processing"] },
     },
@@ -315,7 +366,7 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
   );
 
   if (!claimedOrder) {
-    const existing = await Order.findById(req.params.id);
+    const existing = await Order.findById(targetOrderId);
     if (!existing) throw ApiError.notFound("Order not found");
     if (existing.cancellationClaimedAt || ["cancelled", "refunded"].includes(existing.orderStatus)) {
       throw ApiError.badRequest("Order is already cancelled or cancellation is in progress");
@@ -464,7 +515,8 @@ const returnRequest = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/approve-return
 // @access  Private/Admin
 const approveReturn = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  const targetOrderId = await resolveParentOrderId(req.params.id);
+  const order = await Order.findById(targetOrderId);
   if (!order) throw ApiError.notFound("Order not found");
 
   if (order.returnStatus !== "Requested") {
@@ -551,7 +603,8 @@ const approveReturn = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/process-exchange
 // @access  Private/Admin
 const processExchange = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  const targetOrderId = await resolveParentOrderId(req.params.id);
+  const order = await Order.findById(targetOrderId);
   if (!order) throw ApiError.notFound("Order not found");
 
   if (!order.isExchange) {
@@ -660,11 +713,30 @@ const getAllOrders = asyncHandler(async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
+    let parentReturnMap = new Map();
+    if (mongoose.connection?.readyState === 1 && subOrders.length > 0) {
+      const parentIds = subOrders.map((so) => so.parentOrder).filter(Boolean);
+      if (parentIds.length > 0) {
+        const parents = await Order.find({ _id: { $in: parentIds } })
+          .select("orderNumber returnStatus returnReason isExchange exchangeDetails")
+          .lean();
+        parentReturnMap = new Map(parents.map((p) => [String(p._id), p]));
+      }
+    }
+
     // Format sub-order objects so seller portal renders seamlessly
     const formatted = subOrders.map((so) => {
       const obj = so.toObject();
       obj.orderNumber = so.subOrderNumber; // Alias for UI table
       obj.user = so.customer;
+      const parent = parentReturnMap.get(String(so.parentOrder));
+      if (parent) {
+        obj.parentOrderNumber = parent.orderNumber;
+        obj.returnStatus = parent.returnStatus;
+        obj.returnReason = parent.returnReason;
+        obj.isExchange = parent.isExchange;
+        obj.exchangeDetails = parent.exchangeDetails;
+      }
       return obj;
     });
 
@@ -731,11 +803,17 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
     await subOrder.save();
 
-    // Check sibling SubOrders and sync parent Order status
+    // Check sibling SubOrders and sync parent Order status & tracking
     if (subOrder.parentOrder) {
       const siblings = await SubOrder.find({ parentOrder: subOrder.parentOrder });
       const parentOrder = await Order.findById(subOrder.parentOrder);
       if (parentOrder && siblings.length > 0) {
+        let parentDirty = false;
+        if (trackingNumber !== undefined) {
+          parentOrder.trackingNumber = subOrder.trackingNumber;
+          parentOrder.trackingAssignedAt = subOrder.trackingAssignedAt;
+          parentDirty = true;
+        }
         const allDelivered = siblings.every((s) => s.orderStatus === "delivered");
         const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
         if (!Array.isArray(parentOrder.statusHistory)) parentOrder.statusHistory = [];
@@ -744,10 +822,13 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
           parentOrder.isDelivered = true;
           parentOrder.deliveredAt = new Date();
           parentOrder.statusHistory.push({ status: "delivered", note: "All seller packages delivered" });
-          await parentOrder.save();
+          parentDirty = true;
         } else if (allShipped && !["shipped", "delivered"].includes(parentOrder.orderStatus)) {
           parentOrder.orderStatus = "shipped";
           parentOrder.statusHistory.push({ status: "shipped", note: "All seller packages dispatched" });
+          parentDirty = true;
+        }
+        if (parentDirty) {
           await parentOrder.save();
         }
       }
@@ -755,6 +836,8 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
     const formatted = subOrder.toObject();
     formatted.orderNumber = subOrder.subOrderNumber;
+    formatted.user = subOrder.customer;
+    await attachParentReturnMetadata(formatted, subOrder.parentOrder);
     return sendSuccess(res, 200, "Sub-order status updated successfully", formatted);
   }
 
@@ -940,14 +1023,7 @@ const saveOrderShipment = asyncHandler(async (req, res) => {
   await order.save();
 
   if (isSubOrder && order.parentOrder) {
-    const siblings = await SubOrder.find({ parentOrder: order.parentOrder });
-    const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
-    if (allShipped) {
-      await Order.findByIdAndUpdate(order.parentOrder, {
-        $set: { orderStatus: "shipped" },
-        $push: { statusHistory: { status: "shipped", note: "All seller packages dispatched" } },
-      });
-    }
+    await syncSubOrderShipmentToParent(order, { platformLabel });
   }
 
   const customerId = order.customer || order.user;
@@ -1000,25 +1076,19 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
   await order.save();
 
   if (isSubOrder && order.parentOrder) {
-    const siblings = await SubOrder.find({ parentOrder: order.parentOrder });
-    const allShipped = siblings.every((s) => ["shipped", "delivered"].includes(s.orderStatus));
-    if (allShipped) {
-      await Order.findByIdAndUpdate(order.parentOrder, {
-        $set: { orderStatus: "shipped" },
-        $push: { statusHistory: { status: "shipped", note: "All seller packages dispatched" } },
-      });
-    }
+    await syncSubOrderShipmentToParent(order, { platformLabel });
   }
 
   const ctx = await loadCustomerContext(order);
 
-  if (sendInAppNotification && order.user) {
+  const customerId = order.customer || order.user;
+  if (sendInAppNotification && customerId) {
     await Notification.create({
-      user: order.user,
+      user: customerId,
       title: "Your order has shipped",
-      message: `Order #${order.orderNumber} dispatched via ${platformLabel}. Tracking: ${order.trackingNumber}.`,
+      message: `Order #${order.subOrderNumber || order.orderNumber} dispatched via ${platformLabel}. Tracking: ${order.trackingNumber}.`,
       type: "order",
-      link: `/dashboard/orders/${order._id}`,
+      link: `/dashboard/orders/${order.parentOrder || order._id}`,
     }).catch(() => {});
   }
 
@@ -1065,7 +1135,16 @@ const notifyOrderShipment = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/:id/send-tracking-email
 // @access  Private/Seller
 const sendTrackingEmail = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  let order = null;
+  if (req.user?.role === "seller") {
+    order = await SubOrder.findOne({
+      $or: [{ _id: req.params.id }, { subOrderNumber: req.params.id }],
+      seller: req.user._id,
+    });
+  }
+  if (!order) {
+    order = await Order.findById(req.params.id);
+  }
   if (!order) throw ApiError.notFound("Order not found");
 
   if (!order.trackingNumber) {
@@ -1082,7 +1161,7 @@ const sendTrackingEmail = asyncHandler(async (req, res) => {
   const emailBody =
     buildDefaultShipmentEmailText({
       recipientName: ctx.recipientUser?.name,
-      orderNumber: order.orderNumber,
+      orderNumber: order.subOrderNumber || order.orderNumber,
       platformLabel,
       trackingNumber: order.trackingNumber,
       trackingUrl,
