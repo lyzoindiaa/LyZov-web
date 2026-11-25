@@ -658,26 +658,55 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 }
 
 .about-hero-slide {
+  position: relative;
   flex: 0 0 100%;
   width: 100%;
   height: 100%;
   display: block;
   text-decoration: none;
   overflow: hidden;
+  background: var(--bg-subtle);
+}
+
+.about-hero-backdrop {
+  position: absolute;
+  inset: -16px;
+  background-size: cover;
+  background-position: center center;
+  filter: blur(28px) saturate(1.06);
+  transform: scale(1.1);
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .about-hero-image {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
   display: block;
   transform: scale(1);
   transition: transform 0.9s ease;
 }
 
+@media (min-width: 769px) {
+  .about-hero-image {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 3.5%, #000 96.5%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 3.5%, #000 96.5%, transparent 100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero-image {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+  }
+}
+
 .about-hero-image-wrap:hover .about-hero-image {
-  transform: scale(1.04);
+  transform: scale(1.02);
 }
 
 @media (prefers-reduced-motion: reduce) {
