@@ -15,20 +15,20 @@ const footerColumns = [
   {
     title: "Help & Support",
     links: [
-      { label: "Track Your Order", to: "/dashboard/orders" },
-      { label: "Shipping Policy", to: "/shipping-delivery-policy" },
-      { label: "7-Day Replacement", to: "/return-exchange-policy" },
+      { label: "Track Your Order", to: "/track" },
+      { label: "Shipping Policy", to: "/policies/shipping-delivery-policy" },
+      { label: "7-Day Replacement", to: "/policies/return-exchange-policy" },
       { label: "Contact & Concierge", to: "/contact" },
     ],
   },
   {
     title: "Policies & Legal",
     links: [
-      { label: "Privacy Policy", to: "/privacy-policy" },
-      { label: "Terms & Conditions", to: "/terms-and-conditions" },
-      { label: "Return & Exchange", to: "/return-exchange-policy" },
-      { label: "Refund & Cancellation", to: "/refund-cancellation-policy" },
-      { label: "Shipping & Delivery", to: "/shipping-delivery-policy" },
+      { label: "Privacy Policy", to: "/policies/privacy-policy" },
+      { label: "Terms & Conditions", to: "/policies/terms-and-conditions" },
+      { label: "Return & Exchange", to: "/policies/return-exchange-policy" },
+      { label: "Refund & Cancellation", to: "/policies/refund-cancellation-policy" },
+      { label: "Shipping & Delivery", to: "/policies/shipping-delivery-policy" },
     ],
   },
   {
@@ -51,7 +51,7 @@ const Footer = () => {
       <div style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
         <div className="container-page py-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Link to="/shipping-delivery-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
+            <Link to="/policies/shipping-delivery-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
               <div
                 style={{
                   width: "2.5rem",
@@ -68,7 +68,7 @@ const Footer = () => {
                 <Truck size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Fast Pan-India Delivery</h5>
+                <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Fast Pan-India Delivery</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Secure, insured shipping on every order</p>
               </div>
             </Link>
@@ -90,12 +90,12 @@ const Footer = () => {
                 <ShieldCheck size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Quality You Can Trust</h5>
+                <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>Quality You Can Trust</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Handpicked products, inspected before dispatch</p>
               </div>
             </div>
 
-            <Link to="/return-exchange-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
+            <Link to="/policies/return-exchange-policy" className="flex items-center gap-3 group text-left hover:opacity-90 transition-opacity">
               <div
                 style={{
                   width: "2.5rem",
@@ -112,7 +112,7 @@ const Footer = () => {
                 <RotateCcw size={18} />
               </div>
               <div>
-                <h5 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>7-Day Easy Replacement</h5>
+                <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--ink)" }}>7-Day Easy Replacement</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)" }}>Simple returns if something&apos;s not right</p>
               </div>
             </Link>
@@ -152,7 +152,7 @@ const Footer = () => {
           {/* Link columns */}
           {footerColumns.map((col) => (
             <div key={col.title}>
-              <h4
+              <h3
                 style={{
                   fontSize: "0.75rem",
                   fontWeight: 700,
@@ -163,7 +163,7 @@ const Footer = () => {
                 }}
               >
                 {col.title}
-              </h4>
+              </h3>
               <ul style={{ display: "flex", flexDirection: "column", gap: "0.75rem", listStyle: "none", padding: 0, margin: 0 }}>
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -194,11 +194,11 @@ const Footer = () => {
         >
           <p>© {new Date().getFullYear()} LyZov. All rights reserved.</p>
           <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
-            <Link to="/privacy-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Privacy Policy</Link>
-            <Link to="/terms-and-conditions" className="nav-link" style={{ fontSize: "0.75rem" }}>Terms & Conditions</Link>
-            <Link to="/return-exchange-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Return & Exchange</Link>
-            <Link to="/refund-cancellation-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Refunds</Link>
-            <Link to="/shipping-delivery-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Shipping</Link>
+            <Link to="/policies/privacy-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Privacy Policy</Link>
+            <Link to="/policies/terms-and-conditions" className="nav-link" style={{ fontSize: "0.75rem" }}>Terms &amp; Conditions</Link>
+            <Link to="/policies/return-exchange-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Return &amp; Exchange</Link>
+            <Link to="/policies/refund-cancellation-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Refunds</Link>
+            <Link to="/policies/shipping-delivery-policy" className="nav-link" style={{ fontSize: "0.75rem" }}>Shipping</Link>
           </div>
         </div>
       </div>

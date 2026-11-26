@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const connectDB = async (retries = 5, delay = 5000) => {
+const connectDB = async (retries = 5, delay = 5000, serverSelectionTimeoutMS = 10000) => {
   if (!process.env.MONGO_URI) {
     throw new Error("MONGO_URI is not configured in the backend environment");
   }
@@ -14,7 +14,7 @@ const connectDB = async (retries = 5, delay = 5000) => {
     try {
       const conn = await mongoose.connect(process.env.MONGO_URI, {
         autoIndex: process.env.NODE_ENV !== "production",
-        serverSelectionTimeoutMS: 10000,
+        serverSelectionTimeoutMS,
         family: 4,
       });
       console.log(`MongoDB Connected: ${conn.connection.host}`);

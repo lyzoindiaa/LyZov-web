@@ -177,6 +177,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/products" element={<ShopPage />} />
+            <Route path="/category/:slug" element={<ShopPage />} />
             <Route path="/product/:slug" element={<ProductDetailsPage />} />
             {/* [SINGLE-SELLER MODE] <Route path="/store/:storeSlug" element={<SellerStorefrontPage />} /> */}
             <Route path="/contact" element={<ContactPage />} />

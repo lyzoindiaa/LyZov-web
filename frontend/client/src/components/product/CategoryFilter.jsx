@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { categoryService } from "../../services/categoryService";
 
 // Inline SVG icons for categories — no external image dependencies, always loads
@@ -102,9 +102,10 @@ const defaultCategories = [
 ];
 
 const CategoryFilter = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { slug: routeCategorySlug } = useParams();
+  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState(defaultCategories);
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
+  const activeSlug = routeCategorySlug || searchParams.get("category") || "";
 
   useEffect(() => {
     categoryService
@@ -128,26 +129,9 @@ const CategoryFilter = () => {
       });
   }, []);
 
-  const handleCategoryClick = (categoryId) => {
-    if (selectedCategory === categoryId) {
-      setSelectedCategory("");
-      const next = new URLSearchParams(searchParams);
-      next.delete("category");
-      setSearchParams(next);
-    } else {
-      setSelectedCategory(categoryId);
-      const next = new URLSearchParams(searchParams);
-      next.set("category", categoryId);
-      setSearchParams(next);
-    }
-  };
-
-  useEffect(() => {
-    setSelectedCategory(searchParams.get("category") || "");
-  }, [searchParams]);
-
   return (
     <section
+      aria-label="Shop by Category"
       style={{
         backgroundColor: "var(--bg)",
         borderBottom: "1px solid var(--border)",
@@ -157,60 +141,65 @@ const CategoryFilter = () => {
     >
       <div className="container-page" style={{ width: "100%" }}>
         <div className="category-scroll">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => handleCategoryClick(category.id)}
-              className="category-filter-card"
-              style={{
-                backgroundColor: selectedCategory === category.id ? "var(--accent-bg)" : "var(--surface)",
-                border: selectedCategory === category.id ? "2px solid var(--accent)" : "1px solid var(--border)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-sm)",
-              }}
-              onMouseEnter={(e) => {
-                if (selectedCategory !== category.id) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.borderColor = "var(--accent)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (selectedCategory !== category.id) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.borderColor = "var(--border)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-                }
-              }}
-            >
-              <div
-                className="category-filter-image"
+          {categories.map((category) => {
+            const isActive = activeSlug === category.id;
+            const targetUrl = `/category/${encodeURIComponent(category.id)}`;
+            return (
+              <Link
+                key={category.id}
+                to={targetUrl}
+                className="category-filter-card"
+                aria-current={isActive ? "page" : undefined}
                 style={{
-                  backgroundColor: selectedCategory === category.id ? "var(--accent)" : "var(--bg-subtle)",
+                  backgroundColor: isActive ? "var(--accent-bg)" : "var(--surface)",
+                  border: isActive ? "2px solid var(--accent)" : "1px solid var(--border)",
+                  cursor: "pointer",
+                  boxShadow: "var(--shadow-sm)",
+                  textDecoration: "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.borderColor = "var(--accent)";
+                    e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                  }
                 }}
               >
-                <CategoryIcon
-                  id={category.id}
-                  size={26}
-                  color={selectedCategory === category.id ? "#ffffff" : "var(--accent)"}
-                />
-              </div>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  color: selectedCategory === category.id ? "var(--accent)" : "var(--ink)",
-                  textAlign: "center",
-                  lineHeight: 1.25,
-                  width: "100%",
-                }}
-                className="line-clamp-2"
-              >
-                {category.name}
-              </span>
-            </button>
-          ))}
+                <div
+                  className="category-filter-image"
+                  style={{
+                    backgroundColor: isActive ? "var(--accent)" : "var(--bg-subtle)",
+                  }}
+                >
+                  <CategoryIcon
+                    id={category.id}
+                    size={26}
+                    color={isActive ? "#ffffff" : "var(--accent)"}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: isActive ? "var(--accent)" : "var(--ink)",
+                    textAlign: "center",
+                    lineHeight: 1.25,
+                    width: "100%",
+                  }}
+                  className="line-clamp-2"
+                >
+                  {category.name}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

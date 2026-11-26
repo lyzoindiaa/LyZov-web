@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useSearchParams, useParams, useNavigate, Link } from "react-router-dom";
+import { SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import ProductGrid from "../components/product/ProductGrid";
 import FilterSidebar from "../components/product/FilterSidebar";
 import { productService } from "../services/productService";
+import { categoryService } from "../services/categoryService";
 import SEO from "../components/common/SEO";
 
 const sortOptions = [
@@ -14,9 +15,17 @@ const sortOptions = [
   { label: "Top Rated", value: "rating-desc" },
 ];
 
+const formatSlugLabel = (raw) =>
+  String(raw || "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+
 const ShopPage = () => {
+  const { slug: routeCategorySlug } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
@@ -24,8 +33,46 @@ const ShopPage = () => {
   const loadMoreRef = useRef(null);
   const loadingMoreRef = useRef(false);
 
-  const filters = Object.fromEntries(searchParams.entries());
-  const filtersKey = searchParams.toString();
+  const searchFilters = Object.fromEntries(searchParams.entries());
+  const activeCategorySlug = routeCategorySlug || searchFilters.category || "";
+  const filters = useMemo(
+    () => ({
+      ...searchFilters,
+      ...(activeCategorySlug ? { category: activeCategorySlug } : {}),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParams.toString(), activeCategorySlug]
+  );
+  const filtersKey = useMemo(
+    () => `${activeCategorySlug}::${searchParams.toString()}`,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeCategorySlug, searchParams.toString()]
+  );
+
+  useEffect(() => {
+    categoryService
+      .getCategories()
+      .then((res) => setCategories(res?.data || []))
+      .catch(() => {});
+  }, []);
+
+  const activeCategory = useMemo(() => {
+    if (!activeCategorySlug) return null;
+    const norm = activeCategorySlug.toLowerCase();
+    return (
+      categories.find(
+        (c) => String(c.slug || "").toLowerCase() === norm || String(c._id) === activeCategorySlug
+      ) || null
+    );
+  }, [categories, activeCategorySlug]);
+
+  const subcategories = useMemo(() => {
+    if (!activeCategory) return [];
+    return categories.filter((c) => {
+      const parentId = c.parent?._id ? String(c.parent._id) : c.parent ? String(c.parent) : "";
+      return parentId === String(activeCategory._id);
+    });
+  }, [categories, activeCategory]);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -41,17 +88,18 @@ const ShopPage = () => {
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey]);
 
   useEffect(() => {
     fetchProducts();
-    const scrollTarget = filters.category ? document.getElementById("shop-products-grid") : null;
+    const scrollTarget = activeCategorySlug ? document.getElementById("shop-products-grid") : null;
     if (scrollTarget) {
       window.setTimeout(() => scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [fetchProducts]);
+  }, [fetchProducts, activeCategorySlug]);
 
   const loadMoreProducts = useCallback(async () => {
     if (loadingMoreRef.current || meta.page >= meta.totalPages) return;
@@ -72,6 +120,7 @@ const ShopPage = () => {
       loadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey, meta]);
 
   useEffect(() => {
@@ -90,49 +139,181 @@ const ShopPage = () => {
   }, [isLoading, loadMoreProducts, meta.page, meta.totalPages]);
 
   const updateFilters = (updates) => {
-    const next = { ...filters, ...updates, page: 1 };
+    const next = { ...searchFilters, ...updates };
+    delete next.page;
+    const nextCategory = Object.prototype.hasOwnProperty.call(updates, "category")
+      ? updates.category
+      : activeCategorySlug;
+    delete next.category;
+
+    const params = new URLSearchParams();
     Object.keys(next).forEach((key) => {
-      if (next[key] === undefined || next[key] === "") delete next[key];
+      if (next[key] !== undefined && next[key] !== "") {
+        params.set(key, next[key]);
+      }
     });
-    setSearchParams(next);
+    const qs = params.toString();
+
+    if (nextCategory) {
+      navigate(`/category/${encodeURIComponent(nextCategory)}${qs ? `?${qs}` : ""}`);
+    } else if (routeCategorySlug) {
+      navigate(`/shop${qs ? `?${qs}` : ""}`);
+    } else {
+      setSearchParams(params);
+    }
   };
 
-  const clearFilters = () => setSearchParams({});
+  const clearFilters = () => {
+    if (routeCategorySlug) {
+      navigate("/shop");
+    } else {
+      setSearchParams({});
+    }
+  };
 
-  const categoryParam = searchParams.get("category");
   const brandParam = searchParams.get("brand");
   const searchParam = searchParams.get("search");
+  const categoryName = activeCategory?.name || (activeCategorySlug ? formatSlugLabel(activeCategorySlug) : "");
+  const canonicalCategorySlug = activeCategory?.slug || activeCategorySlug;
 
-  let pageTitle = "Shop All Products";
-  if (categoryParam) {
-    pageTitle = `${categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1)} - Shop`;
+  let pageTitle = "Shop All Products — Quality-Checked Goods | LyZov";
+  let headingTitle = "All Products";
+  if (categoryName) {
+    pageTitle = `${categoryName} — Buy Online in India | LyZov`;
+    headingTitle = categoryName;
   } else if (brandParam) {
-    pageTitle = `${brandParam.charAt(0).toUpperCase() + brandParam.slice(1)} Collection - Shop`;
+    const brandName = formatSlugLabel(brandParam);
+    pageTitle = `${brandName} Collection — Shop | LyZov`;
+    headingTitle = `${brandName} Collection`;
   } else if (searchParam) {
-    pageTitle = `Results for "${searchParam}" - Shop`;
+    pageTitle = `Results for "${searchParam}" — Shop | LyZov`;
+    headingTitle = `Results for "${searchParam}"`;
   }
 
-  const pageDescription = `Explore ${pageTitle} on LyZov. Discover curated, quality-checked products with direct pricing and safe Pan-India delivery.`;
+  const pageDescription = activeCategory?.description
+    ? activeCategory.description
+    : categoryName
+      ? `Shop curated, quality-checked ${categoryName} products online on LyZov. Enjoy transparent pricing, secure UPI checkout, and safe Pan-India delivery.`
+      : `Explore ${headingTitle} on LyZov. Discover curated, quality-checked products with direct pricing and safe Pan-India delivery.`;
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://lyzov.com";
+  const canonicalUrl = canonicalCategorySlug
+    ? `${origin}/category/${encodeURIComponent(canonicalCategorySlug)}`
+    : `${origin}/shop`;
+
+  const hasNonCanonicalParams = Boolean(
+    filters.search || filters.minPrice || filters.maxPrice || filters.minRating || filters.sort || filters.brand
+  );
+
+  const collectionSchema = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage",
+          "@id": `${canonicalUrl}#collection`,
+          name: headingTitle,
+          description: pageDescription,
+          url: canonicalUrl,
+          mainEntity: {
+            "@type": "ItemList",
+            numberOfItems: meta.total || products.length,
+            itemListElement: products.slice(0, 12).map((prod, idx) => ({
+              "@type": "ListItem",
+              position: idx + 1,
+              url: `${origin}/product/${encodeURIComponent(prod.slug || prod._id)}`,
+              name: prod.title || prod.name,
+            })),
+          },
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "Shop", item: `${origin}/shop` },
+            ...(categoryName
+              ? [{ "@type": "ListItem", position: 3, name: categoryName, item: canonicalUrl }]
+              : []),
+          ],
+        },
+      ],
+    }),
+    [canonicalUrl, headingTitle, pageDescription, meta.total, products, origin, categoryName]
+  );
 
   return (
     <div className="container-page py-8 lg:py-12">
       <SEO
         title={pageTitle}
         description={pageDescription}
-        canonicalUrl={`${window.location.origin}/shop`}
+        canonicalUrl={canonicalUrl}
+        noIndex={hasNonCanonicalParams}
+        schema={collectionSchema}
       />
+
+      {/* Breadcrumbs */}
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-[var(--ink-muted)]"
+      >
+        <Link to="/" className="hover:text-[var(--ink)] transition-colors" style={{ textDecoration: "none", color: "inherit" }}>
+          Home
+        </Link>
+        <ChevronRight size={12} />
+        {categoryName ? (
+          <>
+            <Link to="/shop" className="hover:text-[var(--ink)] transition-colors" style={{ textDecoration: "none", color: "inherit" }}>
+              Shop
+            </Link>
+            {Array.isArray(activeCategory?.ancestors) &&
+              activeCategory.ancestors.map((anc) => (
+                <span key={anc._id} className="inline-flex items-center gap-1.5">
+                  <ChevronRight size={12} />
+                  <Link
+                    to={`/category/${encodeURIComponent(anc.slug)}`}
+                    className="hover:text-[var(--ink)] transition-colors"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {anc.name}
+                  </Link>
+                </span>
+              ))}
+            <ChevronRight size={12} />
+            <span className="font-semibold text-[var(--ink)]">{categoryName}</span>
+          </>
+        ) : (
+          <span className="font-semibold text-[var(--ink)]">Shop</span>
+        )}
+      </nav>
+
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div id="shop-products-grid">
-          <span className="eyebrow">Curated Collection</span>
+          <span className="eyebrow">{categoryName ? "Curated Category" : "Curated Collection"}</span>
           <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em", marginTop: "0.25rem" }}>
-            {filters.search ? `Results for "${filters.search}"` : "All Products"}
+            {headingTitle}
           </h1>
           <p style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "0.25rem" }}>
-            Showing {products.length} of {meta.total} curated items
+            {activeCategory?.description || `Showing ${products.length} of ${meta.total} curated items`}
           </p>
         </div>
       </div>
+
+      {/* Crawlable Subcategory Links */}
+      {subcategories.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {subcategories.map((sub) => (
+            <Link
+              key={sub._id}
+              to={`/category/${encodeURIComponent(sub.slug || sub._id)}`}
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              style={{ textDecoration: "none" }}
+            >
+              {sub.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Control Bar */}
       <div
@@ -156,9 +337,9 @@ const ShopPage = () => {
 
         {/* Active Chips */}
         <div className="flex flex-wrap items-center gap-2">
-          {filters.category && (
+          {activeCategorySlug && (
             <span className="badge badge-accent flex items-center gap-1.5 py-1 px-2.5">
-              Category
+              {categoryName || "Category"}
               <X size={12} className="cursor-pointer" onClick={() => updateFilters({ category: undefined })} />
             </span>
           )}
@@ -168,7 +349,7 @@ const ShopPage = () => {
               <X size={12} className="cursor-pointer" onClick={() => updateFilters({ search: undefined })} />
             </span>
           )}
-          {(filters.category || filters.search || filters.minPrice) && (
+          {(activeCategorySlug || filters.search || filters.minPrice) && (
             <button
               onClick={clearFilters}
               style={{

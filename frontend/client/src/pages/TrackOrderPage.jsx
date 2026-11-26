@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Truck, Package, CheckCircle, Clock, XCircle, Search, MapPin, MessageCircle } from "lucide-react";
 import { buildWhatsAppSupportLink } from "../utils/constants";
+import SEO from "../components/common/SEO";
 
 /* ── Status stepper config ─────────────────────────────────── */
 const STEPS = [
@@ -184,6 +185,11 @@ const TrackOrderPage = () => {
         background: "var(--bg)",
       }}
     >
+      <SEO
+        title="Track Your Order — Live Shipment Status | LyZov"
+        description="Track your LyZov order status and live courier delivery updates across India using your order ID."
+        canonicalUrl={`${window.location.origin}/track`}
+      />
       {/* Hero */}
       <div style={{ textAlign: "center", marginBottom: "2.5rem", maxWidth: "36rem" }}>
         <div

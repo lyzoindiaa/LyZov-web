@@ -6,7 +6,11 @@
     <title>LyZov — India's Trusted Online Shopping Platform</title>
     <meta
       name="description"
-      content="Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery."
+      content="Discover a wide selection of curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, and Home Accessories with Pan-India delivery."
+    />
+    <meta
+      name="keywords"
+      content="LyZov, online shopping India, god idols, brass murti, fitness accessories, gym equipment, home decor, electronics, car accessories"
     />
     <meta name="robots" content="index, follow" />
     <script>
@@ -32,7 +36,7 @@
         color: #f8fafc;
       }
       .boot-header {
-        height: 68px;
+        min-height: 64px;
         border-bottom: 1px solid #e2e8f0;
         background: #ffffff;
         display: flex;
@@ -46,19 +50,41 @@
         width: 100%;
         max-width: 1360px;
         margin: 0 auto;
-        padding: 0 1.25rem;
+        padding: 0.75rem 1.25rem;
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 1rem;
+        gap: 0.75rem 1.25rem;
+        box-sizing: border-box;
       }
       .boot-brand {
         font-weight: 800;
         font-size: 1.25rem;
         letter-spacing: -0.03em;
         color: inherit;
+        text-decoration: none;
       }
       .boot-brand span { color: #d97706; }
+      .boot-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+      .boot-nav a,
+      .boot-breadcrumbs a,
+      .boot-footer a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .boot-nav a:hover,
+      .boot-breadcrumbs a:hover,
+      .boot-footer a:hover {
+        color: #d97706;
+        text-decoration: underline;
+      }
       .boot-main {
         flex: 1;
         width: 100%;
@@ -67,23 +93,113 @@
         padding: 2rem 1.25rem;
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1.5rem;
         box-sizing: border-box;
       }
-      .boot-sk {
-        border-radius: 12px;
-        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-        background-size: 200% 100%;
-        animation: bootPulse 1.4s ease-in-out infinite;
+      .boot-hero h1 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: -0.025em;
       }
-      html.dark .boot-sk {
-        background: linear-gradient(90deg, #101010 25%, #1c1c1c 50%, #101010 75%);
-        background-size: 200% 100%;
+      .boot-hero p {
+        margin: 0;
+        color: #475569;
+        line-height: 1.6;
+        max-width: 68ch;
+      }
+      html.dark .boot-hero p { color: #94a3b8; }
+      .boot-section h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1.0625rem;
+        font-weight: 700;
+      }
+      .boot-breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        font-size: 0.8125rem;
+        color: #64748b;
+      }
+      .boot-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+      }
+      .boot-links a {
+        display: inline-block;
+        padding: 0.45rem 0.9rem;
+        border-radius: 9999px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #0f172a;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      html.dark .boot-links a {
+        border-color: #262626;
+        background: #101010;
+        color: #f8fafc;
+      }
+      .boot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+      .boot-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: #ffffff;
+      }
+      html.dark .boot-card {
+        border-color: #202020;
+        background: #0a0a0a;
+      }
+      .boot-card a {
+        color: inherit;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+      }
+      .boot-card img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      .boot-card h3 {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+      .boot-card p {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #d97706;
+      }
+      .boot-product-detail {
+        display: grid;
+        grid-template-columns: minmax(0, 320px) 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+      @media (max-width: 768px) {
+        .boot-product-detail { grid-template-columns: 1fr; }
+      }
+      .boot-product-detail img {
+        width: 100%;
+        max-width: 320px;
+        border-radius: 12px;
+        object-fit: cover;
       }
       .boot-footer {
         border-top: 1px solid #e2e8f0;
         background: #f8fafc;
-        padding: 1.25rem;
+        padding: 1.25rem 0;
         font-size: 0.75rem;
         color: #64748b;
       }
@@ -92,19 +208,31 @@
         background: #0a0a0a;
         color: #94a3b8;
       }
-      @keyframes bootPulse {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+      .boot-footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .boot-footer-links,
+      .boot-social-links {
+        margin-top: 0.35rem;
+        line-height: 1.7;
       }
     </style>
     <link rel="canonical" href="https://lyzov.com" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://lyzov.com/sitemap.xml" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="LyZov" />
+    <meta property="og:locale" content="en_IN" />
     <meta property="og:title" content="LyZov — India's Trusted Online Shopping Platform" />
     <meta property="og:description" content="Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery." />
-    <meta property="og:image" content="/lyzov-logo.png" />
+    <meta property="og:image" content="https://lyzov.com/lyzov-logo.png" />
+    <meta property="og:image:alt" content="LyZov — India's Trusted Online Shopping Platform" />
     <meta property="og:url" content="https://lyzov.com" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LyZov — India's Trusted Online Shopping Platform" />
+    <meta name="twitter:description" content="Discover a wide selection of curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, and Home Accessories." />
+    <meta name="twitter:image" content="https://lyzov.com/lyzov-logo.png" />
 
     <link rel="icon" type="image/png" href="%BASE_URL%favicon.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%lyzov-logo.png" />
@@ -114,7 +242,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <meta name="google-site-verification" content="GSC_VERIFICATION_TOKEN" />
+    <!--__GSC_VERIFICATION__-->
 
     <!-- Schema.org Global Organization & WebSite Structured Data -->
     <script type="application/ld+json">
@@ -122,7 +250,7 @@
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": "Organization",
+          "@type": ["Organization", "OnlineStore"],
           "@id": "https://lyzov.com/#organization",
           "name": "LyZov",
           "url": "https://lyzov.com",
@@ -130,6 +258,12 @@
             "@type": "ImageObject",
             "url": "https://lyzov.com/lyzov-logo.png"
           },
+          "sameAs": [
+            "https://www.facebook.com/LyZov/",
+            "https://www.instagram.com/lyzovindia/",
+            "https://www.youtube.com/@lyzovindia",
+            "https://x.com/LyZovIndia"
+          ],
           "description": "LyZov is a trusted Indian online shopping platform offering a wide selection of curated, quality-checked products with reliable nationwide delivery.",
           "address": {
             "@type": "PostalAddress",
@@ -167,15 +301,16 @@
   <body>
     <noscript>
       <header style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: sans-serif;">
-        <h1>LyZov — India's Trusted Online Shopping Platform</h1>
+        <p><strong>LyZov — India's Trusted Online Shopping Platform</strong></p>
         <p>
           Discover curated, quality-checked products delivered safely across India. Enjoy transparent pricing, secure checkout, and dedicated customer support.
         </p>
-        <nav aria-label="Main Navigation">
+        <nav aria-label="No-Script Main Navigation">
           <ul style="line-height: 2;">
             <li><a href="/shop">Browse All Products</a></li>
-            <li><a href="/shop?sort=popular">Featured Collections</a></li>
-            <li><a href="/dashboard/orders">Track Your Order</a></li>
+            <li><a href="/category/accessories-showpiece-and-figurine-god-idol">God Idols &amp; Murtis</a></li>
+            <li><a href="/category/accessories-fitness-accessories">Fitness &amp; Gym Accessories</a></li>
+            <li><a href="/track">Track Your Order</a></li>
             <li><a href="/contact">Customer Support</a></li>
             <li><a href="/policies/shipping-delivery-policy">Shipping &amp; Delivery Information</a></li>
             <li><a href="/policies/return-exchange-policy">Return &amp; Exchange Policy</a></li>
@@ -184,33 +319,70 @@
       </header>
     </noscript>
     <div id="root">
-      <div class="boot-shell" aria-busy="true">
+      <!--PRERENDER_BODY_START-->
+      <div class="boot-shell">
         <header class="boot-header">
           <div class="boot-container">
-            <div class="boot-brand">Ly<span>Zov</span></div>
-            <div style="display:flex;gap:0.75rem;align-items:center;">
-              <div class="boot-sk" style="width:72px;height:14px;"></div>
-              <div class="boot-sk" style="width:72px;height:14px;"></div>
-              <div class="boot-sk" style="width:32px;height:32px;border-radius:9999px;"></div>
-            </div>
+            <a href="/" class="boot-brand">Ly<span>Zov</span></a>
+            <nav aria-label="Primary Navigation" class="boot-nav">
+              <a href="/">Home</a>
+              <a href="/shop">Shop All Products</a>
+              <a href="/category/accessories-showpiece-and-figurine-god-idol">God Idols</a>
+              <a href="/category/accessories-fitness-accessories">Fitness Gear</a>
+              <a href="/track">Track Order</a>
+              <a href="/contact">Contact Support</a>
+              <a href="/login">Sign In</a>
+            </nav>
           </div>
         </header>
         <main class="boot-main">
-          <div class="boot-sk" style="width:100%;height:220px;border-radius:16px;"></div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
-            <div class="boot-sk" style="height:120px;"></div>
-            <div class="boot-sk" style="height:120px;"></div>
-            <div class="boot-sk" style="height:120px;"></div>
-            <div class="boot-sk" style="height:120px;"></div>
-          </div>
+          <section class="boot-hero">
+            <h1>LyZov — India's Trusted Online Shopping Platform</h1>
+            <p>
+              Shop curated, quality-checked products across Spiritual God Idols &amp; Murtis, Fitness &amp; Gym Accessories, Electronics, Showpieces, Car Accessories, and Everyday Lifestyle Essentials with direct pricing and safe Pan-India delivery.
+            </p>
+          </section>
+          <nav aria-label="Shop Categories" class="boot-section">
+            <h2>Explore Product Categories</h2>
+            <div class="boot-links">
+              <a href="/shop">All Products Catalog</a>
+              <a href="/category/accessories">Accessories</a>
+              <a href="/category/accessories-showpiece-and-figurine-god-idol">God Idols &amp; Murtis</a>
+              <a href="/category/accessories-fitness-accessories">Fitness &amp; Gym Accessories</a>
+              <a href="/category/electronics-battery-oprated">Battery Operated Lights &amp; Tech</a>
+              <a href="/category/accessories-showpiece-and-figurine">Showpiece &amp; Figurine Decor</a>
+              <a href="/category/accessories-car-accessories">Car Accessories</a>
+              <a href="/category/electronics">Electronics</a>
+              <a href="/category/men">Men's Essentials</a>
+            </div>
+          </nav>
         </main>
         <footer class="boot-footer">
-          <div class="boot-container">
-            <span>LyZov — India's Trusted Online Shopping Platform</span>
-            <span>Loading store...</span>
+          <div class="boot-container boot-footer-inner">
+            <div>
+              <strong>LyZov — India's Trusted Online Shopping Platform</strong>
+              <nav aria-label="Footer Store Links" class="boot-footer-links">
+                <a href="/shop">All Products</a> ·
+                <a href="/track">Track Order</a> ·
+                <a href="/contact">Customer Support</a> ·
+                <a href="/policies/privacy-policy">Privacy Policy</a> ·
+                <a href="/policies/terms-and-conditions">Terms &amp; Conditions</a> ·
+                <a href="/policies/return-exchange-policy">Return &amp; Exchange Policy</a> ·
+                <a href="/policies/refund-cancellation-policy">Refund &amp; Cancellation Policy</a> ·
+                <a href="/policies/shipping-delivery-policy">Shipping &amp; Delivery Policy</a>
+              </nav>
+            </div>
+            <div class="boot-social-links">
+              Follow LyZov:
+              <a href="https://www.facebook.com/LyZov/" target="_blank" rel="noopener noreferrer">Facebook</a> ·
+              <a href="https://www.instagram.com/lyzovindia/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
+              <a href="https://www.youtube.com/@lyzovindia" target="_blank" rel="noopener noreferrer">YouTube</a> ·
+              <a href="https://x.com/LyZovIndia" target="_blank" rel="noopener noreferrer">X</a>
+            </div>
           </div>
         </footer>
       </div>
+      <!--PRERENDER_BODY_END-->
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

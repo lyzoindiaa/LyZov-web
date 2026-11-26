@@ -15,7 +15,7 @@ const ensureDbConnected = async () => {
     return mongoose.connection;
   }
   if (!cachedConn) {
-    cachedConn = connectDB().catch((err) => {
+    cachedConn = connectDB(1, 0, 4000).catch((err) => {
       cachedConn = null;
       throw err;
     });
@@ -55,6 +55,8 @@ module.exports = async (req, res) => {
     delete req.query.__p;
     delete req.query.path;
     delete req.query["path*"];
+    delete req.query.slug;
+    delete req.query["slug*"];
   }
 
   return app(req, res);

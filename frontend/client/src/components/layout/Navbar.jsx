@@ -222,7 +222,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/" className="nav-link-animated">Home</Link>
-                <Link to="/?sort=popular" className="nav-link-animated hidden xl:inline-block">Featured</Link>
+                <Link to="/shop?sort=popular" className="nav-link-animated hidden xl:inline-block">Featured</Link>
 
                 {/* Categories Dropdown & Mega-Menu */}
                 <div style={{ position: "relative" }} ref={catRef}>
@@ -280,7 +280,7 @@ const Navbar = () => {
                             <div key={root._id} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                               {/* Level 1 Category Header */}
                               <Link
-                                to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                                to={`/category/${encodeURIComponent(root.slug || root._id)}`}
                                 onClick={() => setCatMenuOpen(false)}
                                 style={{
                                   fontSize: "0.875rem",
@@ -303,7 +303,7 @@ const Navbar = () => {
                                   {root.children.map((sub) => (
                                     <div key={sub._id} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                                       <Link
-                                        to={`/shop?category=${encodeURIComponent(sub.slug || sub._id)}`}
+                                        to={`/category/${encodeURIComponent(sub.slug || sub._id)}`}
                                         onClick={() => setCatMenuOpen(false)}
                                         style={{
                                           fontSize: "0.75rem",
@@ -324,7 +324,7 @@ const Navbar = () => {
                                           {sub.children.slice(0, 4).map((item) => (
                                             <Link
                                               key={item._id}
-                                              to={`/shop?category=${encodeURIComponent(item.slug || item._id)}`}
+                                              to={`/category/${encodeURIComponent(item.slug || item._id)}`}
                                               onClick={() => setCatMenuOpen(false)}
                                               style={{
                                                 fontSize: "0.6875rem",
@@ -345,7 +345,7 @@ const Navbar = () => {
                                 </div>
                               ) : (
                                 <Link
-                                  to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                                  to={`/category/${encodeURIComponent(root.slug || root._id)}`}
                                   onClick={() => setCatMenuOpen(false)}
                                   style={{ fontSize: "0.6875rem", color: "var(--ink-subtle)", textDecoration: "none" }}
                                 >
@@ -665,7 +665,7 @@ const Navbar = () => {
             ) : (
               <>
                 <MobileNavLink to="/">Home</MobileNavLink>
-                <MobileNavLink to="/?sort=popular">Featured Picks</MobileNavLink>
+                <MobileNavLink to="/shop?sort=popular">Featured Picks</MobileNavLink>
                 <MobileNavLink to="/shop" accent>All Products Catalog</MobileNavLink>
 
                 {/* Mobile Categories Accordion/Links */}
@@ -678,7 +678,7 @@ const Navbar = () => {
                       {categoryTree.map((root) => (
                         <div key={root._id} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                           <Link
-                            to={`/shop?category=${encodeURIComponent(root.slug || root._id)}`}
+                            to={`/category/${encodeURIComponent(root.slug || root._id)}`}
                             onClick={() => dispatch(closeMobileMenu())}
                             style={{
                               fontSize: "0.8125rem",
@@ -696,7 +696,7 @@ const Navbar = () => {
                               {root.children.map((sub) => (
                                 <div key={sub._id} style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
                                   <Link
-                                    to={`/shop?category=${encodeURIComponent(sub.slug || sub._id)}`}
+                                    to={`/category/${encodeURIComponent(sub.slug || sub._id)}`}
                                     onClick={() => dispatch(closeMobileMenu())}
                                     style={{
                                       fontSize: "0.75rem",
@@ -714,7 +714,7 @@ const Navbar = () => {
                                       {sub.children.map((item) => (
                                         <Link
                                           key={item._id}
-                                          to={`/shop?category=${encodeURIComponent(item.slug || item._id)}`}
+                                          to={`/category/${encodeURIComponent(item.slug || item._id)}`}
                                           onClick={() => dispatch(closeMobileMenu())}
                                           style={{
                                             fontSize: "0.6875rem",

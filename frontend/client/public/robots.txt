@@ -1,7 +1,9 @@
 User-agent: *
 Allow: /
 Allow: /shop
-Allow: /products/
+Allow: /products
+Allow: /product/
+Allow: /category/
 Allow: /policies/
 Allow: /contact
 Allow: /track
@@ -16,6 +18,7 @@ Disallow: /register
 Disallow: /reset-password/
 Disallow: /verify-email/
 Disallow: /forgot-password
+Disallow: /complete-profile
 Disallow: /api/
 
 Sitemap: https://lyzov.com/sitemap.xml

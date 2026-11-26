@@ -7,6 +7,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Logo from "../components/ui/Logo";
 import ThemeToggle from "../components/ui/ThemeToggle";
+import SEO from "../components/common/SEO";
 
 const VerifyEmailPage = () => {
   const { token } = useParams();
@@ -80,6 +81,7 @@ const VerifyEmailPage = () => {
         position: "relative",
       }}
     >
+      <SEO title="Verify Email | LyZov" noIndex={true} />
       {/* ── Top Bar ── */}
       <div
         style={{

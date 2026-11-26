@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { fetchCurrentUser } from "../features/auth/authSlice";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
+import SEO from "../components/common/SEO";
 import { userService } from "../services/cartService";
 import { addressService } from "../services/cartService";
 
@@ -84,6 +85,7 @@ const CompleteProfilePage = () => {
 
     return (
         <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
+            <SEO title="Complete Profile | LyZov" noIndex={true} />
             {/* Top Bar */}
             <div
                 style={{

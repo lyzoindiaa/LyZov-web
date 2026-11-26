@@ -20,6 +20,7 @@ import { formatCurrency } from "../utils/formatters";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { checkPincode } from "../services/shippingService";
+import SEO from "../components/common/SEO";
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -353,6 +354,7 @@ const CheckoutPage = () => {
 
   return (
     <div className="container-page py-8 lg:py-12">
+      <SEO title="Secure Checkout | LyZov" noIndex={true} />
       {/* Header & Step progress */}
       <div className="mb-8">
         <span className="eyebrow">Secure Checkout</span>
