@@ -64,6 +64,7 @@ const DashboardLayout = () => {
 
       {/* ── Welcome Hero Banner ───────────────────────────── */}
       <div
+        className="p-5 sm:p-7"
         style={{
           position: "relative",
           borderRadius: "1.25rem",
@@ -72,7 +73,6 @@ const DashboardLayout = () => {
           background: "linear-gradient(135deg, var(--bg-raised) 0%, var(--surface) 100%)",
           border: "1px solid var(--border)",
           boxShadow: "var(--shadow-sm)",
-          padding: "1.75rem 2rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -93,16 +93,16 @@ const DashboardLayout = () => {
         />
 
         {/* Left — greeting */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className="min-w-0" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <Avatar name={user?.name} />
-          <div>
+          <div className="min-w-0">
             <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--ink-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.2rem" }}>
               Welcome back
             </p>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
               {firstName} 👋
             </h1>
-            <p style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "0.25rem" }}>
+            <p className="break-all sm:break-normal" style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "0.25rem" }}>
               {user?.email}
             </p>
           </div>
@@ -229,7 +229,7 @@ const DashboardLayout = () => {
             alignSelf: "start",
             minWidth: 0,
           }}
-          className="flex min-w-0 flex-row gap-1.5 overflow-x-auto md:flex-col md:overflow-visible no-scrollbar md:sticky md:top-6"
+          className="flex w-full min-w-0 flex-row items-center gap-2 overflow-x-auto md:w-auto md:flex-col md:items-stretch md:gap-1.5 md:overflow-visible no-scrollbar md:sticky md:top-6"
         >
           {navItems.map((item) => (
             <NavLink
@@ -237,9 +237,9 @@ const DashboardLayout = () => {
               to={item.to}
               onMouseEnter={() => prefetchByPath(item.to)}
               onFocus={() => prefetchByPath(item.to)}
-              className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
+              className={({ isActive }) => `sidebar-nav-item shrink-0 whitespace-nowrap${isActive ? " active" : ""}`}
             >
-              <item.icon size={16} />
+              <item.icon size={16} className="shrink-0" />
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -250,10 +250,10 @@ const DashboardLayout = () => {
           {/* Shop link in sidebar */}
           <Link
             to="/shop"
-            className="sidebar-nav-item"
+            className="sidebar-nav-item shrink-0 whitespace-nowrap"
             style={{ color: "var(--accent)", fontWeight: 700 }}
           >
-            <ShoppingBag size={16} />
+            <ShoppingBag size={16} className="shrink-0" />
             <span>Shop Now</span>
           </Link>
 
@@ -262,28 +262,30 @@ const DashboardLayout = () => {
 
           {/* Logout */}
           <button
+            type="button"
             onClick={() => {
               dispatch(logoutUser());
               dispatch(resetCartLocal());
             }}
+            className="shrink-0 whitespace-nowrap md:w-full"
             style={{
               display: "flex", alignItems: "center", gap: "0.625rem",
               borderRadius: "0.75rem", padding: "0.625rem 0.875rem",
               fontSize: "0.8125rem", fontWeight: 600,
               color: "var(--red)", background: "none", border: "none",
-              cursor: "pointer", transition: "background 0.15s", width: "100%",
+              cursor: "pointer", transition: "background 0.15s",
               textAlign: "left",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--red-bg)")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
           >
-            <LogOut size={16} />
+            <LogOut size={16} className="shrink-0" />
             <span>Log Out</span>
           </button>
         </aside>
 
         {/* Content */}
-        <div className="card-surface p-6">
+        <div className="card-surface p-4 sm:p-6 min-w-0">
           <Suspense fallback={<OutletContentSkeleton variant="portal" />}>
             <Outlet />
           </Suspense>

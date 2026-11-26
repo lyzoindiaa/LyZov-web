@@ -217,6 +217,7 @@ html.dark .glass-card {
   transition: all 0.18s;
   position: relative;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .sidebar-nav-item:hover { background-color: var(--bg-raised); color: var(--ink); }
 .sidebar-nav-item.active { background-color: var(--accent-bg); color: var(--accent); font-weight: 700; }
