@@ -23,6 +23,27 @@ import Button from "../../components/ui/Button";
 import CategoryImageGalleryModal from "../../components/admin/CategoryImageGalleryModal";
 import ConfirmActionModal from "../superadmin/ConfirmActionModal";
 
+const CategoryThumbnail = ({ imageUrl, name }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (!imageUrl || hasError) {
+    return (
+      <div className="h-9 w-9 rounded-lg bg-cream/40 dark:bg-charcoal/60 border border-hairline flex items-center justify-center text-stone shrink-0">
+        <Folder size={16} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={name}
+      onError={() => setHasError(true)}
+      className="h-9 w-9 rounded-lg object-cover border border-hairline shrink-0"
+    />
+  );
+};
+
 const AdminCategoriesPage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -196,19 +217,19 @@ const AdminCategoriesPage = () => {
     switch (level) {
       case 1:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
             L1 • Category
           </span>
         );
       case 2:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">
             L2 • Subcategory
           </span>
         );
       case 3:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
             L3 • Item
           </span>
         );
@@ -242,7 +263,7 @@ const AdminCategoriesPage = () => {
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setLevelFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               levelFilter === "all"
                 ? "bg-[var(--accent)] text-white"
                 : "text-stone hover:bg-cream/40 dark:hover:bg-cream/10"
@@ -252,7 +273,7 @@ const AdminCategoriesPage = () => {
           </button>
           <button
             onClick={() => setLevelFilter("1")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               levelFilter === "1"
                 ? "bg-[var(--accent)] text-white"
                 : "text-stone hover:bg-cream/40 dark:hover:bg-cream/10"
@@ -262,7 +283,7 @@ const AdminCategoriesPage = () => {
           </button>
           <button
             onClick={() => setLevelFilter("2")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               levelFilter === "2"
                 ? "bg-[var(--accent)] text-white"
                 : "text-stone hover:bg-cream/40 dark:hover:bg-cream/10"
@@ -272,7 +293,7 @@ const AdminCategoriesPage = () => {
           </button>
           <button
             onClick={() => setLevelFilter("3")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               levelFilter === "3"
                 ? "bg-[var(--accent)] text-white"
                 : "text-stone hover:bg-cream/40 dark:hover:bg-cream/10"
@@ -283,27 +304,27 @@ const AdminCategoriesPage = () => {
         </div>
 
         {/* Search and Tree Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2.5 w-full md:w-auto">
           {levelFilter === "all" && !search.trim() && (
-            <div className="flex items-center gap-1 mr-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={expandAll}
-                className="text-[11px] font-semibold text-stone hover:text-ink px-2 py-1 rounded bg-cream/40 dark:bg-charcoal/50 border border-hairline dark:border-hairline-dark"
+                className="whitespace-nowrap text-[11px] font-semibold text-stone hover:text-ink px-2.5 py-1.5 rounded bg-cream/40 dark:bg-charcoal/50 border border-hairline dark:border-hairline-dark"
               >
                 Expand All
               </button>
               <button
                 type="button"
                 onClick={collapseAll}
-                className="text-[11px] font-semibold text-stone hover:text-ink px-2 py-1 rounded bg-cream/40 dark:bg-charcoal/50 border border-hairline dark:border-hairline-dark"
+                className="whitespace-nowrap text-[11px] font-semibold text-stone hover:text-ink px-2.5 py-1.5 rounded bg-cream/40 dark:bg-charcoal/50 border border-hairline dark:border-hairline-dark"
               >
                 Collapse All
               </button>
             </div>
           )}
 
-          <div className="relative flex-1 sm:w-64">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone" size={15} />
             <input
               type="text"
@@ -339,15 +360,15 @@ const AdminCategoriesPage = () => {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-hairline bg-ivory dark:border-hairline-dark dark:bg-charcoal shadow-sm">
-          <table className="w-full min-w-[760px] text-left text-sm border-collapse">
+          <table className="w-full min-w-[820px] text-left text-sm border-collapse">
             <thead className="border-b border-hairline bg-cream/30 text-xs font-semibold uppercase text-stone dark:border-hairline-dark dark:bg-charcoal/60">
               <tr>
-                <th className="px-6 py-3.5">Category Structure & Name</th>
-                <th className="px-4 py-3.5">Level</th>
-                <th className="px-4 py-3.5">Slug</th>
-                <th className="px-4 py-3.5 text-center">Order</th>
-                <th className="px-4 py-3.5">Status</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-4 sm:px-6 py-3.5 whitespace-nowrap">Category Structure & Name</th>
+                <th className="px-4 py-3.5 whitespace-nowrap">Level</th>
+                <th className="px-4 py-3.5 whitespace-nowrap">Slug</th>
+                <th className="px-4 py-3.5 text-center whitespace-nowrap">Order</th>
+                <th className="px-4 py-3.5 whitespace-nowrap">Status</th>
+                <th className="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-hairline dark:divide-hairline-dark">
@@ -363,14 +384,14 @@ const AdminCategoriesPage = () => {
                     className="hover:bg-cream/30 dark:hover:bg-cream/5 transition-colors group"
                   >
                     {/* Category Hierarchy & Name */}
-                    <td className="px-6 py-3 font-medium">
+                    <td className="px-4 sm:px-6 py-3 font-medium min-w-[260px]">
                       <div
                         className="flex items-center gap-2"
-                        style={{ paddingLeft: `${depth * 28}px` }}
+                        style={{ paddingLeft: `${depth * 24}px` }}
                       >
                         {/* Tree Branch Indicator */}
                         {depth > 0 && (
-                          <span className="text-stone/40 select-none font-mono text-xs">└──</span>
+                          <span className="text-stone/40 select-none font-mono text-xs shrink-0 whitespace-nowrap">└──</span>
                         )}
 
                         {/* Expand/Collapse Toggle */}
@@ -378,38 +399,28 @@ const AdminCategoriesPage = () => {
                           <button
                             type="button"
                             onClick={() => toggleExpand(cat._id)}
-                            className="p-1 rounded hover:bg-cream/60 dark:hover:bg-cream/10 text-stone hover:text-ink transition-colors"
+                            className="p-1 rounded hover:bg-cream/60 dark:hover:bg-cream/10 text-stone hover:text-ink transition-colors shrink-0"
                             title={isExpanded ? "Collapse" : "Expand"}
                           >
                             {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                           </button>
                         ) : (
-                          <span className="w-5" />
+                          <span className="w-5 shrink-0" />
                         )}
 
                         {/* Thumbnail / Icon */}
-                        {cat.image?.url ? (
-                          <img
-                            src={cat.image.url}
-                            alt={cat.name}
-                            className="h-9 w-9 rounded-lg object-cover border border-hairline shrink-0"
-                          />
-                        ) : (
-                          <div className="h-9 w-9 rounded-lg bg-cream/40 dark:bg-charcoal/60 border border-hairline flex items-center justify-center text-stone shrink-0">
-                            <Folder size={16} />
-                          </div>
-                        )}
+                        <CategoryThumbnail imageUrl={cat.image?.url} name={cat.name} />
 
                         {/* Name and Ancestry Trail */}
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-ink dark:text-cream text-sm">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-semibold text-ink dark:text-cream text-sm whitespace-nowrap">
                             {cat.name}
                           </span>
                           {cat.ancestors && cat.ancestors.length > 0 && (
-                            <span className="text-[11px] text-stone flex items-center gap-1 font-normal">
-                              {cat.ancestors.map((a, i) => (
-                                <span key={a._id} className="flex items-center gap-1">
-                                  {a.name} <ArrowRight size={10} className="text-stone/60" />
+                            <span className="text-[11px] text-stone flex flex-wrap items-center gap-1 font-normal">
+                              {cat.ancestors.map((a) => (
+                                <span key={a._id} className="inline-flex items-center gap-1 whitespace-nowrap">
+                                  {a.name} <ArrowRight size={10} className="text-stone/60 shrink-0" />
                                 </span>
                               ))}
                             </span>
@@ -419,33 +430,33 @@ const AdminCategoriesPage = () => {
                     </td>
 
                     {/* Level Badge */}
-                    <td className="px-4 py-3 shrink-0">{getLevelBadge(level)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{getLevelBadge(level)}</td>
 
                     {/* Slug */}
-                    <td className="px-4 py-3 text-stone font-mono text-xs max-w-xs truncate">
+                    <td className="px-4 py-3 text-stone font-mono text-xs max-w-[200px] truncate">
                       {cat.slug}
                     </td>
 
                     {/* Display Order */}
-                    <td className="px-4 py-3 text-center text-xs text-stone font-mono">
+                    <td className="px-4 py-3 text-center text-xs text-stone font-mono whitespace-nowrap">
                       {cat.displayOrder || 0}
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {cat.isActive !== false ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                           <CheckCircle size={13} /> Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-stone">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-stone whitespace-nowrap">
                           <XCircle size={13} /> Inactive
                         </span>
                       )}
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-3 text-right">
+                    <td className="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Quick Add Subcategory or Item */}
                         {level < 3 && (
@@ -464,10 +475,11 @@ const AdminCategoriesPage = () => {
                         {cat.image?.url && (
                           <button
                             onClick={() => handleViewImage(cat)}
-                            className="rounded-lg p-1.5 text-stone hover:bg-ink/5 hover:text-blue-500 dark:hover:bg-cream/10 dark:hover:text-blue-400 transition-colors"
+                            className="rounded-lg p-2 text-stone hover:bg-ink/5 hover:text-blue-500 dark:hover:bg-cream/10 dark:hover:text-blue-400 transition-colors shrink-0 inline-flex items-center justify-center"
                             title="View Image"
+                            aria-label="View Category Image"
                           >
-                            <Eye size={15} />
+                            <Eye size={16} className="shrink-0" />
                           </button>
                         )}
 
@@ -476,18 +488,20 @@ const AdminCategoriesPage = () => {
                           <>
                             <button
                               onClick={() => handleEdit(cat)}
-                              className="rounded-lg p-1.5 text-stone hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream transition-colors cursor-pointer"
+                              className="rounded-lg p-2 text-stone hover:bg-ink/5 hover:text-ink dark:hover:bg-cream/10 dark:hover:text-cream transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center"
                               title="Edit Category"
+                              aria-label="Edit Category"
                             >
-                              <Edit2 size={15} />
+                              <Edit2 size={16} className="shrink-0" />
                             </button>
 
                             <button
                               onClick={() => handlePromptDelete(cat)}
-                              className="rounded-lg p-1.5 text-stone hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
+                              className="rounded-lg p-2 text-stone hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center"
                               title="Delete Category"
+                              aria-label="Delete Category"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={16} className="shrink-0" />
                             </button>
                           </>
                         ) : (

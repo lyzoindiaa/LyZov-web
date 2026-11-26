@@ -1,18 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { AuthBootstrapFallback } from "../components/skeletons/Skeletons";
 
 const SuperAdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, bootstrapped } = useAuth();
 
   if (!bootstrapped) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", color: "var(--ink)" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
-          <div style={{ width: "2.5rem", height: "2.5rem", borderRadius: "9999px", border: "2px solid var(--border)", borderTopColor: "var(--accent)" }} />
-          <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)" }}>Verifying Admin Privileges...</p>
-        </div>
-      </div>
-    );
+    return <AuthBootstrapFallback message="Verifying Admin Privileges..." />;
   }
 
   if (!isAuthenticated) {

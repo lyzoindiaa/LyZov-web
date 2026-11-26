@@ -129,7 +129,7 @@ const AdminAnalyticsPage = () => {
           background: "linear-gradient(90deg, var(--accent-bg) 0%, var(--surface) 100%)",
         }}
       >
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0 w-full sm:w-auto">
           <div
             style={{
               width: "2.75rem",
@@ -145,12 +145,12 @@ const AdminAnalyticsPage = () => {
           >
             <Wrench size={20} />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h2 style={{ fontSize: "0.9375rem", fontWeight: 800, color: "var(--ink)" }}>LyZov Seller Toolkit</h2>
-              <span className="badge badge-accent" style={{ fontSize: "0.625rem", padding: "0.1rem 0.4rem" }}>tools.lyzov.com</span>
+              <span className="badge badge-accent whitespace-nowrap shrink-0" style={{ fontSize: "0.625rem", padding: "0.15rem 0.5rem" }}>tools.lyzov.com</span>
             </div>
-            <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.15rem" }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.45 }}>
               Access HSN lookup, GST calculators, and seller productivity tools.
             </p>
           </div>
@@ -159,7 +159,7 @@ const AdminAnalyticsPage = () => {
           href="https://tools.lyzov.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-accent flex items-center gap-1.5 shrink-0"
+          className="btn-accent flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 whitespace-nowrap"
           style={{ padding: "0.5rem 1rem", fontSize: "0.8125rem", fontWeight: 700 }}
         >
           <span>Explore Tools</span>
@@ -199,7 +199,7 @@ const AdminAnalyticsPage = () => {
             <p className="py-3 text-sm text-stone">No recent orders yet.</p>
           ) : (
             stats.recentOrders.map((order) => (
-              <div key={order._id} className="flex items-center justify-between py-3 text-sm">
+              <div key={order._id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)] text-[var(--accent)]">
                     {order.items?.find((item) => item.image)?.image ? (
@@ -219,9 +219,9 @@ const AdminAnalyticsPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 shrink-0">
                   <Badge tone={statusTones[order.orderStatus] || "neutral"}>{order.orderStatus || "pending"}</Badge>
-                  <span className="font-semibold tabular-nums">{formatCurrency(order.totalPrice || 0)}</span>
+                  <span className="font-semibold tabular-nums whitespace-nowrap">{formatCurrency(order.totalPrice || 0)}</span>
                 </div>
               </div>
             ))

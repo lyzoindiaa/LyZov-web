@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { NavLink, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -25,6 +25,8 @@ import {
 import { logoutUser } from "../../features/auth/authSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
 import Logo from "../../components/ui/Logo";
+import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
+import { prefetchByPath } from "../../routes/routeLoaders";
 
 const navItems = [
   { label: "Dashboard Overview", to: "/admin", icon: BarChart3, end: true },
@@ -115,6 +117,8 @@ const SuperAdminLayout = () => {
                 to={item.to}
                 end={item.end}
                 onClick={() => setMobileOpen(false)}
+                onMouseEnter={() => prefetchByPath(item.to)}
+                onFocus={() => prefetchByPath(item.to)}
                 className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
               >
                 <item.icon size={16} />
@@ -234,8 +238,10 @@ const SuperAdminLayout = () => {
         </header>
 
         {/* Dynamic Page Outlet */}
-        <main style={{ flex: 1, padding: "1.5rem", maxWidth: "1280px", width: "100%", margin: "0 auto" }}>
-          <Outlet />
+        <main style={{ flex: 1, maxWidth: "1280px", width: "100%", margin: "0 auto" }} className="p-3 sm:p-6 lg:p-8">
+          <Suspense fallback={<OutletContentSkeleton variant="portal" />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

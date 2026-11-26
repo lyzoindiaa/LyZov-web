@@ -268,16 +268,16 @@ const ProductCard = ({ product }) => {
 
         {/* Price row */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }} className="text-xs sm:text-sm md:text-base">
+          <span style={{ fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }} className="text-xs sm:text-sm md:text-base">
             {formatCurrency(finalPrice)}
           </span>
           {product.discountPrice > 0 && (
-            <span style={{ color: "var(--ink-subtle)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }} className="text-[10px] sm:text-xs">
+            <span style={{ color: "var(--ink-subtle)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }} className="text-[10px] sm:text-xs">
               {formatCurrency(product.price)}
             </span>
           )}
           {discountPercent > 0 && (
-            <span style={{ marginLeft: "auto", fontWeight: 700, color: "var(--green)" }} className="text-[10px] sm:text-xs">
+            <span style={{ marginLeft: "auto", fontWeight: 700, color: "var(--green)", whiteSpace: "nowrap" }} className="text-[10px] sm:text-xs">
               {discountPercent}% off
             </span>
           )}

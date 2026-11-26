@@ -520,6 +520,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
     }
     const firstError = Object.values(formErrors)[0]?.message || "Please check required fields across all tabs.";
     toast.error(firstError);
+    if (typeof window !== "undefined" && window.scrollY > 120) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleTabClick = (tabKey) => {
@@ -748,11 +751,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="w-full"
+      <form onSubmit={handleSubmit(onFormSubmit, onFormError)} noValidate className="w-full"
       >
         {/* Tab 1: Basic Information */}
         {activeTab === "basic" && (
-          <div className="card-surface p-6 sm:p-8">
+          <div className="card-surface p-4 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 1: Basic Information</h3>
@@ -826,12 +829,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               <Input label="Color (Optional)" {...register("color")} />
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark mt-4">
               <span className="text-xs text-stone">Complete this step to unlock Product Specs</span>
               <Button
                 type="button"
                 onClick={() => handleTabClick("specs")}
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2"
               >
                 <span>Continue to Step 2</span>
                 <ArrowRight size={16} />
@@ -842,7 +845,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
         {/* Tab 2: Product Specifications */}
         {activeTab === "specs" && (
-          <div className="card-surface p-6 sm:p-8">
+          <div className="card-surface p-4 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 2: Product Specifications</h3>
@@ -917,18 +920,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               <Input label="Packer (Optional)" {...register("packer")} />
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("basic")}
-                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium self-start sm:self-auto"
               >
                 ← Back to Step 1
               </button>
               <Button
                 type="button"
                 onClick={() => handleTabClick("category")}
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2"
               >
                 <span>Continue to Step 3</span>
                 <ArrowRight size={16} />
@@ -939,7 +942,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
         {/* Tab 3: Category Selection */}
         {activeTab === "category" && (
-          <div className="card-surface p-6 sm:p-8">
+          <div className="card-surface p-4 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 3: Category Selection</h3>
@@ -955,12 +958,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
             </div>
 
             <div className="sm:col-span-2 rounded-xl border border-hairline bg-cream/10 p-4 dark:border-hairline-dark dark:bg-charcoal/30">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                 <label className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1.5">
                   Category Hierarchy <span className="text-[var(--red)]">*</span>
                 </label>
                 {selectedCategoryDoc && (
-                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20">
+                  <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-lg sm:rounded-full bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent)]/20">
                     Level {selectedCategoryDoc.level || 1}: {selectedCategoryDoc.name}
                   </span>
                 )}
@@ -1044,9 +1047,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
               {/* Active Breadcrumb Path */}
               {selectedCategoryDoc && (
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
-                  <span className="font-semibold text-ink dark:text-cream">Assigned Hierarchy:</span>
-                  <span>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
+                  <span className="font-semibold text-ink dark:text-cream whitespace-nowrap shrink-0">Assigned Hierarchy:</span>
+                  <span className="min-w-0">
                     {(selectedCategoryDoc.ancestors || []).map((a) => (
                       <span key={a._id} className="text-stone font-normal">
                         {a.name} &gt;{" "}
@@ -1110,18 +1113,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("specs")}
-                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium self-start sm:self-auto"
               >
                 ← Back to Step 2
               </button>
               <Button
                 type="button"
                 onClick={() => handleTabClick("pricing")}
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2"
               >
                 <span>Continue to Step 4</span>
                 <ArrowRight size={16} />
@@ -1132,7 +1135,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
         {/* Tab 4: Pricing & Stock */}
         {activeTab === "pricing" && (
-          <div className="card-surface p-6 sm:p-8">
+          <div className="card-surface p-4 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 4: Pricing & Stock</h3>
@@ -1177,18 +1180,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("category")}
-                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium self-start sm:self-auto"
               >
                 ← Back to Step 3
               </button>
               <Button
                 type="button"
                 onClick={() => handleTabClick("images")}
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2"
               >
                 <span>Continue to Step 5</span>
                 <ArrowRight size={16} />
@@ -1199,7 +1202,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
         {/* Tab 5: Images */}
         {activeTab === "images" && (
-          <div className="card-surface p-6 sm:p-8">
+          <div className="card-surface p-4 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 5: Product Images</h3>
@@ -1324,23 +1327,23 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-4 sm:col-span-2">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 sm:col-span-2 border-t border-hairline dark:border-hairline-dark mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("pricing")}
-                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium self-start sm:self-auto"
               >
                 ← Back to Step 4
               </button>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setActiveTab("seo")}
-                  className="px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900/50 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900/50 transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
                 >
                   <Globe size={14} /> Customize SEO →
                 </button>
-                <Button type="submit" isLoading={isSubmitting || isLoading} className="flex items-center gap-2">
+                <Button type="submit" isLoading={isSubmitting || isLoading} className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2">
                   <CheckCircle2 size={16} />
                   <span>{product ? "Save Changes" : "Create Product"}</span>
                 </Button>
@@ -1351,7 +1354,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
 
         {/* Step 6: SEO & Google Search Preview */}
         {activeTab === "seo" && (
-          <div className="card-surface p-6 sm:p-8 col-span-1 sm:col-span-2 space-y-6">
+          <div className="card-surface p-4 sm:p-8 col-span-1 sm:col-span-2 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 6: Search Engine Optimization (SEO)</h3>
@@ -1503,15 +1506,15 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading, draftKey: externa
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark mt-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("images")}
-                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                className="text-xs text-stone hover:text-[var(--ink)] underline font-medium self-start sm:self-auto"
               >
                 ← Back to Step 5 (Images)
               </button>
-              <Button type="submit" isLoading={isSubmitting || isLoading} className="flex items-center gap-2">
+              <Button type="submit" isLoading={isSubmitting || isLoading} className="w-full sm:w-auto justify-center shrink-0 flex items-center gap-2">
                 <CheckCircle2 size={16} />
                 <span>{product ? "Save Changes" : "Create Product"}</span>
               </Button>

@@ -6,6 +6,7 @@ import { adminBrandService } from "../../services/adminBrandService";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
+import ExpandableText from "../../components/ui/ExpandableText";
 import ConfirmActionModal from "../superadmin/ConfirmActionModal";
 
 const AdminBrandsPage = () => {
@@ -119,67 +120,75 @@ const AdminBrandsPage = () => {
         </Button>
       </div>
 
-      <div className="card-surface overflow-x-auto">
-        <table className="w-full min-w-[500px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 text-xs uppercase tracking-wide text-gray-400">
-              <th className="px-5 py-4">Brand Name</th>
-              <th className="px-5 py-4">Description</th>
-              <th className="px-5 py-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={3} className="px-5 py-8 text-center text-gray-400">
-                  Loading brands...
-                </td>
+      <div className="card-surface overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-gray-800 text-xs uppercase tracking-wide text-gray-400">
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Brand Name</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Description</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap text-right">Actions</th>
               </tr>
-            ) : brands.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="px-5 py-8 text-center text-gray-400">
-                  No brands found. Click "Add Brand" above to create one.
-                </td>
-              </tr>
-            ) : (
-              brands.map((brand) => (
+            </thead>
+            {!isLoading && brands.length > 0 && (
+              <tbody>
+                {brands.map((brand) => (
                 <tr key={brand._id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
-                  <td className="flex items-center gap-2.5 px-5 py-4 font-semibold text-gray-900 dark:text-white">
-                    <Award size={16} className="text-amber-500" />
-                    {brand.name}
+                  <td className="px-4 sm:px-5 py-4 font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                    <div className="flex items-center gap-2.5">
+                      <Award size={16} className="text-amber-500 shrink-0" />
+                      <span>{brand.name}</span>
+                    </div>
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-500 dark:text-gray-400">
-                    {brand.description || "â€”"}
+                  <td className="px-4 sm:px-5 py-4 text-xs text-gray-500 dark:text-gray-400 min-w-[220px] max-w-md">
+                    {brand.description ? (
+                      <ExpandableText text={brand.description} lines={3} buttonClassName="text-xs" />
+                    ) : (
+                      "—"
+                    )}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-4 sm:px-5 py-4 whitespace-nowrap text-right">
                     {isAdmin ? (
-                      <div className="flex items-center gap-3">
+                      <div className="inline-flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(brand)}
-                          className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                          className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center"
                           title="Edit Brand"
+                          aria-label="Edit Brand"
                         >
-                          <Pencil size={15} />
+                          <Pencil size={16} className="shrink-0" />
                         </button>
                         <button
                           onClick={() => handlePromptDelete(brand)}
-                          className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center"
                           title="Delete Brand"
+                          aria-label="Delete Brand"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={16} className="shrink-0" />
                         </button>
                       </div>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 whitespace-nowrap">
                         Admin Managed
                       </span>
                     )}
                   </td>
                 </tr>
-              ))
+                ))}
+              </tbody>
             )}
-          </tbody>
-        </table>
+          </table>
+        </div>
+
+        {isLoading ? (
+          <div className="px-5 py-8 text-center text-gray-400">
+            Loading brands...
+          </div>
+        ) : brands.length === 0 ? (
+          <div className="px-5 py-8 text-center text-gray-400">
+            No brands found. Click "Add Brand" above to create one.
+          </div>
+        ) : null}
       </div>
 
       <Modal
@@ -187,7 +196,7 @@ const AdminBrandsPage = () => {
         onClose={() => setIsModalOpen(false)}
         title={editingBrand ? "Edit Brand" : "Add New Brand"}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
           <Input
             label="Brand Name"
             value={name}

@@ -2,8 +2,17 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const getInitialTheme = () => {
   if (typeof window === "undefined") return "light";
+  try {
+    const persisted = JSON.parse(window.localStorage?.getItem("persist:lyzov-ui") || "{}");
+    if (persisted.theme) {
+      const parsedTheme = JSON.parse(persisted.theme);
+      if (parsedTheme === "dark" || parsedTheme === "light") return parsedTheme;
+    }
+  } catch {
+    // Fallback to direct theme key
+  }
   const stored = window.localStorage?.getItem("lyzov-theme");
-  if (stored) return stored;
+  if (stored === "dark" || stored === "light") return stored;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 

@@ -33,7 +33,7 @@ const AdminCategoryAddPage = () => {
   };
 
   return (
-    <div className="container-page py-8">
+    <div className="max-w-5xl mx-auto py-2 sm:py-6">
       <CategoryForm
         category={null}
         initialParent={initialParent}

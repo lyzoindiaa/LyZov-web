@@ -710,7 +710,9 @@ html.dark .hero-trust-card {
 
 /* ── Prefers reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not(.Toastify__progress-bar):not(.Toastify__progress-bar--animated),
+  *:not(.Toastify__progress-bar):not(.Toastify__progress-bar--animated)::before,
+  *:not(.Toastify__progress-bar):not(.Toastify__progress-bar--animated)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

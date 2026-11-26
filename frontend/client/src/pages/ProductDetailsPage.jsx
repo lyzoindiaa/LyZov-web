@@ -32,6 +32,7 @@ import { formatCurrency, formatDate } from "../utils/formatters";
 import { ProductDetailsSkeleton } from "../components/skeletons/Skeletons";
 import ProductGrid from "../components/product/ProductGrid";
 import QuantityStepper from "../components/ui/QuantityStepper";
+import ExpandableText from "../components/ui/ExpandableText";
 import SEO from "../components/common/SEO";
 import { toast } from "react-toastify";
 
@@ -933,6 +934,7 @@ const ProductDetailsPage = () => {
                   fontWeight: 800,
                   color: "var(--ink)",
                   fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {formatCurrency(finalPrice)}
@@ -944,6 +946,7 @@ const ProductDetailsPage = () => {
                     color: "var(--ink-subtle)",
                     textDecoration: "line-through",
                     fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {formatCurrency(product.price)}
@@ -953,11 +956,6 @@ const ProductDetailsPage = () => {
                 Incl. all taxes & insurance
               </span>
             </div>
-
-            {/* Short summary */}
-            <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.7 }}>
-              {product.description || "Premium quality product designed for everyday excellence."}
-            </p>
 
             {/* Variant selector */}
             {product.variants?.length > 0 && (
@@ -1239,10 +1237,14 @@ const ProductDetailsPage = () => {
               <h3 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", marginBottom: "0.75rem" }}>
                 Product Overview
               </h3>
-              <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.75 }}>
-                {product.description ||
-                  "Crafted with the highest grade materials for unmatched durability and aesthetic appeal. Each item is strictly quality-checked before dispatch."}
-              </p>
+              <ExpandableText
+                text={
+                  product.description ||
+                  "Crafted with the highest grade materials for unmatched durability and aesthetic appeal. Each item is strictly quality-checked before dispatch."
+                }
+                lines={3}
+                style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.75 }}
+              />
             </div>
           )}
 

@@ -98,6 +98,9 @@ const ContactPage = ({ isDashboard = false }) => {
     }
     const firstError = Object.values(formErrors)[0]?.message || "Please fill in all required fields.";
     toast.error(firstError);
+    if (typeof window !== "undefined" && window.scrollY > 120) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleTabClick = (tabKey) => {
@@ -416,7 +419,7 @@ const ContactPage = ({ isDashboard = false }) => {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex flex-col gap-5">
+                  <form onSubmit={handleSubmit(onSubmit, onFormError)} noValidate className="flex flex-col gap-5">
                     {/* Tab 1: Contact Information */}
                     {activeTab === "contact" && (
                       <div className="card-surface p-6 sm:p-8">

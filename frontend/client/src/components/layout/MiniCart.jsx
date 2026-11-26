@@ -115,7 +115,7 @@ const MiniCart = () => {
                                 {item.size && `· ${item.size}`}
                               </p>
                             )}
-                            <p style={{ fontSize: "0.875rem", fontWeight: 800, color: "var(--ink)", marginTop: "0.25rem" }} className="tabular-nums">
+                            <p style={{ fontSize: "0.875rem", fontWeight: 800, color: "var(--ink)", marginTop: "0.25rem", whiteSpace: "nowrap" }} className="tabular-nums">
                               {formatCurrency(item.price)}
                             </p>
                           </div>
@@ -159,7 +159,7 @@ const MiniCart = () => {
                 >
                   <div className="mb-3 flex items-center justify-between text-sm">
                     <span style={{ color: "var(--ink-muted)", fontSize: "0.8125rem" }}>Subtotal</span>
-                    <span style={{ fontSize: "1.0625rem", fontWeight: 800, color: "var(--ink)" }} className="tabular-nums">
+                    <span style={{ fontSize: "1.0625rem", fontWeight: 800, color: "var(--ink)", whiteSpace: "nowrap" }} className="tabular-nums">
                       {formatCurrency(subtotal)}
                     </span>
                   </div>

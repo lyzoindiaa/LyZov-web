@@ -136,10 +136,10 @@ const OrdersPage = () => {
 
           <div className="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border)]">
             <Badge tone={statusTones[order.orderStatus] || "neutral"}>{order.orderStatus}</Badge>
-            <span style={{ fontSize: "0.9375rem", fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontSize: "0.9375rem", fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flexShrink: 0 }}>
               {formatCurrency(order.totalPrice || order.total || 0)}
             </span>
-            <ChevronRight size={16} style={{ color: "var(--ink-subtle)" }} className="hidden sm:inline" />
+            <ChevronRight size={16} style={{ color: "var(--ink-subtle)" }} className="hidden sm:inline shrink-0" />
           </div>
         </Link>
       ))}

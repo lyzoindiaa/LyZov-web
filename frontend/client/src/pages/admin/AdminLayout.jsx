@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { NavLink, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -26,7 +26,8 @@ import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
 import ThemeToggle from "../../components/ui/ThemeToggle";
 import Logo from "../../components/ui/Logo";
-import { useState } from "react";
+import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
+import { prefetchByPath } from "../../routes/routeLoaders";
 
 const navItems = [
   { label: "Analytics", to: "/seller", icon: BarChart3, end: true },
@@ -129,6 +130,8 @@ const AdminLayout = () => {
                 to={item.to}
                 end={item.end}
                 onClick={() => setMobileOpen(false)}
+                onMouseEnter={() => prefetchByPath(item.to)}
+                onFocus={() => prefetchByPath(item.to)}
                 className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
               >
                 <item.icon size={16} />
@@ -342,8 +345,10 @@ const AdminLayout = () => {
         </header>
 
         {/* ── Page Content ───────────────────────────────── */}
-        <main style={{ flex: 1, padding: "1.5rem", backgroundColor: "var(--bg)", overflowX: "hidden" }} className="lg:p-8">
-          <Outlet />
+        <main style={{ flex: 1, backgroundColor: "var(--bg)", overflowX: "hidden" }} className="p-3 sm:p-6 lg:p-8">
+          <Suspense fallback={<OutletContentSkeleton variant="portal" />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

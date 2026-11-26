@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Store, ShieldCheck, Star, Package, ChevronRight, ArrowLeft, Search, Palmtree, Clock } from "lucide-react";
 import { productService } from "../services/productService";
 import ProductGrid from "../components/product/ProductGrid";
+import ExpandableText from "../components/ui/ExpandableText";
 import SEO from "../components/common/SEO";
 
 const SellerStorefrontPage = () => {
@@ -139,7 +140,12 @@ const SellerStorefrontPage = () => {
                   )}
                 </div>
                 {storeData?.storeBio && (
-                  <p className="mt-1 text-sm text-gray-300 max-w-xl">{storeData.storeBio}</p>
+                  <ExpandableText
+                    text={storeData.storeBio}
+                    lines={3}
+                    className="mt-1 text-sm text-gray-300 max-w-xl"
+                    buttonClassName="text-amber-400"
+                  />
                 )}
               </div>
             </div>
