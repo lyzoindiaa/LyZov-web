@@ -280,7 +280,7 @@ const OrderDetailsPage = () => {
                   </div>
                 )}
               </div>
-              <span className="text-sm font-semibold tabular-nums">
+              <span className="text-sm font-semibold tabular-nums whitespace-nowrap shrink-0">
                 {formatCurrency(item.price * item.quantity)}
               </span>
             </div>
@@ -320,29 +320,29 @@ const OrderDetailsPage = () => {
                   : `Online Payment (${order.paymentResult?.currency?.toUpperCase() || "INR"})`}
               </span>
             </div>
-            <div className="flex justify-between text-stone">
+            <div className="flex justify-between gap-4 text-stone">
               <span>Items</span>
-              <span className="tabular-nums">{formatCurrency(order.itemsPrice)}</span>
+              <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.itemsPrice)}</span>
             </div>
             {order.discountAmount > 0 && (
-              <div className="flex justify-between text-emerald-600">
+              <div className="flex justify-between gap-4 text-emerald-600">
                 <span>Discount</span>
-                <span className="tabular-nums">-{formatCurrency(order.discountAmount)}</span>
+                <span className="tabular-nums whitespace-nowrap">-{formatCurrency(order.discountAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-stone">
+            <div className="flex justify-between gap-4 text-stone">
               <span>Tax</span>
-              <span className="tabular-nums">{formatCurrency(order.taxPrice)}</span>
+              <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.taxPrice)}</span>
             </div>
-            <div className="flex justify-between text-stone">
+            <div className="flex justify-between gap-4 text-stone">
               <span>Shipping</span>
-              <span className="tabular-nums">
+              <span className="tabular-nums whitespace-nowrap">
                 {order.shippingPrice === 0 ? "Free" : formatCurrency(order.shippingPrice)}
               </span>
             </div>
-            <div className="flex justify-between border-t border-hairline pt-2 font-semibold dark:border-hairline-dark">
+            <div className="flex justify-between gap-4 border-t border-hairline pt-2 font-semibold dark:border-hairline-dark">
               <span>Total</span>
-              <span className="tabular-nums">{formatCurrency(order.totalPrice)}</span>
+              <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.totalPrice)}</span>
             </div>
           </div>
         </div>

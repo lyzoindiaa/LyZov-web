@@ -196,13 +196,15 @@ const AdminCustomersPage = () => {
               fontSize: "0.8125rem",
               fontWeight: 600,
               cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
             Search
           </button>
         </form>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--bg)", padding: "0.25rem", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--bg)", padding: "0.25rem", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
           {["all", "active", "inactive"].map((s) => (
             <button
               key={s}
@@ -236,9 +238,9 @@ const AdminCustomersPage = () => {
         }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", minWidth: "680px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.8125rem" }}>
+          <table style={{ width: "100%", minWidth: "820px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.8125rem" }}>
             <thead>
-              <tr style={{ backgroundColor: "var(--bg-raised)", borderBottom: "1px solid var(--border)" }}>
+              <tr style={{ backgroundColor: "var(--bg-raised)", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>
                 <th style={{ padding: "0.875rem 1rem", fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.06em" }}>
                   Customer
                 </th>
@@ -259,22 +261,9 @@ const AdminCustomersPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: "3rem", textAlign: "center", color: "var(--ink-muted)" }}>
-                    <RefreshCw size={20} className="animate-spin" style={{ margin: "0 auto 0.5rem" }} />
-                    Loading customers...
-                  </td>
-                </tr>
-              ) : customers.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: "3rem", textAlign: "center", color: "var(--ink-muted)" }}>
-                    No customer accounts found.
-                  </td>
-                </tr>
-              ) : (
-                customers.map((c) => (
+            {!loading && customers.length > 0 && (
+              <tbody>
+                {customers.map((c) => (
                   <tr
                     key={c._id}
                     style={{
@@ -323,16 +312,17 @@ const AdminCustomersPage = () => {
                     </td>
 
                     {/* Profile Completed */}
-                    <td style={{ padding: "1rem" }}>
+                    <td style={{ padding: "1rem", whiteSpace: "nowrap" }}>
                       <span
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "0.25rem",
-                          padding: "0.2rem 0.5rem",
+                          padding: "0.25rem 0.625rem",
                           borderRadius: "9999px",
                           fontSize: "11px",
                           fontWeight: 700,
+                          whiteSpace: "nowrap",
                           backgroundColor: c.profileComplete ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
                           color: c.profileComplete ? "#10b981" : "#f59e0b",
                         }}
@@ -342,32 +332,33 @@ const AdminCustomersPage = () => {
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: "1rem" }}>
+                    <td style={{ padding: "1rem", whiteSpace: "nowrap" }}>
                       <span
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "0.35rem",
-                          padding: "0.2rem 0.5rem",
+                          padding: "0.25rem 0.625rem",
                           borderRadius: "9999px",
                           fontSize: "11px",
                           fontWeight: 700,
+                          whiteSpace: "nowrap",
                           backgroundColor: c.isActive ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
                           color: c.isActive ? "#10b981" : "#ef4444",
                         }}
                       >
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: c.isActive ? "#10b981" : "#ef4444" }} />
+                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0, backgroundColor: c.isActive ? "#10b981" : "#ef4444" }} />
                         {c.isActive ? "Active" : "Disabled"}
                       </span>
                     </td>
 
                     {/* Joined Date */}
-                    <td style={{ padding: "1rem", color: "var(--ink-muted)" }}>
+                    <td style={{ padding: "1rem", color: "var(--ink-muted)", whiteSpace: "nowrap" }}>
                       {new Date(c.createdAt).toLocaleDateString()}
                     </td>
 
                     {/* Action */}
-                    <td style={{ padding: "1rem", textAlign: "right" }}>
+                    <td style={{ padding: "1rem", textAlign: "right", whiteSpace: "nowrap" }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
                         <button
                           onClick={() => handlePromptToggleStatus(c)}
@@ -381,6 +372,7 @@ const AdminCustomersPage = () => {
                             fontSize: "0.75rem",
                             fontWeight: 600,
                             cursor: "pointer",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {c.isActive ? "Deactivate" : "Activate"}
@@ -390,8 +382,9 @@ const AdminCustomersPage = () => {
                           onClick={() => handlePromptDeleteCustomer(c)}
                           disabled={actionLoadingId === c._id}
                           title="Permanently Delete Account & Blacklist Email"
+                          aria-label="Delete customer"
                           style={{
-                            padding: "0.35rem 0.5rem",
+                            padding: "0.45rem 0.55rem",
                             borderRadius: "0.375rem",
                             border: "1px solid rgba(239, 68, 68, 0.25)",
                             backgroundColor: "rgba(239, 68, 68, 0.08)",
@@ -400,18 +393,30 @@ const AdminCustomersPage = () => {
                             alignItems: "center",
                             justifyContent: "center",
                             cursor: "pointer",
+                            flexShrink: 0,
                           }}
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={15} className="shrink-0" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
+                ))}
+              </tbody>
+            )}
           </table>
         </div>
+
+        {loading ? (
+          <div style={{ padding: "3rem 1rem", textAlign: "center", color: "var(--ink-muted)" }}>
+            <RefreshCw size={20} className="animate-spin" style={{ margin: "0 auto 0.5rem" }} />
+            Loading customers...
+          </div>
+        ) : customers.length === 0 ? (
+          <div style={{ padding: "3rem 1rem", textAlign: "center", color: "var(--ink-muted)" }}>
+            No customer accounts found.
+          </div>
+        ) : null}
 
         {/* Pagination Bar */}
         <div className="p-4 border-t border-[var(--border)]">

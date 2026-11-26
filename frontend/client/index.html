@@ -9,6 +9,94 @@
       content="Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery."
     />
     <meta name="robots" content="index, follow" />
+    <script>
+      try {
+        var persistedUi = JSON.parse(localStorage.getItem("persist:lyzov-ui") || "{}");
+        var savedTheme = persistedUi.theme ? JSON.parse(persistedUi.theme) : (localStorage.getItem("lyzov-theme") || "light");
+        var isDark = savedTheme === "dark";
+        document.documentElement.classList.toggle("dark", isDark);
+        document.documentElement.style.backgroundColor = isDark ? "#000000" : "#ffffff";
+      } catch (e) {}
+    </script>
+    <style>
+      .boot-shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        color: #0f172a;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      html.dark .boot-shell {
+        background: #000000;
+        color: #f8fafc;
+      }
+      .boot-header {
+        height: 68px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+      }
+      html.dark .boot-header {
+        border-bottom-color: #202020;
+        background: #0a0a0a;
+      }
+      .boot-container {
+        width: 100%;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .boot-brand {
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.03em;
+        color: inherit;
+      }
+      .boot-brand span { color: #d97706; }
+      .boot-main {
+        flex: 1;
+        width: 100%;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        box-sizing: border-box;
+      }
+      .boot-sk {
+        border-radius: 12px;
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+        background-size: 200% 100%;
+        animation: bootPulse 1.4s ease-in-out infinite;
+      }
+      html.dark .boot-sk {
+        background: linear-gradient(90deg, #101010 25%, #1c1c1c 50%, #101010 75%);
+        background-size: 200% 100%;
+      }
+      .boot-footer {
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+        padding: 1.25rem;
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+      html.dark .boot-footer {
+        border-top-color: #202020;
+        background: #0a0a0a;
+        color: #94a3b8;
+      }
+      @keyframes bootPulse {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    </style>
     <link rel="canonical" href="https://lyzov.com" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="LyZov" />
@@ -95,7 +183,35 @@
         </nav>
       </header>
     </noscript>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-shell" aria-busy="true">
+        <header class="boot-header">
+          <div class="boot-container">
+            <div class="boot-brand">Ly<span>Zov</span></div>
+            <div style="display:flex;gap:0.75rem;align-items:center;">
+              <div class="boot-sk" style="width:72px;height:14px;"></div>
+              <div class="boot-sk" style="width:72px;height:14px;"></div>
+              <div class="boot-sk" style="width:32px;height:32px;border-radius:9999px;"></div>
+            </div>
+          </div>
+        </header>
+        <main class="boot-main">
+          <div class="boot-sk" style="width:100%;height:220px;border-radius:16px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+            <div class="boot-sk" style="height:120px;"></div>
+            <div class="boot-sk" style="height:120px;"></div>
+            <div class="boot-sk" style="height:120px;"></div>
+            <div class="boot-sk" style="height:120px;"></div>
+          </div>
+        </main>
+        <footer class="boot-footer">
+          <div class="boot-container">
+            <span>LyZov — India's Trusted Online Shopping Platform</span>
+            <span>Loading store...</span>
+          </div>
+        </footer>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { NavLink, Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,6 +8,8 @@ import {
 } from "lucide-react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
+import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
+import { prefetchByPath } from "../../routes/routeLoaders";
 
 const navItems = [
   { label: "My Orders", to: "/dashboard/orders", icon: ClipboardList },
@@ -232,6 +235,8 @@ const DashboardLayout = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onMouseEnter={() => prefetchByPath(item.to)}
+              onFocus={() => prefetchByPath(item.to)}
               className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
             >
               <item.icon size={16} />
@@ -279,7 +284,9 @@ const DashboardLayout = () => {
 
         {/* Content */}
         <div className="card-surface p-6">
-          <Outlet />
+          <Suspense fallback={<OutletContentSkeleton variant="portal" />}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </div>

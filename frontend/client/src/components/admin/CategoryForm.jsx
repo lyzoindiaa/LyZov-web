@@ -130,7 +130,11 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
+      setActiveTab("basic");
       toast.error("Category name is required");
+      if (typeof window !== "undefined" && window.scrollY > 120) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       return;
     }
 
@@ -144,8 +148,9 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
 
       await onSubmit(payload);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save category");
-      throw err;
+      toast.error(err.response?.data?.message || "Failed to save category", {
+        toastId: "category-submit-error",
+      });
     }
   };
 
@@ -169,7 +174,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {category ? "Edit Category" : "Add New Category"}
@@ -184,7 +189,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
           <Button
             variant="secondary"
             onClick={onCancel}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 self-start sm:self-auto shrink-0 whitespace-nowrap"
           >
             <ArrowLeft size={16} />
             Back
@@ -239,11 +244,11 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {/* Tab 1: Basic Information */}
         {activeTab === "basic" && (
-          <div className="card-surface p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+          <div className="card-surface p-4 sm:p-8 space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 1: Basic Information</h3>
                 <p className="text-xs text-stone mt-0.5">
@@ -251,7 +256,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
                 </p>
               </div>
               {isStep1Complete && (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5 whitespace-nowrap">
                   <CheckCircle2 size={14} /> Step 1 Completed
                 </span>
               )}
@@ -259,11 +264,11 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
 
             {/* Parent Category Selector */}
             <div className="rounded-xl border border-hairline bg-cream/10 p-4 dark:border-hairline-dark dark:bg-charcoal/30">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center gap-1.5">
-                  <Layers size={14} className="text-[var(--accent)]" /> Category Hierarchy Level
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between mb-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone flex items-center gap-1.5 whitespace-nowrap">
+                  <Layers size={14} className="text-[var(--accent)] shrink-0" /> Category Hierarchy Level
                 </label>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                <span className="inline-block rounded-lg sm:rounded-full px-2.5 py-1 text-xs font-medium bg-[var(--accent-bg)] text-[var(--accent)]">
                   {levelNames[calculatedLevel]}
                 </span>
               </div>
@@ -297,10 +302,10 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
                 </select>
 
                 {/* Breadcrumb Preview */}
-                <div className="flex items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
-                  <CornerDownRight size={13} className="text-[var(--accent)]" />
-                  <span>Hierarchy Path:</span>
-                  <span className="font-semibold text-ink dark:text-cream">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-stone bg-white/60 dark:bg-charcoal/60 px-3 py-2 rounded-lg border border-hairline dark:border-hairline-dark">
+                  <CornerDownRight size={13} className="text-[var(--accent)] shrink-0" />
+                  <span className="whitespace-nowrap shrink-0">Hierarchy Path:</span>
+                  <span className="font-semibold text-ink dark:text-cream min-w-0">
                     {selectedParentDoc ? (
                       <>
                         {(selectedParentDoc.ancestors || []).map((a) => (
@@ -320,7 +325,7 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
             </div>
 
             <Input
-              label="Category Name *"
+              label="Category Name"
               value={formData.name}
               onChange={handleInputChange}
               name="name"
@@ -359,12 +364,12 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
               />
             </div>
 
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark">
               <span className="text-xs text-stone">Saving will automatically unlock Step 2 (Image)</span>
               <Button
                 type="button"
                 onClick={() => handleTabClick("image")}
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto justify-center whitespace-nowrap shrink-0 flex items-center gap-2"
               >
                 <span>Continue to Step 2</span>
                 <ArrowRight size={16} />
@@ -375,8 +380,8 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
 
         {/* Tab 2: Image Upload */}
         {activeTab === "image" && (
-          <div className="card-surface p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-hairline dark:border-hairline-dark">
+          <div className="card-surface p-4 sm:p-8 space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-hairline dark:border-hairline-dark">
               <div>
                 <h3 className="font-display text-lg font-bold">Step 2: Category Image</h3>
                 <p className="text-xs text-stone mt-0.5">
@@ -461,22 +466,22 @@ const CategoryForm = ({ category, initialParent, onSubmit, onCancel, isLoading }
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-hairline dark:border-hairline-dark">
+              <div className="flex items-center justify-between sm:justify-start gap-4">
                 <button
                   type="button"
                   onClick={() => setActiveTab("basic")}
-                  className="text-xs text-stone hover:text-[var(--ink)] underline font-medium"
+                  className="text-xs text-stone hover:text-[var(--ink)] underline font-medium whitespace-nowrap"
                 >
                   ← Back to Step 1
                 </button>
                 {onCancel && (
-                  <Button type="button" variant="secondary" onClick={onCancel} size="sm">
+                  <Button type="button" variant="secondary" onClick={onCancel} size="sm" className="whitespace-nowrap">
                     Cancel
                   </Button>
                 )}
               </div>
-              <Button type="submit" isLoading={isLoading} className="flex items-center gap-2">
+              <Button type="submit" isLoading={isLoading} className="w-full sm:w-auto justify-center whitespace-nowrap shrink-0 flex items-center gap-2">
                 <CheckCircle2 size={16} />
                 <span>{category ? "Save Changes" : "Create Category"}</span>
               </Button>

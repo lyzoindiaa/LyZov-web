@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -5,9 +6,7 @@ import MiniCart from "./MiniCart";
 import CollectionHero from "./CollectionHero";
 import AboutLyZov from "./About";
 import DevelopmentBanner from "./DevelopmentBanner";
-import { hasSeenCollectionHero, markCollectionHeroSeen } from "../../utils/collectionHero";
-
-const isCatalogPath = (pathname) => pathname === "/shop" || pathname.startsWith("/product/");
+import { OutletContentSkeleton } from "../skeletons/Skeletons";
 
 const PublicLayout = () => {
   const { pathname } = useLocation();
@@ -20,7 +19,9 @@ const PublicLayout = () => {
       <MiniCart />
       {showCollectionHero && <CollectionHero />}
       <main className="flex-1 min-w-0">
-        <Outlet />
+        <Suspense fallback={<OutletContentSkeleton variant="storefront" />}>
+          <Outlet />
+        </Suspense>
       </main>
       <AboutLyZov />
       <Footer />

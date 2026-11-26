@@ -537,7 +537,7 @@ const AdminOrderDetailsPage = () => {
                         {item.color ? ` · ${item.color}` : ""}
                         {item.size ? ` · ${item.size}` : ""}
                       </p>
-                      <p className="mt-2 font-semibold tabular-nums">
+                      <p className="mt-2 font-semibold tabular-nums whitespace-nowrap">
                         {formatCurrency(item.price * item.quantity)}
                       </p>
                       {product?.slug && (
@@ -858,21 +858,21 @@ const AdminOrderDetailsPage = () => {
                     {order.paymentMethod} · {order.paymentResult?.currency?.toUpperCase() || "INR"}
                   </span>
                 </div>
-                <div className="flex justify-between text-stone">
+                <div className="flex justify-between gap-4 text-stone">
                   <span>Items</span>
-                  <span>{formatCurrency(order.itemsPrice)}</span>
+                  <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.itemsPrice)}</span>
                 </div>
-                <div className="flex justify-between text-stone">
+                <div className="flex justify-between gap-4 text-stone">
                   <span>Tax</span>
-                  <span>{formatCurrency(order.taxPrice)}</span>
+                  <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.taxPrice)}</span>
                 </div>
-                <div className="flex justify-between text-stone">
+                <div className="flex justify-between gap-4 text-stone">
                   <span>Shipping</span>
-                  <span>{order.shippingPrice ? formatCurrency(order.shippingPrice) : "Free"}</span>
+                  <span className="tabular-nums whitespace-nowrap">{order.shippingPrice ? formatCurrency(order.shippingPrice) : "Free"}</span>
                 </div>
-                <div className="flex justify-between border-t border-hairline pt-2 font-semibold dark:border-hairline-dark">
+                <div className="flex justify-between gap-4 border-t border-hairline pt-2 font-semibold dark:border-hairline-dark">
                   <span>Total</span>
-                  <span>{formatCurrency(order.totalPrice)}</span>
+                  <span className="tabular-nums whitespace-nowrap">{formatCurrency(order.totalPrice)}</span>
                 </div>
               </div>
             </section>

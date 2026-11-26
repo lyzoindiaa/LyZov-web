@@ -21,13 +21,16 @@ const Input = forwardRef(
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
     const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+    const hasTrailingAsterisk = typeof label === "string" && label.trim().endsWith("*");
+    const displayLabel = hasTrailingAsterisk ? label.trim().slice(0, -1).trimEnd() : label;
+    const showRequiredMark = required || hasTrailingAsterisk;
 
     return (
       <div className={`w-full flex flex-col gap-1.5 ${containerClassName}`}>
         {label && (
           <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
             <span>
-              {label} {required && <span className="text-[var(--red)]">*</span>}
+              {displayLabel} {showRequiredMark && <span className="text-[var(--red)]">*</span>}
             </span>
           </label>
         )}

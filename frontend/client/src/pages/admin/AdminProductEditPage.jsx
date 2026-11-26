@@ -63,7 +63,7 @@ const AdminProductEditPage = () => {
 
   if (isFetching) {
     return (
-      <div className="container-page py-8 flex items-center justify-center">
+      <div className="max-w-5xl mx-auto py-2 sm:py-6 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading product...</p>
@@ -74,7 +74,7 @@ const AdminProductEditPage = () => {
 
   if (!product) {
     return (
-      <div className="container-page py-8 text-center">
+      <div className="max-w-5xl mx-auto py-2 sm:py-6 text-center">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Product Not Found</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">The product you're looking for doesn't exist or has been deleted.</p>
@@ -90,7 +90,7 @@ const AdminProductEditPage = () => {
   }
 
   return (
-    <div className="container-page py-8">
+    <div className="max-w-5xl mx-auto py-2 sm:py-6">
       <ProductForm
         product={product}
         onSubmit={handleSubmit}

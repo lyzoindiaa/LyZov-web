@@ -1,5 +1,5 @@
-import { useEffect, lazy, Suspense } from "react";
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { Routes, Route, useNavigate, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,91 +8,128 @@ import PublicLayout from "./components/layout/PublicLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import SuperAdminRoute from "./routes/SuperAdminRoute";
+import { AuthBootstrapFallback } from "./components/skeletons/Skeletons";
+import {
+  routeLoaders,
+  prefetchPublicRoutes,
+  prefetchPortalRoutes,
+} from "./routes/routeLoaders";
 
 // Core eager pages for instant initial paint
 import LandingPage from "./pages/LandingPage";
 import ShopPage from "./pages/ShopPage";
 
-// ── Lazy-loaded Route Chunks ──
-// Customer & Public Pages
-const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage"));
-const CartPage = lazy(() => import("./pages/CartPage"));
-const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const RegisterPage = lazy(() => import("./pages/RegisterPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
-const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
-const ContactPage = lazy(() => import("./pages/ContactPage"));
-const PolicyPage = lazy(() => import("./pages/PolicyPage"));
-const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
+// ── Lazy-loaded Route Chunks (backed by shared prefetchable loaders) ──
+const ProductDetailsPage = lazy(routeLoaders.ProductDetailsPage);
+const CartPage = lazy(routeLoaders.CartPage);
+const CheckoutPage = lazy(routeLoaders.CheckoutPage);
+const LoginPage = lazy(routeLoaders.LoginPage);
+const RegisterPage = lazy(routeLoaders.RegisterPage);
+const ForgotPasswordPage = lazy(routeLoaders.ForgotPasswordPage);
+const ResetPasswordPage = lazy(routeLoaders.ResetPasswordPage);
+const VerifyEmailPage = lazy(routeLoaders.VerifyEmailPage);
+const ContactPage = lazy(routeLoaders.ContactPage);
+const PolicyPage = lazy(routeLoaders.PolicyPage);
+const NotFoundPage = lazy(routeLoaders.NotFoundPage);
+const TrackOrderPage = lazy(routeLoaders.TrackOrderPage);
 // [SINGLE-SELLER MODE] const SellerStorefrontPage = lazy(() => import("./pages/SellerStorefrontPage"));
 // [SINGLE-SELLER MODE] const SellerRegisterPage = lazy(() => import("./pages/SellerRegisterPage"));
-const CompleteProfilePage = lazy(() => import("./pages/CompleteProfilePage"));
+const CompleteProfilePage = lazy(routeLoaders.CompleteProfilePage);
 
 // Customer Dashboard
-const DashboardLayout = lazy(() => import("./pages/dashboard/DashboardLayout"));
-const OrdersPage = lazy(() => import("./pages/dashboard/OrdersPage"));
-const OrderDetailsPage = lazy(() => import("./pages/dashboard/OrderDetailsPage"));
-const WishlistPage = lazy(() => import("./pages/dashboard/WishlistPage"));
-const ProfilePage = lazy(() => import("./pages/dashboard/ProfilePage"));
-const AddressesPage = lazy(() => import("./pages/dashboard/AddressesPage"));
-const EmailHistoryPage = lazy(() => import("./pages/dashboard/EmailHistoryPage"));
+const DashboardLayout = lazy(routeLoaders.DashboardLayout);
+const OrdersPage = lazy(routeLoaders.OrdersPage);
+const OrderDetailsPage = lazy(routeLoaders.OrderDetailsPage);
+const WishlistPage = lazy(routeLoaders.WishlistPage);
+const ProfilePage = lazy(routeLoaders.ProfilePage);
+const AddressesPage = lazy(routeLoaders.AddressesPage);
+const EmailHistoryPage = lazy(routeLoaders.EmailHistoryPage);
 
 // Seller Portal
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
-const AdminProductsPage = lazy(() => import("./pages/admin/AdminProductsPage"));
-const AdminProductAddPage = lazy(() => import("./pages/admin/AdminProductAddPage"));
-const AdminProductEditPage = lazy(() => import("./pages/admin/AdminProductEditPage"));
-const AdminCategoriesPage = lazy(() => import("./pages/admin/AdminCategoriesPage"));
-const AdminCategoryAddPage = lazy(() => import("./pages/admin/AdminCategoryAddPage"));
-const AdminCategoryEditPage = lazy(() => import("./pages/admin/AdminCategoryEditPage"));
-const AdminBrandsPage = lazy(() => import("./pages/admin/AdminBrandsPage"));
-const AdminOrdersPage = lazy(() => import("./pages/admin/AdminOrdersPage"));
-const AdminOrderDetailsPage = lazy(() => import("./pages/admin/AdminOrderDetailsPage"));
+const AdminLayout = lazy(routeLoaders.AdminLayout);
+const AdminAnalyticsPage = lazy(routeLoaders.AdminAnalyticsPage);
+const AdminProductsPage = lazy(routeLoaders.AdminProductsPage);
+const AdminProductAddPage = lazy(routeLoaders.AdminProductAddPage);
+const AdminProductEditPage = lazy(routeLoaders.AdminProductEditPage);
+const AdminCategoriesPage = lazy(routeLoaders.AdminCategoriesPage);
+const AdminCategoryAddPage = lazy(routeLoaders.AdminCategoryAddPage);
+const AdminCategoryEditPage = lazy(routeLoaders.AdminCategoryEditPage);
+const AdminBrandsPage = lazy(routeLoaders.AdminBrandsPage);
+const AdminOrdersPage = lazy(routeLoaders.AdminOrdersPage);
+const AdminOrderDetailsPage = lazy(routeLoaders.AdminOrderDetailsPage);
 // [SINGLE-SELLER MODE] const SellerPayoutsPage = lazy(() => import("./pages/admin/SellerPayoutsPage"));
-const AdminEmailsPage = lazy(() => import("./pages/admin/AdminEmailsPage"));
-const AdminProfilePage = lazy(() => import("./pages/admin/AdminProfilePage"));
-const SellerSettingsPage = lazy(() => import("./pages/admin/SellerSettingsPage"));
-const AdminCouponsPage = lazy(() => import("./pages/admin/AdminCouponsPage"));
+const AdminEmailsPage = lazy(routeLoaders.AdminEmailsPage);
+const AdminProfilePage = lazy(routeLoaders.AdminProfilePage);
+const SellerSettingsPage = lazy(routeLoaders.SellerSettingsPage);
+const AdminCouponsPage = lazy(routeLoaders.AdminCouponsPage);
 
 // SuperAdmin Console
-const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
-const AdminDashboardPage = lazy(() => import("./pages/superadmin/AdminDashboardPage"));
+const SuperAdminLayout = lazy(routeLoaders.SuperAdminLayout);
+const AdminDashboardPage = lazy(routeLoaders.AdminDashboardPage);
 // [SINGLE-SELLER MODE] const AdminSellersPage = lazy(() => import("./pages/superadmin/AdminSellersPage"));
 // [SINGLE-SELLER MODE] const AdminSellerDetailsPage = lazy(() => import("./pages/superadmin/AdminSellerDetailsPage"));
-const AdminCustomersPage = lazy(() => import("./pages/superadmin/AdminCustomersPage"));
+const AdminCustomersPage = lazy(routeLoaders.AdminCustomersPage);
 // [SINGLE-SELLER MODE] const AdminProductModerationPage = lazy(() => import("./pages/superadmin/AdminProductModerationPage"));
 // [SINGLE-SELLER MODE] const AdminMarketplacePayoutsPage = lazy(() => import("./pages/superadmin/AdminMarketplacePayoutsPage"));
-const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminSettingsPage = lazy(routeLoaders.AdminSettingsPage);
 
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { fetchCart } from "./features/cart/cartSlice";
 import { useAuth } from "./hooks/useAuth";
 
-const RouteLoadingFallback = () => (
-  <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-8">
-    <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
-    <span className="text-xs font-semibold text-[var(--ink-muted)]">Loading view...</span>
-  </div>
-);
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    if (hash || navigationType === "POP") return;
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash, navigationType]);
+
+  return null;
+}
 
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const theme = useSelector((state) => state.ui.theme);
+  const [isCompactViewport, setIsCompactViewport] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = (e) => setIsCompactViewport(e.matches);
+    setIsCompactViewport(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   // Global Theme Sync across entire app
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    const isDark = theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.style.backgroundColor = isDark ? "#000000" : "#ffffff";
   }, [theme]);
 
   useEffect(() => {
     dispatch(fetchCurrentUser());
   }, [dispatch]);
+
+  // Idle-prefetch common public pages after first paint so navigation feels instant
+  useEffect(() => prefetchPublicRoutes(), []);
+
+  // Idle-prefetch role-specific portal pages once authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user?.role) return undefined;
+    return prefetchPortalRoutes(user.role);
+  }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
     if (isAuthenticated) dispatch(fetchCart());
@@ -116,7 +153,8 @@ function App() {
 
   return (
     <>
-      <Suspense fallback={<RouteLoadingFallback />}>
+      <ScrollToTop />
+      <Suspense fallback={<AuthBootstrapFallback message="Loading view..." />}>
         <Routes>
           {/* ── Standalone Auth Routes (No duplicate Navbar/Footer) ── */}
           <Route path="/login" element={<LoginPage />} />
@@ -128,7 +166,7 @@ function App() {
           <Route
             path="/complete-profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute standalone>
                 <CompleteProfilePage />
               </ProtectedRoute>
             }
@@ -244,10 +282,13 @@ function App() {
       </Suspense>
 
       <ToastContainer
-        position="top-right"
-        autoClose={5000}
+        position={isCompactViewport ? "top-center" : "top-right"}
+        autoClose={7000}
+        newestOnTop
+        closeOnClick={false}
         pauseOnHover
         pauseOnFocusLoss={false}
+        style={{ zIndex: 99999 }}
         theme={theme === "dark" ? "dark" : "light"}
       />
     </>

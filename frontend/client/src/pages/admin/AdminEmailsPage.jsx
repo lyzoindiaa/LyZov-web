@@ -75,14 +75,15 @@ const AdminEmailsPage = () => {
 
   const handleSendTest = async (e) => {
     e.preventDefault();
-    if (!testEmail) {
-      toast.error("Please enter a test recipient email.");
+    const trimmedEmail = testEmail.trim();
+    if (!trimmedEmail || !/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      toast.error("Please enter a valid test recipient email.");
       return;
     }
 
     setIsSendingTest(true);
     try {
-      const res = await emailAdminService.sendTestEmail(testEmail);
+      const res = await emailAdminService.sendTestEmail(trimmedEmail);
       toast.success(res.message || "Test email dispatched successfully!");
       setIsTestModalOpen(false);
       setTestEmail("");
@@ -202,7 +203,7 @@ const AdminEmailsPage = () => {
           gap: "1rem",
         }}
       >
-        <div className="flex-1 min-w-[16rem]">
+        <div className="w-full sm:flex-1 sm:min-w-[16rem]">
           <Input
             placeholder="Search by recipient or subject..."
             leftIcon={Search}
@@ -285,9 +286,9 @@ const AdminEmailsPage = () => {
         }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", minWidth: "700px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+          <table style={{ width: "100%", minWidth: "740px", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
             <thead>
-              <tr style={{ backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+              <tr style={{ backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>
                 <th style={{ padding: "0.875rem 1.25rem", fontWeight: 700, color: "var(--ink-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Recipient
                 </th>
@@ -306,28 +307,9 @@ const AdminEmailsPage = () => {
                 <th style={{ padding: "0.875rem 1.25rem", textAlign: "right" }}>Action</th>
               </tr>
             </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} style={{ padding: "3rem", textAlign: "center", color: "var(--ink-muted)" }}>
-                    <div className="flex items-center justify-center gap-2">
-                      <RefreshCw size={16} className="animate-spin" />
-                      <span>Loading communication audit records...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ padding: "3.5rem 1rem", textAlign: "center", color: "var(--ink-muted)" }}>
-                    <Mail size={32} style={{ margin: "0 auto 0.75rem", opacity: 0.4 }} />
-                    <p style={{ fontWeight: 600, color: "var(--ink)" }}>No email logs found</p>
-                    <p style={{ fontSize: "0.75rem", marginTop: "4px" }}>
-                      Outgoing transactional emails will automatically record here.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log) => {
+            {!isLoading && logs.length > 0 && (
+              <tbody>
+                {logs.map((log) => {
                   const t = templateLabels[log.template] || {
                     label: log.template,
                     color: "var(--ink-muted)",
@@ -401,22 +383,40 @@ const AdminEmailsPage = () => {
                         })}
                       </td>
 
-                      <td style={{ padding: "0.875rem 1.25rem", textAlign: "right" }}>
+                      <td style={{ padding: "0.875rem 1.25rem", textAlign: "right", whiteSpace: "nowrap" }}>
                         <button
                           onClick={() => setSelectedLog(log)}
-                          className="btn-secondary"
-                          style={{ padding: "0.35rem 0.65rem", borderRadius: "0.5rem", fontSize: "0.75rem" }}
+                          className="btn-secondary inline-flex items-center justify-center shrink-0"
+                          style={{ padding: "0.45rem 0.65rem", borderRadius: "0.5rem", fontSize: "0.75rem", minHeight: "auto" }}
+                          aria-label="View email log"
                         >
-                          <Eye size={13} />
+                          <Eye size={15} className="shrink-0" />
                         </button>
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
+                })}
+              </tbody>
+            )}
           </table>
         </div>
+
+        {isLoading ? (
+          <div style={{ padding: "3rem 1rem", textAlign: "center", color: "var(--ink-muted)" }}>
+            <div className="flex items-center justify-center gap-2">
+              <RefreshCw size={16} className="animate-spin" />
+              <span>Loading communication audit records...</span>
+            </div>
+          </div>
+        ) : logs.length === 0 ? (
+          <div style={{ padding: "3.5rem 1rem", textAlign: "center", color: "var(--ink-muted)" }}>
+            <Mail size={32} style={{ margin: "0 auto 0.75rem", opacity: 0.4 }} />
+            <p style={{ fontWeight: 600, color: "var(--ink)" }}>No email logs found</p>
+            <p style={{ fontSize: "0.75rem", marginTop: "4px" }}>
+              Outgoing transactional emails will automatically record here.
+            </p>
+          </div>
+        ) : null}
 
         {/* ── Pagination ── */}
         {meta.totalPages > 1 && (
@@ -497,7 +497,7 @@ const AdminEmailsPage = () => {
               This will trigger a test email via the configured Gmail SMTP transport and record a test log entry.
             </p>
 
-            <form onSubmit={handleSendTest} className="flex flex-col gap-4">
+            <form onSubmit={handleSendTest} noValidate className="flex flex-col gap-4">
               <Input
                 label="Target Recipient Email"
                 type="email"

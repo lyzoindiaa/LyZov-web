@@ -48,7 +48,7 @@ const AdminProductAddPage = () => {
   };
 
   return (
-    <div className="container-page py-8">
+    <div className="max-w-5xl mx-auto py-2 sm:py-6">
       <ProductForm
         product={null}
         onSubmit={handleSubmit}

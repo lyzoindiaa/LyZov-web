@@ -186,7 +186,7 @@ const CartPage = () => {
                       dispatch(updateCartItem({ itemId: item._id, quantity: item.quantity - 1 }))
                     }
                   />
-                  <span style={{ fontSize: "1rem", fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                  <span style={{ fontSize: "1rem", fontWeight: 800, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {formatCurrency(item.price * item.quantity)}
                   </span>
                 </div>

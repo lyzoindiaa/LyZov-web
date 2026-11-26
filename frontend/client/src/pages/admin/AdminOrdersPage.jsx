@@ -155,40 +155,29 @@ const AdminOrdersPage = () => {
           </select>
         </div>
 
-        <div className="card-surface overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-hairline text-xs uppercase tracking-wide text-stone dark:border-hairline-dark">
-                <th className="px-5 py-4">Order</th>
-                <th className="px-5 py-4">Customer</th>
-                <th className="px-5 py-4">Date</th>
-                <th className="px-5 py-4">Total</th>
-                <th className="px-5 py-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-stone">
-                    Loading orders...
-                  </td>
+        <div className="card-surface overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-hairline text-xs uppercase tracking-wide text-stone dark:border-hairline-dark">
+                  <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Order</th>
+                  <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Customer</th>
+                  <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Date</th>
+                  <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Total</th>
+                  <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Status</th>
                 </tr>
-              ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-stone">
-                    No orders found
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => {
+              </thead>
+              {!isLoading && orders.length > 0 && (
+                <tbody>
+                  {orders.map((order) => {
                   const isDelivered = order.orderStatus === "delivered";
                   return (
                     <tr key={order._id} className="border-b border-hairline last:border-0 dark:border-hairline-dark">
-                      <td className="px-5 py-4 font-medium">
+                      <td className="px-4 sm:px-5 py-4 font-medium whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => navigate(`/seller/orders/${order._id}`)}
-                          className="flex items-center gap-3 text-left hover:text-[var(--accent)] hover:underline"
+                          className="flex items-center gap-3 text-left hover:text-[var(--accent)] hover:underline whitespace-nowrap"
                         >
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--accent-bg)] text-[var(--accent)]">
                             {order.items?.find((item) => item.image)?.image ? (
@@ -201,13 +190,13 @@ const AdminOrdersPage = () => {
                               <Package size={18} />
                             )}
                           </span>
-                          {order.orderNumber}
+                          <span>{order.orderNumber}</span>
                         </button>
                       </td>
-                      <td className="px-5 py-4 text-stone">{order.user?.name}</td>
-                      <td className="px-5 py-4 text-stone">{formatDateTime(order.createdAt)}</td>
-                      <td className="px-5 py-4 tabular-nums">{formatCurrency(order.totalPrice)}</td>
-                      <td className="px-5 py-4">
+                      <td className="px-4 sm:px-5 py-4 text-stone whitespace-nowrap">{order.user?.name}</td>
+                      <td className="px-4 sm:px-5 py-4 text-stone whitespace-nowrap">{formatDateTime(order.createdAt)}</td>
+                      <td className="px-4 sm:px-5 py-4 tabular-nums font-semibold whitespace-nowrap">{formatCurrency(order.totalPrice)}</td>
+                      <td className="px-4 sm:px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-2">
                           <select
                             value={order.orderStatus}
@@ -258,10 +247,21 @@ const AdminOrdersPage = () => {
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
+                })}
+              </tbody>
+            )}
           </table>
+          </div>
+
+          {isLoading ? (
+            <div className="px-5 py-8 text-center text-stone">
+              Loading orders...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="px-5 py-8 text-center text-stone">
+              No orders found
+            </div>
+          ) : null}
         </div>
 
         <div className="p-4 border-t border-[var(--border)]">

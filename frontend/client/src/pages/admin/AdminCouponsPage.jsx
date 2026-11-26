@@ -139,13 +139,41 @@ const AdminCouponsPage = () => {
 
   const handleSubmitModal = async (e) => {
     e.preventDefault();
+    const trimmedCode = formData.code.toUpperCase().trim();
+    const parsedDiscount = Number(formData.discountValue);
+
+    if (trimmedCode.length < 3 || trimmedCode.length > 20) {
+      toast.error("Coupon code must be between 3 and 20 characters");
+      return;
+    }
+    if (!Number.isFinite(parsedDiscount) || parsedDiscount < 1) {
+      toast.error("Please enter a discount value of at least 1");
+      return;
+    }
+    if (formData.discountType === "percentage" && parsedDiscount > 90) {
+      toast.error("Percentage discount cannot exceed 90%");
+      return;
+    }
+    if (formData.discountType === "flat" && parsedDiscount > 100000) {
+      toast.error("Flat discount cannot exceed ₹1,00,000");
+      return;
+    }
+    if (!formData.validFrom || !formData.validUntil) {
+      toast.error("Please select both Valid From and Valid Until dates");
+      return;
+    }
+    if (new Date(formData.validUntil) < new Date(formData.validFrom)) {
+      toast.error("Valid Until date must be on or after Valid From date");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const payload = {
-        code: formData.code.toUpperCase().trim(),
+        code: trimmedCode,
         description: formData.description.trim(),
         discountType: formData.discountType,
-        discountValue: Number(formData.discountValue),
+        discountValue: parsedDiscount,
         minPurchaseAmount: Number(formData.minPurchaseAmount) || 0,
         maxDiscountAmount:
           formData.discountType === "percentage" && formData.maxDiscountAmount !== ""
@@ -212,21 +240,21 @@ const AdminCouponsPage = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={fetchCoupons}
-            className="btn-secondary !py-2 !px-3 text-xs font-bold inline-flex items-center gap-1.5"
+            className="btn-secondary !py-2 !px-3 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
             title="Refresh"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Refresh
+            <RefreshCw size={14} className={loading ? "animate-spin shrink-0" : "shrink-0"} />
+            <span>Refresh</span>
           </button>
           <button
             onClick={openCreateModal}
-            className="btn-accent !py-2 !px-4 text-xs font-bold inline-flex items-center gap-2 shadow-soft"
+            className="btn-accent !py-2 !px-4 text-xs font-bold inline-flex items-center gap-2 shadow-soft whitespace-nowrap shrink-0"
           >
-            <Plus size={16} />
-            {isSuperAdmin ? "New Platform Coupon" : "Create Store Coupon"}
+            <Plus size={16} className="shrink-0" />
+            <span>{isSuperAdmin ? "New Platform Coupon" : "Create Store Coupon"}</span>
           </button>
         </div>
       </div>
@@ -271,7 +299,7 @@ const AdminCouponsPage = () => {
               <Percent size={18} />
             </span>
           </div>
-          <p className="text-2xl font-black text-[var(--ink)] mt-2">
+          <p className="text-2xl font-black text-[var(--ink)] mt-2 tabular-nums whitespace-nowrap">
             {formatCurrency(totalDiscountDisbursed)}
           </p>
           <span className="text-[11px] text-[var(--ink-muted)]">Total customer savings disbursed</span>
@@ -286,7 +314,7 @@ const AdminCouponsPage = () => {
               <IndianRupee size={18} />
             </span>
           </div>
-          <p className="text-2xl font-black text-[var(--ink)] mt-2">
+          <p className="text-2xl font-black text-[var(--ink)] mt-2 tabular-nums whitespace-nowrap">
             {formatCurrency(totalRevenueGenerated)}
           </p>
           <span className="text-[11px] text-[var(--ink-muted)]">Gross checkout value from campaigns</span>
@@ -295,7 +323,7 @@ const AdminCouponsPage = () => {
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md relative">
+        <form onSubmit={handleSearchSubmit} className="w-full md:flex-1 md:max-w-md relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)]" />
           <input
             type="text"
@@ -306,14 +334,14 @@ const AdminCouponsPage = () => {
           />
         </form>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full md:w-auto">
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <Filter size={14} className="text-[var(--ink-muted)]" />
+          <div className="flex items-center gap-1.5 text-xs w-full sm:w-auto">
+            <Filter size={14} className="text-[var(--ink-muted)] shrink-0" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="py-1.5 px-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--ink)] text-xs font-medium focus:outline-none focus:border-[var(--accent)]"
+              className="w-full sm:w-auto py-1.5 px-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--ink)] text-xs font-medium focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active & Live</option>
@@ -325,12 +353,12 @@ const AdminCouponsPage = () => {
 
           {/* Super Admin Scope Filter */}
           {isSuperAdmin && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <Layers size={14} className="text-[var(--ink-muted)]" />
+            <div className="flex items-center gap-1.5 text-xs w-full sm:w-auto">
+              <Layers size={14} className="text-[var(--ink-muted)] shrink-0" />
               <select
                 value={scopeFilter}
                 onChange={(e) => setScopeFilter(e.target.value)}
-                className="py-1.5 px-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--ink)] text-xs font-medium focus:outline-none focus:border-[var(--accent)]"
+                className="w-full sm:w-auto py-1.5 px-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--ink)] text-xs font-medium focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="all">All Scopes</option>
                 <option value="platform">Platform-Wide (Admin)</option>
@@ -344,43 +372,22 @@ const AdminCouponsPage = () => {
       {/* Coupons Table */}
       <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)] shadow-soft">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full min-w-[960px] text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--bg-subtle)] font-bold text-[var(--ink-muted)] uppercase tracking-wider">
-                <th className="py-3 px-4">Coupon Code</th>
-                <th className="py-3 px-4">Discount</th>
-                <th className="py-3 px-4">Funding & Scope</th>
-                <th className="py-3 px-4">Thresholds</th>
-                <th className="py-3 px-4">Validity</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Redemptions</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+              <tr className="border-b border-[var(--border)] bg-[var(--bg-subtle)] font-bold text-[var(--ink-muted)] uppercase tracking-wider whitespace-nowrap">
+                <th className="py-3 px-4 whitespace-nowrap">Coupon Code</th>
+                <th className="py-3 px-4 whitespace-nowrap">Discount</th>
+                <th className="py-3 px-4 whitespace-nowrap">Funding & Scope</th>
+                <th className="py-3 px-4 whitespace-nowrap">Thresholds</th>
+                <th className="py-3 px-4 whitespace-nowrap">Validity</th>
+                <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                <th className="py-3 px-4 whitespace-nowrap">Redemptions</th>
+                <th className="py-3 px-4 whitespace-nowrap text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-[var(--ink-muted)]">
-                    <RefreshCw size={22} className="animate-spin inline-block mb-2 text-[var(--accent)]" />
-                    <p className="font-medium">Loading promotional campaigns...</p>
-                  </td>
-                </tr>
-              ) : coupons.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-[var(--ink-muted)]">
-                    <Ticket size={32} className="inline-block mb-2 opacity-30" />
-                    <p className="font-bold text-sm text-[var(--ink)]">No coupons found</p>
-                    <p className="text-xs mt-1">Create your first coupon code to start offering customer discounts.</p>
-                    <button
-                      onClick={openCreateModal}
-                      className="btn-accent !py-1.5 !px-3 text-xs font-bold inline-flex items-center gap-1.5 mt-3"
-                    >
-                      <Plus size={14} /> Create Coupon
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                coupons.map((coupon) => {
+            {!loading && coupons.length > 0 && (
+              <tbody className="divide-y divide-[var(--border)]">
+                {coupons.map((coupon) => {
                   const now = new Date();
                   const from = new Date(coupon.validFrom);
                   const until = new Date(coupon.validUntil);
@@ -391,20 +398,21 @@ const AdminCouponsPage = () => {
                   return (
                     <tr key={coupon._id} className="hover:bg-[var(--bg-subtle)] transition-colors">
                       {/* Code */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-sm px-2.5 py-1 rounded-md bg-[var(--bg-raised)] border border-[var(--border)] text-[var(--accent)] tracking-wider">
+                          <span className="font-mono font-black text-sm px-2.5 py-1 rounded-md bg-[var(--bg-raised)] border border-[var(--border)] text-[var(--accent)] tracking-wider whitespace-nowrap">
                             {coupon.code}
                           </span>
                           <button
                             onClick={() => handleCopyCode(coupon.code)}
-                            className="p-1 rounded text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--bg-raised)] transition-colors"
+                            className="p-1.5 rounded text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--bg-raised)] transition-colors shrink-0 inline-flex items-center justify-center"
                             title="Copy code"
+                            aria-label="Copy coupon code"
                           >
                             {copiedCode === coupon.code ? (
-                              <Check size={14} className="text-emerald-500" />
+                              <Check size={14} className="text-emerald-500 shrink-0" />
                             ) : (
-                              <Copy size={14} />
+                              <Copy size={14} className="shrink-0" />
                             )}
                           </button>
                         </div>
@@ -416,33 +424,33 @@ const AdminCouponsPage = () => {
                       </td>
 
                       {/* Discount Value */}
-                      <td className="py-3.5 px-4 font-bold text-[var(--ink)]">
+                      <td className="py-3.5 px-4 font-bold text-[var(--ink)] whitespace-nowrap">
                         {coupon.discountType === "percentage" ? (
                           <div className="flex flex-col">
-                            <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm whitespace-nowrap">
                               {coupon.discountValue}% OFF
                             </span>
                             {coupon.maxDiscountAmount ? (
-                              <span className="text-[10px] text-[var(--ink-muted)] font-normal">
+                              <span className="text-[10px] text-[var(--ink-muted)] font-normal whitespace-nowrap tabular-nums">
                                 Cap: {formatCurrency(coupon.maxDiscountAmount)}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-[var(--ink-muted)] font-normal">No cap</span>
+                              <span className="text-[10px] text-[var(--ink-muted)] font-normal whitespace-nowrap">No cap</span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm whitespace-nowrap tabular-nums">
                             {formatCurrency(coupon.discountValue)} FLAT
                           </span>
                         )}
                       </td>
 
                       {/* Scope & Funding */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {coupon.scope === "seller" ? (
                           <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              <Store size={11} /> Store Only
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                              <Store size={11} className="shrink-0" /> Store Only
                             </span>
                             <p className="text-[10px] text-[var(--ink-muted)] mt-0.5 font-medium">
                               {coupon.seller?.sellerProfile?.businessName || coupon.seller?.name || "Merchant"}
@@ -451,8 +459,8 @@ const AdminCouponsPage = () => {
                           </div>
                         ) : (
                           <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                              <Layers size={11} /> Platform-Wide
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 whitespace-nowrap">
+                              <Layers size={11} className="shrink-0" /> Platform-Wide
                             </span>
                             <p className="text-[9px] text-[var(--ink-subtle)] mt-0.5">(Platform Funded)</p>
                           </div>
@@ -460,18 +468,18 @@ const AdminCouponsPage = () => {
                       </td>
 
                       {/* Min purchase & limits */}
-                      <td className="py-3.5 px-4 text-[var(--ink-muted)]">
+                      <td className="py-3.5 px-4 text-[var(--ink-muted)] whitespace-nowrap">
                         <div>
-                          <span>Min: {formatCurrency(coupon.minPurchaseAmount || 0)}</span>
+                          <span className="whitespace-nowrap tabular-nums">Min: {formatCurrency(coupon.minPurchaseAmount || 0)}</span>
                         </div>
-                        <div className="text-[10px] text-[var(--ink-subtle)] mt-0.5">
+                        <div className="text-[10px] text-[var(--ink-subtle)] mt-0.5 whitespace-nowrap">
                           Limit: {coupon.usageLimit ? `${coupon.usageLimit} total` : "Unlimited"}
                         </div>
                       </td>
 
                       {/* Validity */}
-                      <td className="py-3.5 px-4 text-[var(--ink-muted)]">
-                        <div className="flex items-center gap-1 text-[11px]">
+                      <td className="py-3.5 px-4 text-[var(--ink-muted)] whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-[11px] whitespace-nowrap">
                           <Calendar size={12} className="text-[var(--ink-subtle)] shrink-0" />
                           <span>
                             {new Date(coupon.validFrom).toLocaleDateString("en-IN", {
@@ -489,45 +497,45 @@ const AdminCouponsPage = () => {
                       </td>
 
                       {/* Status */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                            <Clock size={11} /> Expired
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 border border-rose-500/20 whitespace-nowrap">
+                            <Clock size={11} className="shrink-0" /> Expired
                           </span>
                         ) : isScheduled ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
-                            <Clock size={11} /> Scheduled
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20 whitespace-nowrap">
+                            <Clock size={11} className="shrink-0" /> Scheduled
                           </span>
                         ) : isLive ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                            <CheckCircle2 size={11} /> Active
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 whitespace-nowrap">
+                            <CheckCircle2 size={11} className="shrink-0" /> Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-500 border border-slate-500/20">
-                            <XCircle size={11} /> Paused
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-500 border border-slate-500/20 whitespace-nowrap">
+                            <XCircle size={11} className="shrink-0" /> Paused
                           </span>
                         )}
                       </td>
 
                       {/* Redemptions & Analytics */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-[var(--ink)]">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="font-bold text-[var(--ink)] whitespace-nowrap">
                           {coupon.usedCount || 0} uses
                         </div>
                         {coupon.stats && (
-                          <div className="text-[10px] text-[var(--ink-muted)]">
+                          <div className="text-[10px] text-[var(--ink-muted)] whitespace-nowrap tabular-nums">
                             Sales: {formatCurrency(coupon.stats.revenue)}
                           </div>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5">
                           {/* Toggle Active Switch */}
                           <button
                             onClick={() => handleToggleActive(coupon)}
-                            className={`p-1.5 rounded-md border text-xs font-semibold transition-colors ${
+                            className={`px-2.5 py-1.5 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                               coupon.isActive
                                 ? "border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
                                 : "border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
@@ -541,30 +549,54 @@ const AdminCouponsPage = () => {
                           {(!isSuperAdmin || coupon.scope === "platform") && (
                             <button
                               onClick={() => openEditModal(coupon)}
-                              className="p-1.5 rounded-md border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--bg-raised)] transition-colors"
+                              className="p-2 rounded-md border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--bg-raised)] transition-colors shrink-0 inline-flex items-center justify-center"
                               title="Edit coupon"
+                              aria-label="Edit coupon"
                             >
-                              <Edit2 size={13} />
+                              <Edit2 size={15} className="shrink-0" />
                             </button>
                           )}
 
                           {/* Delete */}
                           <button
                             onClick={() => setDeletingCoupon(coupon)}
-                            className="p-1.5 rounded-md border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 transition-colors"
+                            className="p-2 rounded-md border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0 inline-flex items-center justify-center"
                             title="Delete coupon"
+                            aria-label="Delete coupon"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={15} className="shrink-0" />
                           </button>
                         </div>
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
+                })}
+              </tbody>
+            )}
           </table>
         </div>
+
+        {loading ? (
+          <div className="py-12 px-4 text-center text-[var(--ink-muted)]">
+            <RefreshCw size={22} className="animate-spin mx-auto mb-2 text-[var(--accent)]" />
+            <p className="font-medium text-xs">Loading promotional campaigns...</p>
+          </div>
+        ) : coupons.length === 0 ? (
+          <div className="py-12 px-4 text-center text-[var(--ink-muted)]">
+            <Ticket size={32} className="mx-auto mb-2 opacity-30" />
+            <p className="font-bold text-sm text-[var(--ink)]">No coupons found</p>
+            <p className="text-xs mt-1 max-w-xs mx-auto">
+              Create your first coupon code to start offering customer discounts.
+            </p>
+            <button
+              onClick={openCreateModal}
+              className="btn-accent !py-2 !px-4 text-xs font-bold inline-flex items-center gap-1.5 mt-4 whitespace-nowrap"
+            >
+              <Plus size={14} className="shrink-0" />
+              <span>Create Coupon</span>
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {/* ── CREATE / EDIT MODAL ── */}
@@ -591,7 +623,7 @@ const AdminCouponsPage = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitModal} className="space-y-4">
+            <form onSubmit={handleSubmitModal} noValidate className="space-y-4">
               {/* Code */}
               <div>
                 <label className="block text-xs font-bold text-[var(--ink)] mb-1 uppercase tracking-wider">

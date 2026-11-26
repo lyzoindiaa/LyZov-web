@@ -205,88 +205,104 @@ const AdminProductsPage = () => {
         </div>
       )}
 
-      <div className="card-surface overflow-x-auto">
-        <table className="w-full min-w-[600px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-hairline text-xs uppercase tracking-wide text-stone dark:border-hairline-dark">
-              <th className="px-5 py-4">Product</th>
-              <th className="px-5 py-4">Category</th>
-              <th className="px-5 py-4">Price</th>
-              <th className="px-5 py-4">Stock</th>
-              <th className="px-5 py-4">Images</th>
-              <th className="px-5 py-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-stone">
-                  Loading products...
-                </td>
+      <div className="card-surface overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[780px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-hairline text-xs uppercase tracking-wide text-stone dark:border-hairline-dark">
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Product</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Category</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Price</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Stock</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap">Images</th>
+                <th className="px-4 sm:px-5 py-4 whitespace-nowrap text-right">Actions</th>
               </tr>
-            ) : products.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-stone">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <p className="text-base font-semibold text-gray-700 dark:text-gray-300">No products found</p>
-                    <p className="text-xs text-stone">You haven't added any products to your catalog yet.</p>
-                    <Button icon={Plus} size="sm" onClick={handleAdd} className="mt-2">
-                      Add Your First Product
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              products.map((product) => (
+            </thead>
+            {!isLoading && products.length > 0 && (
+              <tbody>
+                {products.map((product) => (
                 <tr key={product._id} className="border-b border-hairline last:border-0 dark:border-hairline-dark">
-                  <td className="flex items-center gap-3 px-5 py-4">
-                    <img
-                      src={product.images?.[0]?.url}
-                      alt={product.title}
-                      className="h-12 w-10 rounded-md object-cover"
-                    />
-                    <span className="font-medium">{product.title}</span>
+                  <td className="px-4 sm:px-5 py-4 min-w-[220px] max-w-[280px]">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={product.images?.[0]?.url}
+                        alt={product.title}
+                        className="h-12 w-10 rounded-md object-cover shrink-0"
+                      />
+                      <span className="font-medium line-clamp-2">{product.title}</span>
+                    </div>
                   </td>
-                  <td className="px-5 py-4 text-stone">{product.category?.name}</td>
-                  <td className="px-5 py-4 tabular-nums">{formatCurrency(product.price)}</td>
-                  <td className="px-5 py-4 tabular-nums">{product.stock}</td>
-                  <td className="px-5 py-4">
+                  <td className="px-4 sm:px-5 py-4 text-stone whitespace-nowrap">{product.category?.name}</td>
+                  <td className="px-4 sm:px-5 py-4 tabular-nums font-semibold whitespace-nowrap">{formatCurrency(product.price)}</td>
+                  <td className="px-4 sm:px-5 py-4 tabular-nums whitespace-nowrap">{product.stock}</td>
+                  <td className="px-4 sm:px-5 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       {product.images && product.images.length > 0 ? (
                         <>
-                          <span className="text-xs text-stone">
+                          <span className="text-xs text-stone whitespace-nowrap">
                             {product.images.length} {product.images.length === 1 ? 'image' : 'images'}
                           </span>
                           <button
+                            type="button"
                             onClick={() => handleViewImages(product)}
-                            className="text-stone hover:text-blue-500 transition-colors"
+                            className="p-1.5 rounded-lg text-stone hover:text-blue-500 hover:bg-blue-500/10 transition-colors shrink-0 inline-flex items-center justify-center"
                             title="View images"
+                            aria-label="View product images"
                           >
-                            <Eye size={16} />
+                            <Eye size={16} className="shrink-0" />
                           </button>
                         </>
                       ) : (
-                        <span className="text-xs text-stone flex items-center gap-1">
-                          <ImageIcon size={12} /> No images
+                        <span className="text-xs text-stone flex items-center gap-1 whitespace-nowrap">
+                          <ImageIcon size={14} className="shrink-0" /> No images
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => handleEdit(product)} className="text-stone hover:text-ink dark:hover:text-cream">
-                        <Pencil size={16} />
+                  <td className="px-4 sm:px-5 py-4 whitespace-nowrap text-right">
+                    <div className="inline-flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(product)}
+                        className="p-2 rounded-lg text-stone hover:text-ink hover:bg-[var(--bg-raised)] dark:hover:text-cream transition-colors shrink-0 inline-flex items-center justify-center"
+                        title="Edit product"
+                        aria-label="Edit product"
+                      >
+                        <Pencil size={16} className="shrink-0" />
                       </button>
-                      <button onClick={() => handleDelete(product._id)} className="text-stone hover:text-red-500">
-                        <Trash2 size={16} />
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product._id)}
+                        className="p-2 rounded-lg text-stone hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0 inline-flex items-center justify-center"
+                        title="Delete product"
+                        aria-label="Delete product"
+                      >
+                        <Trash2 size={16} className="shrink-0" />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
+                ))}
+              </tbody>
             )}
-          </tbody>
-        </table>
+          </table>
+        </div>
+
+        {isLoading ? (
+          <div className="px-5 py-8 text-center text-stone">
+            Loading products...
+          </div>
+        ) : products.length === 0 ? (
+          <div className="px-5 py-12 text-center text-stone">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <p className="text-base font-semibold text-gray-700 dark:text-gray-300">No products found</p>
+              <p className="text-xs text-stone">You haven't added any products to your catalog yet.</p>
+              <Button icon={Plus} size="sm" onClick={handleAdd} className="mt-2 whitespace-nowrap">
+                Add Your First Product
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <Pagination

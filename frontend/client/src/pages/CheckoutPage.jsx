@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import {
   MapPin,
-  CreditCard,
   ShieldCheck,
   CheckCircle2,
   Plus,
@@ -70,12 +69,28 @@ const CheckoutPage = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [pincodeCheck, setPincodeCheck] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState(null); // { loading, valid, message }
+  const prevStepRef = useRef(step);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (prevStepRef.current !== step) {
+      prevStepRef.current = step;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step]);
 
   useEffect(() => {
     // Preload Razorpay checkout script
@@ -231,7 +246,7 @@ const CheckoutPage = () => {
           color: "#0f172a",
         },
         method: {
-          card: true,
+          card: false,
           upi: true,
           netbanking: false,
           wallet: false,
@@ -241,6 +256,7 @@ const CheckoutPage = () => {
         config: {
           display: {
             hide: [
+              { method: "card" },
               { method: "netbanking" },
               { method: "wallet" },
               { method: "emi" },
@@ -345,9 +361,10 @@ const CheckoutPage = () => {
         </h1>
 
         {/* Steps Bar */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "1.25rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-5">
+          <div className="flex items-center gap-2 shrink-0">
             <div
+              className="shrink-0"
               style={{
                 width: "2rem",
                 height: "2rem",
@@ -361,15 +378,16 @@ const CheckoutPage = () => {
                 fontSize: "0.8125rem",
               }}
             >
-              {step === "payment" ? <CheckCircle2 size={16} /> : "1"}
+              {step === "payment" ? <CheckCircle2 size={16} className="shrink-0" /> : "1"}
             </div>
-            <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)" }}>Shipping Address</span>
+            <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink)", whiteSpace: "nowrap" }}>Shipping Address</span>
           </div>
 
-          <div style={{ width: "3rem", height: "2px", backgroundColor: step === "payment" ? "var(--green)" : "var(--border)" }} />
+          <div style={{ width: "2rem", height: "2px", flexShrink: 0, backgroundColor: step === "payment" ? "var(--green)" : "var(--border)" }} />
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="flex items-center gap-2 shrink-0">
             <div
+              className="shrink-0"
               style={{
                 width: "2rem",
                 height: "2rem",
@@ -386,7 +404,7 @@ const CheckoutPage = () => {
             >
               2
             </div>
-            <span style={{ fontSize: "0.8125rem", fontWeight: step === "payment" ? 700 : 500, color: step === "payment" ? "var(--ink)" : "var(--ink-muted)" }}>
+            <span style={{ fontSize: "0.8125rem", fontWeight: step === "payment" ? 700 : 500, color: step === "payment" ? "var(--ink)" : "var(--ink-muted)", whiteSpace: "nowrap" }}>
               Payment Method
             </span>
           </div>
@@ -422,7 +440,7 @@ const CheckoutPage = () => {
         {/* Left Step Form */}
         <div>
           {step === "address" ? (
-            <div className="card-surface p-6 sm:p-8">
+            <div className="card-surface p-4 sm:p-8">
               {/* PINCODE CHECK — commented out for now, re-enable when Delhivery API is ready
               <div style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--border)" }}>
                 <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--ink)" }}>Check Delivery Serviceability</h3>
@@ -508,7 +526,7 @@ const CheckoutPage = () => {
               )}
 
               {showNewAddressForm && (
-                <form onSubmit={handleSubmit(proceedToPayment)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <form onSubmit={handleSubmit(proceedToPayment)} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
                     label="Full Name"
                     {...register("fullName", { required: "Full name is required" })}
@@ -576,14 +594,15 @@ const CheckoutPage = () => {
               )}
             </div>
           ) : (
-            <div className="card-surface p-6 sm:p-8">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+            <div className="card-surface p-4 sm:p-8">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-5">
                 <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <CreditCard size={18} style={{ color: "var(--accent)" }} /> Choose Payment Method
+                  <QrCode size={18} className="shrink-0" style={{ color: "var(--accent)" }} /> Choose Payment Method
                 </h2>
                 <button
                   type="button"
                   onClick={() => setStep("address")}
+                  className="whitespace-nowrap shrink-0"
                   style={{
                     fontSize: "0.75rem",
                     fontWeight: 600,
@@ -599,7 +618,7 @@ const CheckoutPage = () => {
               </div>
 
               {/* Payment Method Selector Cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.85rem", marginBottom: "1.5rem" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">
                 {/* Cash on Delivery Option */}
                 <div
                   onClick={() => handleSelectPaymentMethod("cod")}
@@ -672,10 +691,10 @@ const CheckoutPage = () => {
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                       <QrCode size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Pay Online (UPI / Cards)</span>
+                      <span style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--ink)" }}>Pay Online (UPI)</span>
                     </div>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.4 }}>
-                      Instant payment via UPI (GPay, PhonePe, Paytm, QR) or Credit/Debit Cards.
+                      Instant payment via UPI (GPay, PhonePe, Paytm, or QR).
                     </p>
                   </div>
                 </div>
@@ -730,10 +749,10 @@ const CheckoutPage = () => {
                     <div style={{ fontSize: "0.8125rem", color: "var(--ink)" }}>
                       <p style={{ fontWeight: 700 }}>Razorpay 100% Secure Checkout</p>
                       <p style={{ color: "var(--ink-muted)", marginTop: "0.25rem", lineHeight: 1.5 }}>
-                        Your payment is processed with 256-bit bank-grade encryption. LyZov never stores your card, PIN, or banking passwords.
+                        Your UPI payment is processed with 256-bit bank-grade encryption. LyZov never stores your UPI PIN or banking passwords.
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
-                        {["UPI / QR", "Google Pay", "PhonePe", "Paytm", "Credit & Debit Cards"].map((method) => (
+                        {["UPI / QR", "Google Pay", "PhonePe", "Paytm"].map((method) => (
                           <span
                             key={method}
                             style={{
@@ -761,7 +780,7 @@ const CheckoutPage = () => {
                     className="w-full mt-5"
                     style={{ padding: "0.85rem", fontSize: "0.875rem", fontWeight: 700 }}
                   >
-                    Pay {formatCurrency(total)} Online via Razorpay
+                    Pay {formatCurrency(total)} Online via UPI
                   </Button>
                   <p style={{ marginTop: "0.625rem", fontSize: "0.7rem", color: "var(--ink-subtle)", textAlign: "center" }}>
                     🔒 Powered by Razorpay &middot; Instant Order Confirmation
@@ -800,7 +819,7 @@ const CheckoutPage = () => {
                   <span style={{ color: "var(--ink-muted)", maxWidth: "70%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {item.name} × {item.quantity}
                   </span>
-                  <span style={{ fontWeight: 700, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                  <span style={{ fontWeight: 700, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {formatCurrency(item.price * item.quantity)}
                   </span>
                 </div>
