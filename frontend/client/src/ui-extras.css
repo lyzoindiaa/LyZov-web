@@ -231,6 +231,30 @@ html.dark .glass-card {
   background: var(--accent);
 }
 
+/* ── Customer Dashboard mobile horizontal nav ── */
+@media (max-width: 767px) {
+  .dashboard-nav-bar {
+    -webkit-overflow-scrolling: touch;
+  }
+  .dashboard-nav-bar .sidebar-nav-item {
+    width: auto !important;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background-color: var(--bg-raised);
+    border-radius: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  .dashboard-nav-bar .sidebar-nav-item.active {
+    border-color: var(--accent);
+    background-color: var(--accent-bg);
+    color: var(--accent);
+  }
+  .dashboard-nav-bar .sidebar-nav-item.active::before {
+    display: none;
+  }
+}
+
 /* ── Floating label input ── */
 .input-float-wrap { position: relative; }
 .input-float {
