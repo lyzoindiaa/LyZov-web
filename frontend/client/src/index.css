@@ -643,7 +643,7 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 .about-hero-image-wrap {
   position: relative;
   width: 100%;
-  height: clamp(200px, 43vw, 640px);
+  height: clamp(220px, 33vw, 460px);
   overflow: hidden;
   background: var(--bg-subtle);
 }
@@ -667,18 +667,38 @@ html.dark td { border-color: var(--border); color: var(--ink); }
   background: var(--bg-subtle);
 }
 
+.about-hero-backdrop {
+  position: absolute;
+  inset: -24px;
+  background-size: cover;
+  background-position: center center;
+  filter: blur(36px) saturate(1.06);
+  transform: scale(1.1);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .about-hero-image {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 14%;
+  object-fit: contain;
+  object-position: center center;
   display: block;
   transform: scale(1);
   transition: transform 0.9s ease;
 }
 
+@media (min-width: 769px) {
+  .about-hero-image {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+  }
+}
+
 .about-hero-image-wrap:hover .about-hero-image {
-  transform: scale(1.03);
+  transform: scale(1.015);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -937,7 +957,7 @@ html.dark .category-tone-cyan { border-color: rgba(34, 211, 238, 0.25); }
   }
 
   .about-hero-image-wrap {
-    height: clamp(200px, 48vw, 420px);
+    height: clamp(175px, 42vw, 320px);
   }
 
   .about-container {

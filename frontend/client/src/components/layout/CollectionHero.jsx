@@ -12,21 +12,21 @@ const carouselSlides = [
     title: "Everything You Love, Now on LyZov — Kids Toys, Idols & Gifts, Electronics",
     image: heroBannerOne,
     to: "/shop",
-    objectPosition: "center 14%",
+    backdrop: "#fdf1e7",
   },
   {
     id: "kitchen-home-appliances",
     title: "Everything You Love, Now on LyZov — Kitchen, Home, Cooling & Small Appliances",
     image: heroBannerTwo,
     to: "/shop",
-    objectPosition: "center 14%",
+    backdrop: "#f6efe8",
   },
   {
     id: "everyday-essentials",
     title: "Everything You Love, Now on LyZov — Furniture, Fashion, Electronics, Grocery, Beauty & Fitness",
     image: heroBannerThree,
     to: "/shop",
-    objectPosition: "center center",
+    backdrop: "linear-gradient(90deg, #ead7eb 0%, #f5ece8 50%, #fbdcc4 100%)",
   },
 ];
 
@@ -60,9 +60,15 @@ function CollectionHero() {
               key={slide.id}
               to={slide.to}
               className="about-hero-slide"
+              style={{ background: slide.backdrop }}
               aria-label={slide.title}
               tabIndex={index === activeSlide ? 0 : -1}
             >
+              <div
+                className="about-hero-backdrop"
+                style={{ backgroundImage: `url(${slide.image})` }}
+                aria-hidden="true"
+              />
               <img
                 src={slide.image}
                 alt={slide.title}
@@ -70,7 +76,6 @@ function CollectionHero() {
                 decoding="async"
                 fetchPriority={index === 0 ? "high" : "auto"}
                 className="about-hero-image"
-                style={{ objectPosition: slide.objectPosition }}
               />
             </Link>
           ))}
