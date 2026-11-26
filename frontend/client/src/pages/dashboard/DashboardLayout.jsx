@@ -218,19 +218,18 @@ const DashboardLayout = () => {
       {/* ── Main Layout: Sidebar + Content ──────────────── */}
       <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[200px_1fr] lg:grid-cols-[230px_1fr] lg:gap-8">
 
-        {/* Sidebar */}
+        {/* Sidebar / Mobile Horizontal Tabs */}
         <aside
           style={{
             backgroundColor: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: "1rem",
-            padding: "0.75rem",
             boxShadow: "var(--shadow-sm)",
             alignSelf: "start",
             minWidth: 0,
             width: "100%",
           }}
-          className="flex flex-col gap-1.5 md:sticky md:top-6"
+          className="dashboard-nav-bar flex min-w-0 flex-row items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth p-2.5 md:flex-col md:items-stretch md:overflow-visible md:p-3 md:sticky md:top-6"
         >
           {navItems.map((item) => (
             <NavLink
@@ -238,28 +237,32 @@ const DashboardLayout = () => {
               to={item.to}
               onMouseEnter={() => prefetchByPath(item.to)}
               onFocus={() => prefetchByPath(item.to)}
-              className={({ isActive }) => `sidebar-nav-item${isActive ? " active" : ""}`}
+              className={({ isActive }) => `sidebar-nav-item shrink-0${isActive ? " active" : ""}`}
             >
-              <item.icon size={16} />
+              <item.icon size={16} className="shrink-0" />
               <span>{item.label}</span>
             </NavLink>
           ))}
 
-          {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
+          {/* Desktop divider */}
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
+          {/* Mobile vertical divider */}
+          <div style={{ width: "1px", height: "1.5rem", backgroundColor: "var(--border)", margin: "0 0.125rem" }} className="block md:hidden shrink-0" />
 
-          {/* Shop link in sidebar */}
+          {/* Shop link */}
           <Link
             to="/shop"
-            className="sidebar-nav-item"
+            className="sidebar-nav-item shrink-0"
             style={{ color: "var(--accent)", fontWeight: 700 }}
           >
-            <ShoppingBag size={16} />
+            <ShoppingBag size={16} className="shrink-0" />
             <span>Shop Now</span>
           </Link>
 
-          {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
+          {/* Desktop divider */}
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
+          {/* Mobile vertical divider */}
+          <div style={{ width: "1px", height: "1.5rem", backgroundColor: "var(--border)", margin: "0 0.125rem" }} className="block md:hidden shrink-0" />
 
           {/* Logout */}
           <button
@@ -269,16 +272,18 @@ const DashboardLayout = () => {
             }}
             style={{
               display: "flex", alignItems: "center", gap: "0.625rem",
-              borderRadius: "0.75rem", padding: "0.625rem 0.875rem",
+              borderRadius: "0.625rem",
               fontSize: "0.8125rem", fontWeight: 600,
-              color: "var(--red)", background: "none", border: "none",
-              cursor: "pointer", transition: "background 0.15s", width: "100%",
+              color: "var(--red)",
+              cursor: "pointer", transition: "all 0.15s",
               textAlign: "left",
+              whiteSpace: "nowrap",
             }}
+            className="shrink-0 w-auto p-2 sm:px-3 sm:py-2 md:p-[0.625rem_0.875rem] md:w-full bg-[var(--bg-raised)] md:bg-transparent border border-[var(--border)] md:border-none"
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--red-bg)")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
           >
-            <LogOut size={16} />
+            <LogOut size={16} className="shrink-0" />
             <span>Log Out</span>
           </button>
         </aside>
