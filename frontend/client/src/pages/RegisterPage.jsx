@@ -8,6 +8,7 @@ import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import SEO from "../components/common/SEO";
 
 const trustBullets = [
   { icon: ShieldCheck, text: "Fast & easy sign up in under 30s" },
@@ -57,6 +58,7 @@ const RegisterPage = () => {
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", backgroundColor: "var(--bg)", position: "relative", overflowX: "hidden", overflowY: "auto" }}>
+      <SEO title="Create Account | LyZov" noIndex={true} />
       {/* ── Top Bar ──────────────────────────────────────── */}
       <div
         style={{

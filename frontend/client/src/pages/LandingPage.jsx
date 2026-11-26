@@ -132,12 +132,38 @@ const LandingPage = () => {
   // Hide hero whenever there's an active search, category, or searchDraft in progress
   const showHero = !filters.search && !filters.category && !searchDraft;
 
+  const homeSchema = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const origin = window.location.origin;
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "@id": `${origin}/#storefront`,
+      name: "LyZov — India's Trusted Online Shopping Platform",
+      description:
+        "Discover curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, Car & Home Accessories with Pan-India delivery.",
+      url: origin,
+      mainEntity: {
+        "@type": "ItemList",
+        numberOfItems: products.length,
+        itemListElement: products.slice(0, 12).map((prod, idx) => ({
+          "@type": "ListItem",
+          position: idx + 1,
+          url: `${origin}/product/${encodeURIComponent(prod.slug || prod._id)}`,
+          name: prod.title || prod.name,
+        })),
+      },
+    };
+  }, [products]);
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       <SEO
         title="LyZov — India's Trusted Online Shopping Platform"
-        description="Discover a wide selection of curated, quality-checked products on LyZov. Enjoy secure online shopping, direct pricing, and safe Pan-India delivery."
+        description="Discover a wide selection of curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, and Home Accessories with Pan-India delivery."
         canonicalUrl={window.location.origin}
+        noIndex={Boolean(filters.search || filters.minPrice || filters.sort || inStockOnly)}
+        schema={homeSchema}
       />
       {/* ── Top Hero Banner (Shown on default home view) ── */}
       {showHero && <Hero />}
@@ -153,7 +179,7 @@ const LandingPage = () => {
             <span className="eyebrow flex items-center gap-1.5">
               <Sparkles size={12} /> Shop LyZov
             </span>
-            <h2
+            <h1
               style={{
                 color: "var(--ink)",
                 fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
@@ -163,7 +189,7 @@ const LandingPage = () => {
               }}
             >
               {filters.search ? `Results for "${filters.search}"` : "Trending Picks You'll Love"}
-            </h2>
+            </h1>
             <p style={{ color: "var(--ink-muted)", fontSize: "0.9375rem", marginTop: "0.35rem", lineHeight: 1.6 }}>
               {meta.total > 0
                 ? `${meta.total} handpicked products — ${products.length} shown on this page`

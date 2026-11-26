@@ -8,6 +8,7 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import Logo from "../components/ui/Logo";
+import SEO from "../components/common/SEO";
 
 const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg)", position: "relative" }}>
+      <SEO title="Forgot Password | LyZov" noIndex={true} />
 
       {/* ── Top Bar ──────────────────────────────────────── */}
       <div

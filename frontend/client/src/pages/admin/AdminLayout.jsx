@@ -28,6 +28,7 @@ import ThemeToggle from "../../components/ui/ThemeToggle";
 import Logo from "../../components/ui/Logo";
 import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
 import { prefetchByPath } from "../../routes/routeLoaders";
+import SEO from "../../components/common/SEO";
 
 const navItems = [
   { label: "Analytics", to: "/seller", icon: BarChart3, end: true },
@@ -75,6 +76,7 @@ const AdminLayout = () => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="flex-col lg:flex-row">
+      <SEO title="Seller Portal | LyZov" noIndex={true} />
 
       {/* Mobile / Tablet Drawer Backdrop */}
       {mobileOpen && (

@@ -27,6 +27,7 @@ import ThemeToggle from "../../components/ui/ThemeToggle";
 import Logo from "../../components/ui/Logo";
 import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
 import { prefetchByPath } from "../../routes/routeLoaders";
+import SEO from "../../components/common/SEO";
 
 const navItems = [
   { label: "Dashboard Overview", to: "/admin", icon: BarChart3, end: true },
@@ -61,6 +62,7 @@ const SuperAdminLayout = () => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--ink)" }} className="flex-col lg:flex-row">
+      <SEO title="Admin Console | LyZov" noIndex={true} />
       {/* Mobile / Tablet Drawer Backdrop */}
       {mobileOpen && (
         <div

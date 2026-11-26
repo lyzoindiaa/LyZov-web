@@ -12,6 +12,7 @@ import {
 import { formatCurrency } from "../utils/formatters";
 import QuantityStepper from "../components/ui/QuantityStepper";
 import Button from "../components/ui/Button";
+import SEO from "../components/common/SEO";
 
 const parseGstRate = (rateStr) => {
   if (!rateStr) return 0;
@@ -66,6 +67,7 @@ const CartPage = () => {
   if (!isAuthenticated) {
     return (
       <div className="container-page py-20">
+        <SEO title="Shopping Cart | LyZov" noIndex={true} />
         <div className="empty-state card-surface max-w-md mx-auto">
           <div
             style={{
@@ -94,6 +96,7 @@ const CartPage = () => {
   if (status !== "loading" && items.length === 0) {
     return (
       <div className="container-page py-20">
+        <SEO title="Shopping Cart | LyZov" noIndex={true} />
         <div className="empty-state card-surface max-w-md mx-auto">
           <div
             style={{
@@ -121,6 +124,7 @@ const CartPage = () => {
 
   return (
     <div className="container-page py-8 lg:py-12">
+      <SEO title="Shopping Cart | LyZov" noIndex={true} />
       <div className="mb-8">
         <span className="eyebrow">Shopping Cart</span>
         <h1 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.025em", marginTop: "0.25rem" }}>

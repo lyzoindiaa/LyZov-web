@@ -349,6 +349,7 @@ const ProductDetailsPage = () => {
   if (loadError)
     return (
       <div className="container-page py-24 text-center">
+        <SEO title="Unable to load product | LyZov" noIndex={true} />
         <div className="empty-state card-surface max-w-md mx-auto">
           <h2 className="empty-state-title">Unable to load product</h2>
           <p className="empty-state-desc">The product service is temporarily unavailable. Please try again in a moment.</p>
@@ -361,6 +362,7 @@ const ProductDetailsPage = () => {
   if (!product)
     return (
       <div className="container-page py-24 text-center">
+        <SEO title="Product Not Found | LyZov" noIndex={true} />
         <div className="empty-state card-surface max-w-md mx-auto">
           <h2 className="empty-state-title">Product Not Found</h2>
           <p className="empty-state-desc">The item you're looking for may be unavailable or moved.</p>
@@ -487,9 +489,14 @@ const ProductDetailsPage = () => {
     },
   }));
 
+  const productCategorySlug = product.category?.slug || "";
+  const productCategoryName = product.category?.name || "";
   const breadcrumbItems = [
     { name: "Home", url: `${window.location.origin}/` },
     { name: "Shop", url: `${window.location.origin}/shop` },
+    ...(productCategoryName && productCategorySlug
+      ? [{ name: productCategoryName, url: `${window.location.origin}/category/${encodeURIComponent(productCategorySlug)}` }]
+      : []),
     { name: product.title, url: canonicalUrl },
   ];
 
@@ -505,6 +512,7 @@ const ProductDetailsPage = () => {
         sku: product.lyId || product.sku || undefined,
         ...(product.mpn ? { mpn: product.mpn } : {}),
         ...(product.brand?.name ? { brand: { "@type": "Brand", name: product.brand.name } } : {}),
+        ...(productCategoryName ? { category: productCategoryName } : {}),
         offers: {
           "@type": "Offer",
           url: canonicalUrl,
@@ -518,7 +526,7 @@ const ProductDetailsPage = () => {
             "@type": "OfferShippingDetails",
             shippingRate: {
               "@type": "MonetaryAmount",
-              value: "9.99",
+              value: finalPrice >= 999 ? "0" : "99",
               currency: "INR",
             },
             shippingDestination: {
@@ -586,7 +594,9 @@ const ProductDetailsPage = () => {
         description={pageDescription}
         canonicalUrl={canonicalUrl}
         ogImage={ogImage}
+        ogImageAlt={product.images?.[0]?.altText || product.title || product.name}
         ogType="product"
+        keywords={product.searchKeyword || (Array.isArray(product.tags) ? product.tags.join(", ") : "")}
         schema={productSchema}
       />
       <div className="container-page py-8 lg:py-12">
@@ -626,6 +636,19 @@ const ProductDetailsPage = () => {
               <Link to="/shop" style={{ color: "var(--ink-muted)", textDecoration: "none", fontWeight: 500 }} onMouseEnter={(e) => e.target.style.color = "var(--ink)"} onMouseLeave={(e) => e.target.style.color = "var(--ink-muted)"}>
                 Shop
               </Link>
+              {productCategoryName && productCategorySlug && (
+                <>
+                  <ChevronRight size={12} style={{ color: "var(--ink-subtle)" }} />
+                  <Link
+                    to={`/category/${encodeURIComponent(productCategorySlug)}`}
+                    style={{ color: "var(--ink-muted)", textDecoration: "none", fontWeight: 500 }}
+                    onMouseEnter={(e) => (e.target.style.color = "var(--ink)")}
+                    onMouseLeave={(e) => (e.target.style.color = "var(--ink-muted)")}
+                  >
+                    {productCategoryName}
+                  </Link>
+                </>
+              )}
               <ChevronRight size={12} style={{ color: "var(--ink-subtle)" }} />
               <span style={{ color: "var(--ink)", fontWeight: 700 }} className="max-w-[200px] sm:max-w-xs truncate">{product.title || product.name}</span>
             </nav>
@@ -665,7 +688,7 @@ const ProductDetailsPage = () => {
                   product.images?.[activeImage]?.url ||
                   "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800"
                 }
-                alt={product.title || product.name}
+                alt={product.images?.[activeImage]?.altText || product.title || product.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
               />
               {discountPercent > 0 && (
@@ -841,7 +864,7 @@ const ProductDetailsPage = () => {
                       transition: "all 0.2s",
                     }}
                   >
-                    <img src={img.url} alt="" loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={img.url} alt={img.altText || `${product.title || product.name} — View ${idx + 1}`} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </button>
                 ))}
               </div>

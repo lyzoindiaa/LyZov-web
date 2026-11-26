@@ -29,7 +29,7 @@ const sellerEmailRoutes = require("./routes/sellerEmailRoutes");
 const customerEmailRoutes = require("./routes/customerEmailRoutes");
 const seoRoutes = require("./routes/seoRoutes");
 const shippingRoutes = require("./routes/shippingRoutes");
-const { prerenderProductPage } = require("./services/prerenderService");
+const { prerenderRoute } = require("./services/prerenderService");
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -194,7 +194,7 @@ const frontendDist = candidateDirs.find((dir) => fs.existsSync(path.join(dir, "i
 const indexHtmlPath = path.join(frontendDist, "index.html");
 
 if (fs.existsSync(indexHtmlPath)) {
-  app.use(express.static(frontendDist));
+  app.use(express.static(frontendDist, { index: false }));
 
   app.get("*", async (req, res, next) => {
     if (req.path.startsWith("/api")) {
@@ -206,20 +206,22 @@ if (fs.existsSync(indexHtmlPath)) {
       return next();
     }
 
-    // Universal prerender for product pages
-    if (req.path.startsWith("/product/")) {
-      try {
-        const slug = req.path.replace(/^\/product\//, "").split("/")[0].split("?")[0];
-        const result = await prerenderProductPage(slug, indexHtmlPath);
-        if (result?.redirect) {
-          return res.redirect(result.statusCode || 301, result.redirect);
-        }
-        if (result?.html) {
-          return res.status(200).send(result.html);
-        }
-      } catch (err) {
-        console.error("Prerender error for path", req.path, err);
+    try {
+      const result = await prerenderRoute(req, indexHtmlPath);
+      if (result?.redirect) {
+        return res.redirect(result.statusCode || 301, result.redirect);
       }
+      if (result?.html) {
+        res.setHeader(
+          "Cache-Control",
+          result.notFound
+            ? "no-cache, no-store, must-revalidate"
+            : "public, max-age=0, s-maxage=300, stale-while-revalidate=600"
+        );
+        return res.status(result.statusCode || 200).send(result.html);
+      }
+    } catch (err) {
+      console.error("Prerender error for path", req.path, err);
     }
 
     res.sendFile(indexHtmlPath);

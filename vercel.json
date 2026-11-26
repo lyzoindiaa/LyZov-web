@@ -33,6 +33,38 @@
       "destination": "/api/index?__p=/api/:path*"
     },
     {
+      "source": "/shop",
+      "destination": "/api/index?__p=/shop"
+    },
+    {
+      "source": "/products",
+      "destination": "/api/index?__p=/products"
+    },
+    {
+      "source": "/category/:path*",
+      "destination": "/api/index?__p=/category/:path*"
+    },
+    {
+      "source": "/product/:path*",
+      "destination": "/api/index?__p=/product/:path*"
+    },
+    {
+      "source": "/policies",
+      "destination": "/api/index?__p=/policies"
+    },
+    {
+      "source": "/policies/:path*",
+      "destination": "/api/index?__p=/policies/:path*"
+    },
+    {
+      "source": "/contact",
+      "destination": "/api/index?__p=/contact"
+    },
+    {
+      "source": "/track",
+      "destination": "/api/index?__p=/track"
+    },
+    {
       "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }

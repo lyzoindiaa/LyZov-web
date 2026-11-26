@@ -47,11 +47,6 @@ const PolicyPage = () => {
     setSearchQuery("");
   }, [activePolicy.id]);
 
-  // Handle policy tab switch
-  const handleSelectPolicy = (slug) => {
-    navigate(`/policies/${slug}`);
-  };
-
   // Filter sections by search query
   const filteredSections = useMemo(() => {
     if (!searchQuery.trim()) return activePolicy.sections;
@@ -236,10 +231,9 @@ const PolicyPage = () => {
               const PIcon = iconMap[p.icon] || FileText;
               const isActive = p.id === activePolicy.id;
               return (
-                <button
+                <Link
                   key={p.id}
-                  type="button"
-                  onClick={() => handleSelectPolicy(p.slug)}
+                  to={`/policies/${p.slug}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -250,6 +244,7 @@ const PolicyPage = () => {
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                     cursor: "pointer",
+                    textDecoration: "none",
                     border: `1.5px solid ${isActive ? "var(--accent)" : "var(--border)"}`,
                     backgroundColor: isActive ? "var(--accent)" : "var(--surface)",
                     color: isActive ? "#FFFFFF" : "var(--ink)",
@@ -258,7 +253,7 @@ const PolicyPage = () => {
                 >
                   <PIcon size={14} />
                   <span>{p.shortTitle}</span>
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -289,10 +284,9 @@ const PolicyPage = () => {
                   const Icon = iconMap[pol.icon] || FileText;
                   const isCurrent = pol.id === activePolicy.id;
                   return (
-                    <button
+                    <Link
                       key={pol.id}
-                      type="button"
-                      onClick={() => handleSelectPolicy(pol.slug)}
+                      to={`/policies/${pol.slug}`}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -301,7 +295,7 @@ const PolicyPage = () => {
                         borderRadius: "0.75rem",
                         textAlign: "left",
                         width: "100%",
-                        border: "none",
+                        textDecoration: "none",
                         backgroundColor: isCurrent ? "var(--accent-bg)" : "transparent",
                         color: isCurrent ? "var(--accent)" : "var(--ink)",
                         fontWeight: isCurrent ? 700 : 500,
@@ -315,7 +309,7 @@ const PolicyPage = () => {
                         {pol.shortTitle}
                       </span>
                       {isCurrent && <ChevronRight size={14} style={{ color: "var(--accent)" }} />}
-                    </button>
+                    </Link>
                   );
                 })}
               </div>

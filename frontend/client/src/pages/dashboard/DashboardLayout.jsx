@@ -10,6 +10,7 @@ import { logoutUser } from "../../features/auth/authSlice";
 import { resetCartLocal } from "../../features/cart/cartSlice";
 import { OutletContentSkeleton } from "../../components/skeletons/Skeletons";
 import { prefetchByPath } from "../../routes/routeLoaders";
+import SEO from "../../components/common/SEO";
 
 const navItems = [
   { label: "My Orders", to: "/dashboard/orders", icon: ClipboardList },
@@ -61,6 +62,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="container-page py-8 lg:py-12">
+      <SEO title="Customer Dashboard | LyZov" noIndex={true} />
 
       {/* ── Welcome Hero Banner ───────────────────────────── */}
       <div
