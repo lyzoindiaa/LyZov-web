@@ -230,8 +230,9 @@ const DashboardLayout = () => {
             boxShadow: "var(--shadow-sm)",
             alignSelf: "start",
             minWidth: 0,
+            width: "100%",
           }}
-          className="flex min-w-0 flex-row gap-1.5 overflow-x-auto md:flex-col md:overflow-visible no-scrollbar md:sticky md:top-6"
+          className="flex flex-col gap-1.5 md:sticky md:top-6"
         >
           {navItems.map((item) => (
             <NavLink
@@ -247,7 +248,7 @@ const DashboardLayout = () => {
           ))}
 
           {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
 
           {/* Shop link in sidebar */}
           <Link
@@ -260,7 +261,7 @@ const DashboardLayout = () => {
           </Link>
 
           {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} className="hidden md:block" />
+          <div style={{ borderTop: "1px solid var(--border)", margin: "0.5rem 0" }} />
 
           {/* Logout */}
           <button
