@@ -404,8 +404,8 @@ export const policiesData = [
       "LyZov delivers across India with precision and care. Enjoy fast order dispatch, multi-layer protective packaging, and real-time SMS/Email shipment tracking.",
     highlights: [
       {
-        title: "Free Delivery Above ₹999",
-        desc: "All domestic orders over ₹999 qualify for complimentary premium shipping.",
+        title: "Doorstep Delivery",
+        desc: "Fast, reliable delivery across serviceable pin codes in India.",
       },
       {
         title: "24-48 Hour Dispatch",
@@ -427,14 +427,14 @@ export const policiesData = [
       },
       {
         id: "shipping-rates",
-        heading: "2. Shipping Rates & Thresholds",
+        heading: "2. Shipping Rates & Delivery",
         paragraphs: [
-          "We offer transparent, uncomplicated shipping charges across our entire catalog:",
+          "We offer transparent, uncomplicated shipping across our entire catalog:",
         ],
         listItems: [
-          "Orders Above ₹999: 100% FREE Standard Shipping across all serviceable pin codes in India.",
-          "Orders Below ₹999: A flat standard delivery fee of ₹99 is applied at checkout to cover insured transit packaging.",
-          "No Hidden Surcharges: All charges are visibly calculated and displayed prior to payment confirmation.",
+          "Transparent Delivery: Any applicable delivery charges are clearly displayed prior to order confirmation.",
+          "Insured Transit Packaging: All orders are packaged with protective materials to ensure safe arrival.",
+          "No Hidden Surcharges: What you see at checkout is exactly what you pay.",
         ],
       },
       {

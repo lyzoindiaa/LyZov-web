@@ -899,12 +899,14 @@ const ProductDetailsPage = () => {
                     <Star
                       key={i}
                       size={14}
-                      fill={i <= Math.round(product.rating || 4.5) ? "currentColor" : "none"}
+                      fill={reviews.length > 0 && i <= Math.round(product.rating || 0) ? "currentColor" : "none"}
                     />
                   ))}
                 </div>
                 <span style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>
-                  ({reviews.length || 12} verified reviews)
+                  {reviews.length > 0
+                    ? `(${reviews.length} verified review${reviews.length > 1 ? "s" : ""})`
+                    : "(No reviews yet)"}
                 </span>
                 <span style={{ color: "var(--border)" }}>•</span>
                 {stock > 0 ? (
@@ -1167,7 +1169,7 @@ const ProductDetailsPage = () => {
               }}
             >
               {[
-                [Truck, "Pan-India", "Free over ₹999", "/shipping-delivery-policy"],
+                [Truck, "Pan-India", "Fast Delivery", "/shipping-delivery-policy"],
                 [ShieldCheck, "100% Genuine", "Quality tested", null],
                 [RotateCcw, "7-Day Support", "Easy replacement", "/return-exchange-policy"],
               ].map(([Icon, t, s, link], i) => {
@@ -1501,7 +1503,7 @@ const ProductDetailsPage = () => {
                     <Truck size={18} style={{ color: "var(--accent)" }} /> Fast Doorstep Delivery Across India
                   </h4>
                   <p style={{ fontSize: "0.875rem", color: "var(--ink-light)", lineHeight: 1.7, marginBottom: "0.85rem" }}>
-                    All orders are packaged with heavy-duty multi-layer protective materials. Dispatched within 24-48 hours. Metro deliveries arrive in 2-4 business days with real-time SMS tracking. Free shipping on orders over ₹999.
+                    All orders are packaged with heavy-duty multi-layer protective materials. Dispatched within 24-48 hours. Metro deliveries arrive in 2-4 business days with real-time SMS tracking.
                   </p>
                   <Link
                     to="/shipping-delivery-policy"

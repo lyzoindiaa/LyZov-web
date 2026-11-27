@@ -54,7 +54,7 @@ const POLICY_META = {
     title: "Shipping & Delivery Policy — Pan-India Coverage | LyZov",
     heading: "Shipping & Delivery Policy",
     description:
-      "Free standard shipping above ₹999, 24-48 hour dispatch, and tracked Pan-India delivery across 19,000+ pincodes on LyZov.",
+      "Fast & reliable delivery, 24-48 hour dispatch, and tracked Pan-India delivery across 19,000+ pincodes on LyZov.",
   },
 };
 
