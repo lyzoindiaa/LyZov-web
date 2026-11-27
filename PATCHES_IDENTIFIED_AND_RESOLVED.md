@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This document catalogues the full audit of patches, temporary workarounds, security holes, and test suite discrepancies identified across the LyZov Gentleman fullstack platform (backend Node.js/Express and frontend React/Vite), along with the precise resolutions applied directly in this branch.
+This document catalogues the full audit of patches, temporary workarounds, security holes, and test suite discrepancies identified across the LyZov fullstack platform (backend Node.js/Express and frontend React/Vite), along with the precise resolutions applied directly in this branch.
 
 | # | Domain | Component / File | Issue Classification | Severity | Resolution Status |
 |---|---|---|---|---|---|

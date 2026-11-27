@@ -86,7 +86,7 @@ const AdminOrderDetailsPage = () => {
     if (tplKey === "standard") {
       return {
         subject: `Order #${orderObj.orderNumber} shipped — ${platformLabel} tracking ${tracking}`,
-        body: `Hello ${recipientName},\n\nYour LyZov order #${orderObj.orderNumber} has been dispatched.\n\nCourier / Platform: ${platformLabel}\nTracking / AWB ID: ${tracking}${trackLink ? `\nTrack package: ${trackLink}` : ""}\n\nYou can also check your order progress anytime from your LyZov account.\n\nThank you for choosing LyZov Gentlemen.`,
+        body: `Hello ${recipientName},\n\nYour LyZov order #${orderObj.orderNumber} has been dispatched.\n\nCourier / Platform: ${platformLabel}\nTracking / AWB ID: ${tracking}${trackLink ? `\nTrack package: ${trackLink}` : ""}\n\nYou can also check your order progress anytime from your LyZov account.\n\nThank you for choosing LyZov.`,
       };
     }
 
@@ -100,7 +100,7 @@ const AdminOrderDetailsPage = () => {
     if (tplKey === "delayed") {
       return {
         subject: `Order #${orderObj.orderNumber} dispatched — Thank you for your patience`,
-        body: `Hello ${recipientName},\n\nThank you so much for your patience! Your order #${orderObj.orderNumber} is now fully packed and handed over to ${platformLabel}.\n\nTracking / AWB Number: ${tracking}${trackLink ? `\nTrack your package: ${trackLink}` : ""}\n\nWe appreciate your understanding and support!\n\nWarm regards,\nLyZov Gentlemen`,
+        body: `Hello ${recipientName},\n\nThank you so much for your patience! Your order #${orderObj.orderNumber} is now fully packed and handed over to ${platformLabel}.\n\nTracking / AWB Number: ${tracking}${trackLink ? `\nTrack your package: ${trackLink}` : ""}\n\nWe appreciate your understanding and support!\n\nWarm regards,\nLyZov`,
       };
     }
 

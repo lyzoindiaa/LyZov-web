@@ -84,7 +84,7 @@ const seed = async () => {
   const menClothing = await Category.create({
     name: "Clothing",
     slug: "men-clothing",
-    description: "Tailored shirts, casual tees, and premium trousers for gentlemen",
+    description: "Tailored shirts, casual tees, and premium trousers",
     level: 2,
     parent: menRoot._id,
     ancestors: [{ _id: menRoot._id, name: menRoot.name, slug: menRoot.slug, level: 1 }],

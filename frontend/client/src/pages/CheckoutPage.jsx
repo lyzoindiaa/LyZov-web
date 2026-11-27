@@ -244,7 +244,7 @@ const CheckoutPage = () => {
         key: sessionData.keyId,
         amount: sessionData.amount,
         currency: sessionData.currency || "INR",
-        name: "LyZov Gentlemen",
+        name: "LyZov",
         description: `Order #${sessionData.razorpayOrderId}`,
         image: "/lyzov-logo-dark.png",
         order_id: sessionData.razorpayOrderId,

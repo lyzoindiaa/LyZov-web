@@ -72,7 +72,7 @@ function buildDefaultShipmentEmailText({
     "",
     "You can also view order progress anytime from your LyZov account or our Track Order page.",
     "",
-    "Thank you for choosing LyZov Gentlemen."
+    "Thank you for choosing LyZov."
   );
   return lines.join("\n");
 }
