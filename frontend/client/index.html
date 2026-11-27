@@ -284,16 +284,51 @@
           "name": "LyZov",
           "description": "LyZov is a trusted Indian online shopping platform offering a wide selection of curated, quality-checked products with reliable nationwide delivery.",
           "publisher": {
-            "@id": "https://lyzov.com/#organization"
+            "@id": "https://www.lyzov.com/#organization"
           },
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
               "@type": "EntryPoint",
-              "urlTemplate": "https://lyzov.com/shop?search={search_term_string}"
+              "urlTemplate": "https://www.lyzov.com/shop?search={search_term_string}"
             },
             "query-input": "required name=search_term_string"
           }
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://www.lyzov.com/#navigation",
+          "name": "Main Navigation",
+          "itemListElement": [
+            {
+              "@type": "SiteNavigationElement",
+              "position": 1,
+              "name": "All Products",
+              "description": "Explore all curated products on LyZov",
+              "url": "https://www.lyzov.com/shop"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 2,
+              "name": "God Idols & Murtis",
+              "description": "Spiritual god idols and devotional figurines",
+              "url": "https://www.lyzov.com/category/accessories-showpiece-and-figurine-god-idol"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 3,
+              "name": "Fitness & Gym Accessories",
+              "description": "Workout gear, hand grippers and fitness accessories",
+              "url": "https://www.lyzov.com/category/accessories-fitness-accessories"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 4,
+              "name": "Track Order",
+              "description": "Live shipment tracking for your LyZov orders",
+              "url": "https://www.lyzov.com/track"
+            }
+          ]
         }
       ]
     }
