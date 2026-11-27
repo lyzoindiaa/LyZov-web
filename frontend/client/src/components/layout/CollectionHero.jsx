@@ -1,32 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import heroBannerOne from "../../assets/hero-crousal-1.jpeg";
-import heroBannerTwo from "../../assets/hero-crousal-2.png";
-import heroBannerThree from "../../assets/Hero.png";
+import heroBannerCouple from "../../assets/hero-banner-couple.webp";
+import heroBannerAppliances from "../../assets/hero-banner-appliances.webp";
+import heroBannerLifestyle from "../../assets/hero-banner-lifestyle.webp";
 
 const AUTO_ADVANCE_MS = 5000;
 
 const carouselSlides = [
   {
-    id: "toys-idols-electronics",
-    title: "Everything You Love, Now on LyZov — Kids Toys, Idols & Gifts, Electronics",
-    image: heroBannerOne,
+    id: "everyday-essentials",
+    title: "Everything You Love, Now on LyZov — Upto 35% OFF on first order — Furniture, Fashion, Electronics, Grocery, Beauty & Fitness",
+    image: heroBannerCouple,
     to: "/shop",
-    backdrop: "#fdf1e7",
+    backdrop: "linear-gradient(90deg, #ead7eb 0%, #f5ece8 50%, #fbdcc4 100%)",
+    objectPosition: "center center",
   },
   {
     id: "kitchen-home-appliances",
     title: "Everything You Love, Now on LyZov — Kitchen, Home, Cooling & Small Appliances",
-    image: heroBannerTwo,
+    image: heroBannerAppliances,
     to: "/shop",
     backdrop: "#f6efe8",
+    objectPosition: "center center",
   },
   {
-    id: "everyday-essentials",
-    title: "Everything You Love, Now on LyZov — Furniture, Fashion, Electronics, Grocery, Beauty & Fitness",
-    image: heroBannerThree,
+    id: "toys-idols-electronics",
+    title: "Everything You Love, Now on LyZov — Kids Toys, Idols & Gifts, Electronics",
+    image: heroBannerLifestyle,
     to: "/shop",
-    backdrop: "linear-gradient(90deg, #ead7eb 0%, #f5ece8 50%, #fbdcc4 100%)",
+    backdrop: "#fdf1e7",
+    objectPosition: "center 28%",
   },
 ];
 
@@ -76,6 +79,7 @@ function CollectionHero() {
                 decoding="async"
                 fetchPriority={index === 0 ? "high" : "auto"}
                 className="about-hero-image"
+                style={{ objectPosition: slide.objectPosition || "center center" }}
               />
             </Link>
           ))}

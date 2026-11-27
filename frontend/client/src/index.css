@@ -637,15 +637,20 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 
 .about-hero-carousel {
   width: 100%;
+  max-width: 100%;
   margin: 0;
+  padding: 0;
 }
 
 .about-hero-image-wrap {
   position: relative;
   width: 100%;
-  height: clamp(220px, 33vw, 460px);
+  height: clamp(160px, 33.33vw, 480px);
   overflow: hidden;
   background: var(--bg-subtle);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .about-hero-track {
@@ -683,18 +688,10 @@ html.dark td { border-color: var(--border); color: var(--ink); }
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
   display: block;
   transform: scale(1);
   transition: transform 0.9s ease;
-}
-
-@media (min-width: 769px) {
-  .about-hero-image {
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
-  }
 }
 
 .about-hero-image-wrap:hover .about-hero-image {
@@ -953,11 +950,15 @@ html.dark .category-tone-cyan { border-color: rgba(34, 211, 238, 0.25); }
 @media (max-width: 768px) {
   .about-hero-carousel {
     width: 100%;
-    margin-bottom: 1rem;
+    max-width: 100%;
+    margin: 0 0 1rem;
   }
 
   .about-hero-image-wrap {
-    height: clamp(175px, 42vw, 320px);
+    height: clamp(130px, 33.33vw, 240px);
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 
   .about-container {

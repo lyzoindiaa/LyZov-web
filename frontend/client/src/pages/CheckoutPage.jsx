@@ -191,8 +191,18 @@ const CheckoutPage = () => {
 
       dispatch(resetCartLocal());
       toast.success("Order placed successfully with Cash on Delivery!");
-      const orderId = res.data?._id || res.data?.order?._id || res.data?.data?._id || res.data?.id;
-      navigate(`/dashboard/orders/${orderId}`);
+      const orderId =
+        res?.data?._id ||
+        res?.data?.order?._id ||
+        res?.data?.data?._id ||
+        res?.data?.id ||
+        res?._id ||
+        res?.order?._id;
+      if (orderId && String(orderId) !== "undefined") {
+        navigate(`/dashboard/orders/${orderId}`);
+      } else {
+        navigate("/dashboard/orders");
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not place COD order");
     } finally {

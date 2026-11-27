@@ -194,7 +194,21 @@ const frontendDist = candidateDirs.find((dir) => fs.existsSync(path.join(dir, "i
 const indexHtmlPath = path.join(frontendDist, "index.html");
 
 if (fs.existsSync(indexHtmlPath)) {
-  app.use(express.static(frontendDist, { index: false }));
+  app.use(
+    express.static(frontendDist, {
+      index: false,
+      maxAge: "30d",
+      setHeaders: (res, staticPath) => {
+        if (staticPath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        } else if (staticPath.includes(path.sep + "assets" + path.sep) || staticPath.includes("/assets/")) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (/\.(ico|png|jpg|jpeg|webp|avif|svg|gif|woff2?)$/i.test(staticPath)) {
+          res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400");
+        }
+      },
+    })
+  );
 
   app.get("*", async (req, res, next) => {
     if (req.path.startsWith("/api")) {

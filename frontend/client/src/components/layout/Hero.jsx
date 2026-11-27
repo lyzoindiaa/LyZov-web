@@ -11,7 +11,7 @@ import decorImg from "../../assets/hero-decor.svg";
 // Each item has an icon, title, and subtitle describing the guarantee
 // These are displayed in rounded cards (border-radius: 1rem)
 const trustItems = [
-  { icon: Truck, title: "Free Shipping", sub: "On orders above ₹999" },
+  { icon: Truck, title: "Fast & Reliable Delivery", sub: "Pan-India tracked shipping" },
   { icon: ShieldCheck, title: "Quality Guaranteed", sub: "Every item hand-inspected" },
   { icon: RotateCcw, title: "Easy Returns", sub: "7-day replacement support" },
   { icon: Award, title: "Best Value", sub: "Direct pricing, no markups" },

@@ -21,4 +21,4 @@ Disallow: /forgot-password
 Disallow: /complete-profile
 Disallow: /api/
 
-Sitemap: https://lyzov.com/sitemap.xml
+Sitemap: https://www.lyzov.com/sitemap.xml

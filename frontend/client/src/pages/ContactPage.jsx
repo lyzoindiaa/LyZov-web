@@ -225,9 +225,12 @@ const ContactPage = ({ isDashboard = false }) => {
                     <span style={{ fontSize: "0.75rem", color: "var(--ink-muted)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
                       Email Inquiries
                     </span>
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", marginTop: "2px" }}>
-                      lyzovindia@gmail.com
-                    </p>
+                    <a
+                      href="mailto:lyzovindia@gmail.com"
+                      style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", marginTop: "2px", textDecoration: "none" }}
+                    >
+                      {"lyzovindia" + "@" + "gmail.com"}
+                    </a>
                     <p style={{ fontSize: "0.75rem", color: "var(--ink-muted)", marginTop: "2px" }}>
                       Average response time: &lt; 4 hours
                     </p>

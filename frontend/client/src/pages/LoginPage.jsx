@@ -12,7 +12,7 @@ import SEO from "../components/common/SEO";
 
 const trustBullets = [
   { icon: ShieldCheck, text: "100% secure checkout & payments" },
-  { icon: Truck, text: "Free express delivery on orders ₹999+" },
+  { icon: Truck, text: "Fast & reliable Pan-India delivery" },
   { icon: Award, text: "Authentic & quality guaranteed items" },
 ];
 

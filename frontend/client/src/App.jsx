@@ -210,6 +210,14 @@ function App() {
             <Route path="/refund-policy" element={<Navigate to="/policies/refund-cancellation-policy" replace />} />
             <Route path="/shipping" element={<Navigate to="/policies/shipping-delivery-policy" replace />} />
 
+            {/* ── Direct Customer Order & Dashboard Aliases ── */}
+            <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />
+            <Route path="/orders/:orderId" element={<Navigate to="/dashboard/orders/:orderId" replace />} />
+            <Route path="/order" element={<Navigate to="/dashboard/orders" replace />} />
+            <Route path="/order/:orderId" element={<Navigate to="/dashboard/orders/:orderId" replace />} />
+            <Route path="/dashbaord" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashbaord/*" element={<Navigate to="/dashboard" replace />} />
+
             <Route
               path="/dashboard"
               element={
@@ -221,6 +229,8 @@ function App() {
               <Route index element={<OrdersPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="orders/:orderId" element={<OrderDetailsPage />} />
+              <Route path="order" element={<Navigate to="/dashboard/orders" replace />} />
+              <Route path="order/:orderId" element={<Navigate to="/dashboard/orders/:orderId" replace />} />
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="addresses" element={<AddressesPage />} />

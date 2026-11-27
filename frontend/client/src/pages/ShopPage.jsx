@@ -196,7 +196,7 @@ const ShopPage = () => {
       ? `Shop curated, quality-checked ${categoryName} products online on LyZov. Enjoy transparent pricing, secure UPI checkout, and safe Pan-India delivery.`
       : `Explore ${headingTitle} on LyZov. Discover curated, quality-checked products with direct pricing and safe Pan-India delivery.`;
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://lyzov.com";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://www.lyzov.com";
   const canonicalUrl = canonicalCategorySlug
     ? `${origin}/category/${encodeURIComponent(canonicalCategorySlug)}`
     : `${origin}/shop`;
