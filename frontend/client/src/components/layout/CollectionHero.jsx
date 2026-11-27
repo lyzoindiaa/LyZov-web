@@ -13,6 +13,7 @@ const carouselSlides = [
     image: heroBannerCouple,
     to: "/shop",
     backdrop: "linear-gradient(90deg, #ead7eb 0%, #f5ece8 50%, #fbdcc4 100%)",
+    objectPosition: "center center",
   },
   {
     id: "kitchen-home-appliances",
@@ -20,6 +21,7 @@ const carouselSlides = [
     image: heroBannerAppliances,
     to: "/shop",
     backdrop: "#f6efe8",
+    objectPosition: "center center",
   },
   {
     id: "toys-idols-electronics",
@@ -27,6 +29,7 @@ const carouselSlides = [
     image: heroBannerLifestyle,
     to: "/shop",
     backdrop: "#fdf1e7",
+    objectPosition: "center 28%",
   },
 ];
 
@@ -76,6 +79,7 @@ function CollectionHero() {
                 decoding="async"
                 fetchPriority={index === 0 ? "high" : "auto"}
                 className="about-hero-image"
+                style={{ objectPosition: slide.objectPosition || "center center" }}
               />
             </Link>
           ))}

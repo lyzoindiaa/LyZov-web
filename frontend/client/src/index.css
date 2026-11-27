@@ -636,25 +636,21 @@ html.dark td { border-color: var(--border); color: var(--ink); }
 }
 
 .about-hero-carousel {
-  width: 98%;
-  max-width: 1720px;
-  margin: 0.75rem auto 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .about-hero-image-wrap {
   position: relative;
   width: 100%;
-  height: clamp(220px, 33vw, 460px);
+  height: clamp(160px, 33.33vw, 480px);
   overflow: hidden;
-  border-radius: 1.25rem;
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
   background: var(--bg-subtle);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-}
-
-html.dark .about-hero-image-wrap {
-  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .about-hero-track {
@@ -692,8 +688,7 @@ html.dark .about-hero-image-wrap {
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
   display: block;
   transform: scale(1);
   transition: transform 0.9s ease;
@@ -954,14 +949,16 @@ html.dark .category-tone-cyan { border-color: rgba(34, 211, 238, 0.25); }
 
 @media (max-width: 768px) {
   .about-hero-carousel {
-    width: 98%;
-    margin: 0.5rem auto 1rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 1rem;
   }
 
   .about-hero-image-wrap {
-    height: clamp(175px, 42vw, 320px);
-    border-radius: 0.875rem;
-    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.08);
+    height: clamp(130px, 33.33vw, 240px);
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 
   .about-container {
