@@ -31,19 +31,20 @@ module.exports = async (req, res) => {
     console.error("MongoDB serverless connection error:", error);
   }
 
-  // vercel.json rewrites /api/* to this function as /api/index?__p=<original path>.
-  // Rebuild the real URL (path + original query string) so Express can route it.
+  // vercel.json rewrites incoming requests to this function (/api/index).
+  // On Vercel, the real incoming request URL is reliably preserved in x-forwarded-uri or x-vercel-original-path.
+  // Rebuild the real URL so Express can accurately route sub-paths (e.g. /api/auth/google, /api/categories).
   try {
-    const parsed = new URL(req.url, "http://localhost");
-    const originalPath = parsed.searchParams.get("__p");
-    if (originalPath && originalPath.startsWith("/")) {
-      parsed.searchParams.delete("__p");
-      const qs = parsed.searchParams.toString();
-      req.url = originalPath + (qs ? `?${qs}` : "");
+    const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-vercel-original-path"];
+    if (originalUri && String(originalUri).startsWith("/")) {
+      req.url = originalUri;
     } else {
-      const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-vercel-original-path"];
-      if (originalUri && String(originalUri).startsWith("/")) {
-        req.url = originalUri;
+      const parsed = new URL(req.url, "http://localhost");
+      const originalPath = parsed.searchParams.get("__p");
+      if (originalPath && originalPath.startsWith("/") && !originalPath.includes(":path") && !originalPath.includes("$")) {
+        parsed.searchParams.delete("__p");
+        const qs = parsed.searchParams.toString();
+        req.url = originalPath + (qs ? `?${qs}` : "");
       }
     }
   } catch (error) {
