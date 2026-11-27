@@ -41,8 +41,8 @@
       "destination": "/api/index?__p=/robots.txt"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/index?__p=/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "/api/index"
     },
     {
       "source": "/shop",

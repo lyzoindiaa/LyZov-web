@@ -44,7 +44,7 @@ const buildWhatsAppInvite = ({ name, businessName, email, tempPassword, phone, l
   const url = loginUrl || process.env.CLIENT_URL || "https://lyzov.com/login";
   const business = businessName ? ` for "${businessName}"` : "";
 
-  const text = `Hello ${name || "Partner"},\n\nWelcome to LyZov Gentlemen! Your Seller account${business} has been created.\n\nHere are your login credentials:\n🌐 Portal: ${url}\n📧 Email: ${email}\n🔑 Temporary Password: ${tempPassword}\n\nPlease log in and update your password in Profile > Security.`;
+  const text = `Hello ${name || "Partner"},\n\nWelcome to LyZov! Your Seller account${business} has been created.\n\nHere are your login credentials:\n🌐 Portal: ${url}\n📧 Email: ${email}\n🔑 Temporary Password: ${tempPassword}\n\nPlease log in and update your password in Profile > Security.`;
 
   // Clean phone number (strip spaces, dashes, parentheses)
   let cleanPhone = String(phone || "").replace(/[^0-9+]/g, "");

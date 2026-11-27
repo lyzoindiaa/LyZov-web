@@ -60,7 +60,7 @@ describe("SEO Sitemap, Robots & Prerender Suite", () => {
   });
 
   test("SEO-02: buildRobotsTxt allows /product/, /category/, /shop and matches public/robots.txt", () => {
-    const dynamicRobots = buildRobotsTxt("https://lyzov.com").replace(/\r\n/g, "\n").trim();
+    const dynamicRobots = buildRobotsTxt("https://www.lyzov.com").replace(/\r\n/g, "\n").trim();
     const publicRobots = fs
       .readFileSync(path.resolve(__dirname, "../../../frontend/client/public/robots.txt"), "utf8")
       .replace(/\r\n/g, "\n")
@@ -71,7 +71,7 @@ describe("SEO Sitemap, Robots & Prerender Suite", () => {
     assert.ok(dynamicRobots.includes("Allow: /category/"));
     assert.ok(dynamicRobots.includes("Disallow: /complete-profile"));
     assert.ok(!dynamicRobots.includes("Allow: /products/"));
-    assert.ok(dynamicRobots.includes("Sitemap: https://lyzov.com/sitemap.xml"));
+    assert.ok(dynamicRobots.includes("Sitemap: https://www.lyzov.com/sitemap.xml"));
   });
 
   test("SEO-03: applySeoToHtml prevents duplicate canonical/OG/Twitter tags and escapes JSON-LD XSS", () => {
@@ -153,22 +153,22 @@ describe("SEO Sitemap, Robots & Prerender Suite", () => {
     // 1. Offline / generic routes without DB
     const contactRes = await prerenderRoute({ path: "/contact", query: {} }, TEMPLATE_PATH);
     assert.strictEqual(contactRes.statusCode, 200);
-    assert.ok(contactRes.html.includes('href="https://lyzov.com/contact"'));
+    assert.ok(contactRes.html.includes('href="https://www.lyzov.com/contact"'));
     assert.ok(contactRes.html.includes("<h1>LyZov Customer Support &amp; Concierge Desk</h1>"));
 
     const trackRes = await prerenderRoute({ path: "/track", query: {} }, TEMPLATE_PATH);
     assert.strictEqual(trackRes.statusCode, 200);
-    assert.ok(trackRes.html.includes('href="https://lyzov.com/track"'));
+    assert.ok(trackRes.html.includes('href="https://www.lyzov.com/track"'));
 
     const policyRes = await prerenderRoute({ path: "/policies/shipping-delivery-policy", query: {} }, TEMPLATE_PATH);
     assert.strictEqual(policyRes.statusCode, 200);
-    assert.ok(policyRes.html.includes('href="https://lyzov.com/policies/shipping-delivery-policy"'));
+    assert.ok(policyRes.html.includes('href="https://www.lyzov.com/policies/shipping-delivery-policy"'));
     assert.ok(policyRes.html.includes('href="/policies/privacy-policy"'));
 
     const filteredShop = await prerenderRoute({ path: "/shop", query: { search: "dumbbell" } }, TEMPLATE_PATH);
     assert.strictEqual(filteredShop.statusCode, 200);
     assert.ok(filteredShop.html.includes('content="noindex, follow"'));
-    assert.ok(filteredShop.html.includes('href="https://lyzov.com/shop"'));
+    assert.ok(filteredShop.html.includes('href="https://www.lyzov.com/shop"'));
 
     // 2. Stub DB connection & Mongoose queries to verify 404 + live Product + live Category prerendering
     const origDesc = Object.getOwnPropertyDescriptor(mongoose.connection, "readyState");
@@ -202,7 +202,7 @@ describe("SEO Sitemap, Robots & Prerender Suite", () => {
 
       const catRes = await prerenderRoute({ path: "/category/fitness-gear", query: {} }, TEMPLATE_PATH);
       assert.strictEqual(catRes.statusCode, 200);
-      assert.ok(catRes.html.includes('href="https://lyzov.com/category/fitness-gear"'));
+      assert.ok(catRes.html.includes('href="https://www.lyzov.com/category/fitness-gear"'));
       assert.ok(catRes.html.includes("<h1>Fitness Gear</h1>"));
     } finally {
       if (origDesc) Object.defineProperty(mongoose.connection, "readyState", origDesc);

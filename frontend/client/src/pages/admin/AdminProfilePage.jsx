@@ -596,7 +596,7 @@ const AdminProfilePage = () => {
               <div>
                 <Input
                   label="Store / Brand Name *"
-                  placeholder="e.g. LyZov Gentlemen"
+                  placeholder="e.g. LyZov"
                   {...storeForm.register("businessName", { required: "Store / Brand Name is required" })}
                   error={storeForm.formState.errors.businessName?.message}
                 />

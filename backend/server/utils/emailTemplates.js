@@ -1,5 +1,5 @@
 /**
- * LyZov Gentlemen - Luxury Branded HTML Email Templates
+ * LyZov - Premium Branded HTML Email Templates
  */
 
 const primaryGold = "#C5A059";
@@ -18,7 +18,7 @@ const baseEmailWrapper = ({ title, preheader, content, clientUrl }) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title || "LyZov Gentlemen"}</title>
+  <title>${title || "LyZov"}</title>
   <style>
     body { margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     table { border-collapse: collapse; }
@@ -66,7 +66,7 @@ const baseEmailWrapper = ({ title, preheader, content, clientUrl }) => {
                     </span>
                     <div style="height: 2px; width: 40px; background-color: ${primaryGold}; margin: 8px auto 6px;"></div>
                     <span style="font-size: 10px; letter-spacing: 0.25em; color: ${primaryGold}; text-transform: uppercase;">
-                      Gentlemen's Curations
+                      Curated Collections
                     </span>
                   </td>
                 </tr>
@@ -393,7 +393,7 @@ const orderConfirmationTemplate = ({ order, user }) => {
   `;
 
   return {
-    subject: `Order Confirmed: ${order.orderNumber} — LyZov Gentlemen`,
+    subject: `Order Confirmed: ${order.orderNumber} — LyZov`,
     text: `Thank you for your order #${order.orderNumber}!\n\nTotal: ${formatPrice(order.totalPrice)}\nDelivery to: ${order.shippingAddress?.fullName}, ${order.shippingAddress?.city}\n\nTrack your order at: ${orderUrl}`,
     html: baseEmailWrapper({
       title: `Order Confirmation #${order.orderNumber}`,
@@ -653,7 +653,7 @@ const customerSupportInquiryTemplate = ({ name, email, phone, subject, category,
       We've received your message
     </h2>
     <p style="margin: 0 0 20px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
-      Hello ${name}, thank you for contacting LyZov Gentlemen Support. Our concierge team has logged your inquiry <strong>#${ticketId}</strong> and will get back to you within 24 hours.
+      Hello ${name}, thank you for contacting LyZov Support. Our concierge team has logged your inquiry <strong>#${ticketId}</strong> and will get back to you within 24 hours.
     </p>
 
     <div style="background-color: #F8FAFC; border-radius: 6px; padding: 18px; margin-bottom: 24px; font-size: 13px; line-height: 1.6;">
@@ -753,7 +753,7 @@ const googleWelcomeWithTempPasswordTemplate = ({ name, tempPassword, changePassw
     </div>
 
     <h2 style="text-align: center; margin: 0 0 8px; font-size: 23px; color: ${textDark}; font-weight: 700;">
-      Welcome to LyZov, ${name || "Gentleman"}!
+      Welcome to LyZov, ${name || "Customer"}!
     </h2>
     <p style="text-align: center; margin: 0 0 28px; font-size: 14px; color: ${textMuted}; line-height: 1.6;">
       You've successfully joined LyZov via your Google account. Your account is ready.
@@ -815,7 +815,7 @@ const googleWelcomeWithTempPasswordTemplate = ({ name, tempPassword, changePassw
 
   return {
     subject: "Welcome to LyZov — Your Account &amp; Temporary Password",
-    text: `Welcome to LyZov, ${name || "Gentleman"}!\n\nYou signed up with Google. Your temporary email login password is:\n\n  ${tempPassword}\n\nPlease change it here: ${changePasswordUrl}\n\nOr log in at: ${loginUrl}\n\nIf you didn't create this account, contact us immediately.`,
+    text: `Welcome to LyZov, ${name || "Customer"}!\n\nYou signed up with Google. Your temporary email login password is:\n\n  ${tempPassword}\n\nPlease change it here: ${changePasswordUrl}\n\nOr log in at: ${loginUrl}\n\nIf you didn't create this account, contact us immediately.`,
     html: baseEmailWrapper({
       title: "Welcome to LyZov — Google Sign-Up",
       preheader: `Welcome ${name || ""}! Your LyZov account is ready. Here's your temporary password.`,
@@ -841,7 +841,7 @@ const sellerInvitationTemplate = ({ sellerName, businessName, email, tempPasswor
       Welcome to LyZov Marketplace
     </h2>
     <p style="text-align: center; margin: 0 0 24px; font-size: 15px; color: ${textMuted}; line-height: 1.6;">
-      Dear <strong>${sellerName || "Partner"}</strong>, you have been invited as an official Seller on <strong>LyZov Gentlemen</strong>${businessName ? ` for <strong>${businessName}</strong>` : ""}.
+      Dear <strong>${sellerName || "Partner"}</strong>, you have been invited as an official Seller on <strong>LyZov</strong>${businessName ? ` for <strong>${businessName}</strong>` : ""}.
     </p>
 
     <!-- Credentials Card -->
@@ -899,7 +899,7 @@ const sellerInvitationTemplate = ({ sellerName, businessName, email, tempPasswor
 
   return {
     subject: `Welcome to LyZov — Merchant Invitation for ${businessName || sellerName || "Seller"}`,
-    text: `Welcome to LyZov Gentlemen!\n\nYou have been invited as a Seller${businessName ? ` for ${businessName}` : ""}.\n\nLogin Portal: ${url}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and update your password immediately.`,
+    text: `Welcome to LyZov!\n\nYou have been invited as a Seller${businessName ? ` for ${businessName}` : ""}.\n\nLogin Portal: ${url}\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease log in and update your password immediately.`,
     html: baseEmailWrapper({
       title: "Seller Invitation — LyZov Marketplace",
       preheader: `Welcome to LyZov! Your merchant credentials for ${businessName || sellerName} are inside.`,
@@ -952,7 +952,7 @@ const commissionScheduleNoticeTemplate = ({
       Dear ${businessName || sellerName || "Valued Merchant"},
     </p>
     <p style="margin: 0 0 24px 0; font-size: 14px; color: ${textDark}; line-height: 1.6;">
-      Please be advised of an upcoming revision to your platform margin fees on the LyZov Gentlemen Marketplace. In accordance with platform governance, the revised commission structure outlined below will take effect from the scheduled date:
+      Please be advised of an upcoming revision to your platform margin fees on the LyZov Marketplace. In accordance with platform governance, the revised commission structure outlined below will take effect from the scheduled date:
     </p>
 
     <!-- Highlighted Rates Card -->

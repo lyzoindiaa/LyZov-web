@@ -1,7 +1,7 @@
 {
   "name": "lyzov-fullstack",
   "version": "1.0.0",
-  "description": "LyZov Gentlemen Fullstack E-Commerce Platform",
+  "description": "LyZov Fullstack E-Commerce Platform",
   "private": true,
   "main": "index.js",
   "scripts": {

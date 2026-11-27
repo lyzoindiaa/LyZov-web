@@ -74,7 +74,7 @@ class EmailService {
    * Internal sender: handles delivery, fallback, and database audit logging
    */
   async dispatch({ to, recipientName = "", template, subject, html, text, relatedUser = null, relatedOrder = null, metadata = {} }) {
-    const fromAddress = process.env.SMTP_FROM || `LyZov Gentlemen <${process.env.SMTP_USER || "no-reply@lyzov.com"}>`;
+    const fromAddress = process.env.SMTP_FROM || `LyZov <${process.env.SMTP_USER || "no-reply@lyzov.com"}>`;
 
     // 1. Simulated mode if transporter is not configured or in dev without credentials
     if (!this.transporter) {

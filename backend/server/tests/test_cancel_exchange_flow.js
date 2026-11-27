@@ -144,7 +144,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
       orderStatus: "pending",
       paymentMethod: "cod",
       isPaid: false,
-      items: [{ product: productId, quantity: 1, price: 999, name: "Gentleman Blazer" }],
+      items: [{ product: productId, quantity: 1, price: 999, name: "Classic Blazer" }],
       statusHistory: [],
       cancelReason: "",
       save: async function () { return this; },
@@ -471,7 +471,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
       items: [
         {
           product: productId,
-          name: "Gentleman Blazer - Size M",
+          name: "Classic Blazer - Size M",
           price: 4999,
           quantity: 1,
           size: "M",
@@ -499,7 +499,7 @@ describe("Cancel & Exchange Flow Comprehensive Test Suite", () => {
         items: [
           {
             product: productId,
-            name: "Gentleman Blazer - Size L",
+            name: "Classic Blazer - Size L",
             price: 0,
             quantity: 1,
             size: "L",
