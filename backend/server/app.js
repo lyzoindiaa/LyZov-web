@@ -147,7 +147,7 @@ const globalLimiter = rateLimit({
 app.use("/api", globalLimiter);
 
 
-app.get(["/api", "/api/", "/api/index"], (req, res) => {
+app.get(["/api", "/api/"], (req, res) => {
   res.status(200).json({ success: true, message: "LyZov API is running", timestamp: new Date() });
 });
 
