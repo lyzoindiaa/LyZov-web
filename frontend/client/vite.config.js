@@ -16,8 +16,28 @@ const gscVerificationPlugin = () => ({
   },
 });
 
+const analyticsPlugin = () => ({
+  name: "lyzov-ga-analytics",
+  transformIndexHtml(html) {
+    const gaId = (process.env.VITE_GA_ID || process.env.GA_MEASUREMENT_ID || "G-LYZOVSTORE").trim();
+    if (gaId) {
+      const tag = `
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${gaId}', { send_page_view: true });
+    </script>`;
+      return html.replace("<!--__GA_ANALYTICS__-->", tag);
+    }
+    return html.replace("<!--__GA_ANALYTICS__-->", "");
+  },
+});
+
 export default defineConfig({
-  plugins: [react(), gscVerificationPlugin()],
+  plugins: [react(), gscVerificationPlugin(), analyticsPlugin()],
   server: {
     port: 5173,
     proxy: {

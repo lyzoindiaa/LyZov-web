@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Image as ImageIcon } from "lucide-react";
+import { optimizeCloudinaryUrl, getCloudinarySrcSet } from "../../utils/imageOptimizer";
 
 /**
  * High-performance LazyImage component.
@@ -73,7 +74,9 @@ const LazyImage = ({
       {!hasError && src ? (
         <img
           ref={imgRef}
-          src={src}
+          src={optimizeCloudinaryUrl(src, { width: 600 })}
+          srcSet={getCloudinarySrcSet(src)}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
           alt={alt}
           loading="lazy"
           decoding="async"

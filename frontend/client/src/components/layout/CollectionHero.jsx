@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import heroBannerCouple from "../../assets/hero-banner-couple.jpg";
-import heroBannerAppliances from "../../assets/hero-banner-appliances.jpg";
-import heroBannerLifestyle from "../../assets/hero-banner-lifestyle.jpg";
+import heroBannerCouple from "../../assets/hero-banner-couple.webp";
+import heroBannerAppliances from "../../assets/hero-banner-appliances.webp";
+import heroBannerLifestyle from "../../assets/hero-banner-lifestyle.webp";
 
 const AUTO_ADVANCE_MS = 5000;
 

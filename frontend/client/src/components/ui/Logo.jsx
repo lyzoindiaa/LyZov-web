@@ -1,7 +1,9 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import lightLogoSrc from "../../assets/lyzov-logo-light.png";
-import darkLogoSrc from "../../assets/lyzov-logo-dark.png";
+import lightLogoPng from "../../assets/lyzov-logo-light.png";
+import darkLogoPng from "../../assets/lyzov-logo-dark.png";
+import lightLogoWebp from "../../assets/lyzov-logo-light.webp";
+import darkLogoWebp from "../../assets/lyzov-logo-dark.webp";
 
 const SIZES = {
   xs: 36,
@@ -27,7 +29,8 @@ const Logo = ({
   const isDark = theme === "dark";
   const height = SIZES[size] ?? SIZES.md;
 
-  const currentSrc = isDark ? darkLogoSrc : lightLogoSrc;
+  const webpSrc = isDark ? darkLogoWebp : lightLogoWebp;
+  const pngSrc = isDark ? darkLogoPng : lightLogoPng;
   const imgClass = `logo-img ${variant === "elevated" ? "logo-img-elevated" : ""}`;
   const imgStyle = {
     height,
@@ -39,16 +42,19 @@ const Logo = ({
   };
 
   const image = (
-    <img
-      src={currentSrc}
-      alt="LyZov — Premium Lifestyle Shopping"
-      width={Math.round(height * 3.2)}
-      height={height}
-      className={imgClass}
-      style={imgStyle}
-      loading="eager"
-      decoding="async"
-    />
+    <picture>
+      <source srcSet={webpSrc} type="image/webp" />
+      <img
+        src={pngSrc}
+        alt="LyZov — Premium Lifestyle Shopping"
+        width={Math.round(height * 2)}
+        height={height}
+        className={imgClass}
+        style={imgStyle}
+        loading="eager"
+        decoding="async"
+      />
+    </picture>
   );
 
   if (!linked) {

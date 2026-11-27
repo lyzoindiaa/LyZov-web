@@ -34,6 +34,7 @@ import ProductGrid from "../components/product/ProductGrid";
 import QuantityStepper from "../components/ui/QuantityStepper";
 import ExpandableText from "../components/ui/ExpandableText";
 import SEO from "../components/common/SEO";
+import { optimizeCloudinaryUrl } from "../utils/imageOptimizer";
 import { toast } from "react-toastify";
 
 const ProductDetailsPage = () => {
@@ -685,7 +686,7 @@ const ProductDetailsPage = () => {
             >
               <img
                 src={
-                  product.images?.[activeImage]?.url ||
+                  optimizeCloudinaryUrl(product.images?.[activeImage]?.url, { width: 1000 }) ||
                   "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800"
                 }
                 alt={product.images?.[activeImage]?.altText || product.title || product.name}
@@ -864,7 +865,7 @@ const ProductDetailsPage = () => {
                       transition: "all 0.2s",
                     }}
                   >
-                    <img src={img.url} alt={img.altText || `${product.title || product.name} — View ${idx + 1}`} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={optimizeCloudinaryUrl(img.url, { width: 160 })} alt={img.altText || `${product.title || product.name} — View ${idx + 1}`} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </button>
                 ))}
               </div>

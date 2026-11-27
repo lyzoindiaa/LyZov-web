@@ -1,8 +1,9 @@
 const path = require("path");
-const dotenv = require("dotenv");
 
 // Load .env if present (Vercel provides process.env automatically)
-dotenv.config();
+try {
+  require("dotenv").config();
+} catch {}
 
 const app = require("../backend/server/app");
 const connectDB = require("../backend/server/config/db");

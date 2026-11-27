@@ -33,11 +33,10 @@ const getCookieOptions = (isRefresh = false) => {
     sameSite,
   };
 
+  options.path = "/";
   if (isRefresh) {
-    options.path = "/api/auth";
     options.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
   } else {
-    options.path = "/";
     options.maxAge = 15 * 60 * 1000; // 15 mins
   }
 
@@ -63,6 +62,7 @@ const clearAuthCookies = (res) => {
   res.clearCookie("refreshToken", refreshOpts);
 
   // Clean up legacy refresh cookie path if present
+  res.clearCookie("refreshToken", { ...refreshOpts, path: "/api/auth" });
   res.clearCookie("refreshToken", { ...refreshOpts, path: "/api/auth/refresh" });
 };
 

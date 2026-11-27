@@ -160,7 +160,7 @@ const LandingPage = () => {
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       <SEO
         title="LyZov — India's Trusted Online Shopping Platform"
-        description="Discover a wide selection of curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, and Home Accessories with Pan-India delivery."
+        description="Shop curated God idols, fitness gear, electronics & home essentials on LyZov. Enjoy direct pricing, verified quality & fast Pan-India delivery."
         canonicalUrl={window.location.origin}
         noIndex={Boolean(filters.search || filters.minPrice || filters.sort || inStockOnly)}
         schema={homeSchema}
@@ -188,7 +188,7 @@ const LandingPage = () => {
                 marginTop: "0.25rem",
               }}
             >
-              {filters.search ? `Results for "${filters.search}"` : "Trending Picks You'll Love"}
+              {filters.search ? `Results for "${filters.search}"` : "LyZov Online Shopping — Curated Products & Trending Picks"}
             </h1>
             <p style={{ color: "var(--ink-muted)", fontSize: "0.9375rem", marginTop: "0.35rem", lineHeight: 1.6 }}>
               {meta.total > 0

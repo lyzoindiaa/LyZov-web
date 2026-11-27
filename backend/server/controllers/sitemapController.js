@@ -12,7 +12,7 @@ const escapeXml = (unsafe) => {
 };
 
 const getBaseUrl = () => {
-  const rawBaseUrl = process.env.CLIENT_URL || "https://lyzov.com";
+  const rawBaseUrl = process.env.CLIENT_URL || "https://www.lyzov.com";
   return rawBaseUrl.replace(/\/+$/, "");
 };
 

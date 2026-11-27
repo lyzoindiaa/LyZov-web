@@ -80,7 +80,7 @@ const getIndexHtml = (indexHtmlPath) => {
 };
 
 const getBaseUrl = () => {
-  const rawBaseUrl = process.env.CLIENT_URL || "https://lyzov.com";
+  const rawBaseUrl = process.env.CLIENT_URL || "https://www.lyzov.com";
   return rawBaseUrl.replace(/\/+$/, "");
 };
 
@@ -92,6 +92,13 @@ const escapeHtml = (str) => {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+};
+
+const optimizeCloudinaryUrl = (url, width = 400) => {
+  if (!url || typeof url !== "string") return url;
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+  if (url.includes("/upload/f_auto") || url.includes("/upload/q_auto")) return url;
+  return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width},c_limit/`);
 };
 
 const safeJsonLdString = (data) => JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
@@ -149,7 +156,7 @@ const renderPrerenderShell = ({
               .filter((p) => p?.slug && p?.title)
               .map((prod) => {
                 const effPrice = prod.discountPrice > 0 ? prod.discountPrice : prod.price;
-                const thumb = prod.images?.[0]?.url || "/lyzov-logo.png";
+                const thumb = optimizeCloudinaryUrl(prod.images?.[0]?.url, 320) || "/lyzov-logo.webp";
                 return `<article class="boot-card">
                   <a href="/product/${encodeURIComponent(prod.slug)}">
                     <img src="${escapeHtml(thumb)}" alt="${escapeHtml(prod.title)}" width="160" height="160" loading="lazy" />
@@ -181,7 +188,7 @@ const renderPrerenderShell = ({
           <a href="/shop">Shop All Products</a>
           <a href="/track">Track Order</a>
           <a href="/contact">Contact Support</a>
-          <a href="/login">Sign In</a>
+          <a href="/dashboard">Account</a>
         </nav>
       </div>
     </header>
@@ -604,7 +611,7 @@ const prerenderProductPage = async (slug, indexHtmlPath) => {
 
   const canonicalUrl = product.seo?.canonicalUrl || `${baseUrl}/product/${product.slug}`;
   const metaKeywords = product.searchKeyword || (Array.isArray(product.tags) ? product.tags.join(", ") : "");
-  const imageUrl = product.images?.[0]?.url || `${baseUrl}/lyzov-logo.png`;
+  const imageUrl = optimizeCloudinaryUrl(product.images?.[0]?.url, 800) || `${baseUrl}/lyzov-logo.webp`;
 
   const jsonLd = buildProductJsonLd({
     product,
@@ -894,7 +901,7 @@ const prerenderRoute = async (req, indexHtmlPath) => {
         robots: "index, follow",
         bodyHtml: renderPrerenderShell({
           heading: "LyZov Customer Support & Concierge Desk",
-          lead: "Email lyzovindia@gmail.com or reach support Monday–Saturday for order tracking, delivery updates, and product inquiries.",
+          lead: "Contact LyZov customer support Monday–Saturday for order tracking, delivery updates, and product inquiries.",
           breadcrumbs: [{ name: "Home", href: "/" }, { name: "Contact Support" }],
           categories,
         }),
@@ -933,7 +940,7 @@ const prerenderRoute = async (req, indexHtmlPath) => {
     ]);
     const title = "LyZov — India's Trusted Online Shopping Platform";
     const description =
-      "Discover curated, quality-checked products on LyZov across Spiritual God Idols, Fitness Gear, Electronics, Car & Home Accessories with Pan-India delivery.";
+      "Shop curated God idols, fitness gear, electronics & home essentials on LyZov. Enjoy direct pricing, verified quality & fast Pan-India delivery.";
     const bodyHtml = renderPrerenderShell({
       heading: "LyZov — India's Trusted Online Shopping Platform",
       lead: description,
@@ -959,7 +966,50 @@ const prerenderRoute = async (req, indexHtmlPath) => {
     };
   }
 
-  return null;
+  // Known dynamic client-only SPA routes (served with index.html for client-side routing)
+  const isKnownSpaRoute =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/verify-email") ||
+    pathname === "/complete-profile" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/order") ||
+    pathname.startsWith("/seller") ||
+    pathname.startsWith("/admin");
+
+  if (isKnownSpaRoute) {
+    return null;
+  }
+
+  // Any other unmatched route is a true 404
+  const categories = await fetchTopCategories();
+  const notFoundHtml = renderPrerenderShell({
+    heading: "404 — Page Not Found",
+    lead: "The page you're looking for doesn't exist or may have moved. Explore our catalog or head back to continue shopping.",
+    breadcrumbs: [{ name: "Home", href: "/" }, { name: "404 Not Found" }],
+    categories,
+    extraNavHtml: `<div style="text-align: center; margin: 2rem 0;">
+      <a href="/shop" style="display: inline-block; padding: 0.75rem 1.5rem; background: #d97706; color: #fff; border-radius: 9999px; text-decoration: none; font-weight: 700;">Browse All Products</a>
+      <a href="/" style="display: inline-block; margin-left: 1rem; padding: 0.75rem 1.5rem; border: 1px solid #d97706; color: #d97706; border-radius: 9999px; text-decoration: none; font-weight: 700;">Back to Home</a>
+    </div>`,
+  });
+
+  return {
+    statusCode: 404,
+    notFound: true,
+    html: applySeoToHtml(template, {
+      title: "Page Not Found (404) | LyZov",
+      description: "The page you are looking for does not exist on LyZov. Browse our curated catalog of God idols, fitness gear, and home essentials.",
+      canonicalUrl: `${baseUrl}/404`,
+      robots: "noindex, nofollow",
+      bodyHtml: notFoundHtml,
+    }),
+  };
 };
 
 module.exports = {
