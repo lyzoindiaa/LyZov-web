@@ -31,19 +31,44 @@ module.exports = async (req, res) => {
     console.error("MongoDB serverless connection error:", error);
   }
 
-  // vercel.json rewrites /api/* to this function as /api/index?__p=/api/$1.
   // Rebuild the real URL so Express can accurately route sub-paths (e.g. /api/auth/google, /api/categories, /api/products).
   try {
     const parsed = new URL(req.url, "http://localhost");
     const pParam = parsed.searchParams.get("__p");
-    const originalUri = req.headers["x-forwarded-uri"] || req.headers["x-vercel-original-path"];
+    const originalUri = req.headers["x-vercel-original-path"] || req.headers["x-forwarded-uri"];
 
-    if (pParam && pParam.startsWith("/") && !pParam.includes("$")) {
+    // 1. Explicit clean path passed via __p query param (e.g. sitemap, robots, prerender)
+    if (pParam && pParam.startsWith("/") && !pParam.includes("$") && !pParam.includes(":path")) {
       parsed.searchParams.delete("__p");
       const qs = parsed.searchParams.toString();
       req.url = pParam + (qs ? `?${qs}` : "");
-    } else if (originalUri && String(originalUri).startsWith("/") && !originalUri.includes("/api/index")) {
+    }
+    // 2. Vercel original request path header
+    else if (originalUri && String(originalUri).startsWith("/") && !originalUri.includes("/api/index")) {
       req.url = originalUri;
+    }
+    // 3. Vercel named wildcard params in query (source: /api/:path*)
+    else if (req.query?.path || req.query?.["path*"]) {
+      const sub = Array.isArray(req.query.path || req.query["path*"])
+        ? (req.query.path || req.query["path*"]).join("/")
+        : String(req.query.path || req.query["path*"]);
+      parsed.searchParams.delete("path");
+      parsed.searchParams.delete("path*");
+      parsed.searchParams.delete("__p");
+      const qs = parsed.searchParams.toString();
+      req.url = "/api/" + sub.replace(/^\/+/, "") + (qs ? `?${qs}` : "");
+    }
+    // 4. Vercel regex rewrite matches header
+    else if (req.headers["x-now-route-matches"]) {
+      const params = new URLSearchParams(req.headers["x-now-route-matches"]);
+      const m = params.get("1") || params.get("match") || params.get("path");
+      if (m) {
+        req.url = "/api/" + decodeURIComponent(m).replace(/^\/+/, "");
+      }
+    }
+    // 5. Fallback for /api/index root call -> /api
+    else if (req.url === "/api/index" || req.url === "/api/index/") {
+      req.url = "/api";
     }
   } catch (error) {
     console.error("Failed to restore original request URL:", error);
