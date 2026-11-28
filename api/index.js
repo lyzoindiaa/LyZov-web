@@ -35,6 +35,7 @@ module.exports = async (req, res) => {
   try {
     const parsed = new URL(req.url, "http://localhost");
     const pParam = parsed.searchParams.get("__p");
+    const pathParam = parsed.searchParams.get("path") || parsed.searchParams.get("path*") || req.query?.path || req.query?.["path*"];
     const originalUri = req.headers["x-vercel-original-path"] || req.headers["x-forwarded-uri"];
 
     // 1. Explicit clean path passed via __p query param (e.g. sitemap, robots, prerender)
@@ -43,20 +44,24 @@ module.exports = async (req, res) => {
       const qs = parsed.searchParams.toString();
       req.url = pParam + (qs ? `?${qs}` : "");
     }
-    // 2. Vercel original request path header
-    else if (originalUri && String(originalUri).startsWith("/") && !originalUri.includes("/api/index")) {
-      req.url = originalUri;
-    }
-    // 3. Vercel named wildcard params in query (source: /api/:path*)
-    else if (req.query?.path || req.query?.["path*"]) {
-      const sub = Array.isArray(req.query.path || req.query["path*"])
-        ? (req.query.path || req.query["path*"]).join("/")
-        : String(req.query.path || req.query["path*"]);
+    // 2. Vercel wildcard rewrite params: /api/:path* -> /api/index?path=...
+    else if (pathParam) {
+      const rawSub = Array.isArray(pathParam) ? pathParam.join("/") : String(pathParam);
       parsed.searchParams.delete("path");
       parsed.searchParams.delete("path*");
       parsed.searchParams.delete("__p");
       const qs = parsed.searchParams.toString();
-      req.url = "/api/" + sub.replace(/^\/+/, "") + (qs ? `?${qs}` : "");
+
+      if (rawSub === "index" || rawSub === "api" || rawSub === "") {
+        req.url = "/api" + (qs ? `?${qs}` : "");
+      } else {
+        const cleanPath = decodeURIComponent(rawSub).replace(/^\/+/, "");
+        req.url = "/api/" + cleanPath + (qs ? `?${qs}` : "");
+      }
+    }
+    // 3. Vercel original request path header
+    else if (originalUri && String(originalUri).startsWith("/") && !originalUri.includes("/api/index")) {
+      req.url = originalUri;
     }
     // 4. Vercel regex rewrite matches header
     else if (req.headers["x-now-route-matches"]) {
