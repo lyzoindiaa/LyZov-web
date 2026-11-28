@@ -45,8 +45,8 @@
       "destination": "/api/index?__p=/api"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/index?__p=/api/:path*"
+      "source": "/api/((?!index$).+)",
+      "destination": "/api/index?__p=/api/$1"
     },
     {
       "source": "/shop",
@@ -57,20 +57,20 @@
       "destination": "/api/index?__p=/products"
     },
     {
-      "source": "/category/:path*",
-      "destination": "/api/index?__p=/category/:path*"
+      "source": "/category/(.*)",
+      "destination": "/api/index?__p=/category/$1"
     },
     {
-      "source": "/product/:path*",
-      "destination": "/api/index?__p=/product/:path*"
+      "source": "/product/(.*)",
+      "destination": "/api/index?__p=/product/$1"
     },
     {
       "source": "/policies",
       "destination": "/api/index?__p=/policies"
     },
     {
-      "source": "/policies/:path*",
-      "destination": "/api/index?__p=/policies/:path*"
+      "source": "/policies/(.*)",
+      "destination": "/api/index?__p=/policies/$1"
     },
     {
       "source": "/contact",
@@ -81,7 +81,7 @@
       "destination": "/api/index?__p=/track"
     },
     {
-      "source": "/((?!assets/|.*\\..*).*)",
+      "source": "/((?!api/|api$|assets/|.*\\..*).*)",
       "destination": "/api/index?__p=/$1"
     }
   ]

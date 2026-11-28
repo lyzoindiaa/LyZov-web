@@ -31,63 +31,48 @@ module.exports = async (req, res) => {
     console.error("MongoDB serverless connection error:", error);
   }
 
-  // Rebuild the real URL so Express can accurately route sub-paths (e.g. /api/auth/google, /api/categories, /api/products).
+  // Rebuild the real URL so Express can route it (e.g. /api/auth/google, /api/categories, /shop, /sitemap.xml).
   try {
-    const parsed = new URL(req.url, "http://localhost");
-    const pParam = parsed.searchParams.get("__p");
-    const pathParam = parsed.searchParams.get("path") || parsed.searchParams.get("path*") || req.query?.path || req.query?.["path*"];
-    const originalUri = req.headers["x-vercel-original-path"] || req.headers["x-forwarded-uri"];
-
-    // 1. Explicit clean path passed via __p query param (e.g. sitemap, robots, prerender)
-    if (pParam && pParam.startsWith("/") && !pParam.includes("$") && !pParam.includes(":path")) {
-      parsed.searchParams.delete("__p");
-      const qs = parsed.searchParams.toString();
-      req.url = pParam + (qs ? `?${qs}` : "");
-    }
-    // 2. Vercel wildcard rewrite params: /api/:path* -> /api/index?path=...
-    else if (pathParam) {
-      const rawSub = Array.isArray(pathParam) ? pathParam.join("/") : String(pathParam);
-      parsed.searchParams.delete("path");
-      parsed.searchParams.delete("path*");
-      parsed.searchParams.delete("__p");
-      const qs = parsed.searchParams.toString();
-
-      if (rawSub === "index" || rawSub === "api" || rawSub === "") {
-        req.url = "/api" + (qs ? `?${qs}` : "");
-      } else {
-        const cleanPath = decodeURIComponent(rawSub).replace(/^\/+/, "");
-        req.url = "/api/" + cleanPath + (qs ? `?${qs}` : "");
-      }
-    }
-    // 3. Vercel original request path header
-    else if (originalUri && String(originalUri).startsWith("/") && !originalUri.includes("/api/index")) {
-      req.url = originalUri;
-    }
-    // 4. Vercel regex rewrite matches header
-    else if (req.headers["x-now-route-matches"]) {
-      const params = new URLSearchParams(req.headers["x-now-route-matches"]);
-      const m = params.get("1") || params.get("match") || params.get("path");
-      if (m) {
-        req.url = "/api/" + decodeURIComponent(m).replace(/^\/+/, "");
-      }
-    }
-    // 5. Fallback for /api/index root call -> /api
-    else if (req.url === "/api/index" || req.url === "/api/index/") {
-      req.url = "/api";
-    }
+    req.url = resolveOriginalUrl(req.url, req.headers || {});
   } catch (error) {
     console.error("Failed to restore original request URL:", error);
   }
 
   req.originalUrl = req.url;
 
-  if (req.query) {
-    delete req.query.__p;
-    delete req.query.path;
-    delete req.query["path*"];
-    delete req.query.slug;
-    delete req.query["slug*"];
-  }
-
   return app(req, res);
 };
+
+// vercel.json rewrites everything to /api/index?__p=<original path>.
+// Vercel may also append wildcard params (e.g. ?path=...). A __p pointing back at the
+// function itself (/api/index) is never a real route, so it is ignored.
+function resolveOriginalUrl(rawUrl, headers) {
+  const parsed = new URL(rawUrl, "http://localhost");
+  const isSelf = (p) => /^\/api\/index\/?$/.test(p);
+  const isValid = (p) => typeof p === "string" && p.startsWith("/") && !p.includes("$") && !p.includes(":path") && !isSelf(p);
+
+  const pParam = parsed.searchParams.get("__p");
+  const pathParam = parsed.searchParams.get("path");
+  parsed.searchParams.delete("__p");
+
+  let target = null;
+  if (isValid(pParam)) {
+    target = pParam;
+  } else if (pathParam && pathParam !== "index") {
+    parsed.searchParams.delete("path");
+    target = "/api/" + decodeURIComponent(pathParam).replace(/^\/+/, "");
+  } else {
+    const originalUri = headers["x-vercel-original-path"] || headers["x-forwarded-uri"];
+    if (isValid(originalUri)) return originalUri;
+    if (isSelf(parsed.pathname)) {
+      if (pathParam === "index") parsed.searchParams.delete("path");
+      target = "/api";
+    }
+  }
+
+  if (!target) return rawUrl;
+  const qs = parsed.searchParams.toString();
+  return target + (qs ? `?${qs}` : "");
+}
+
+module.exports.resolveOriginalUrl = resolveOriginalUrl;
